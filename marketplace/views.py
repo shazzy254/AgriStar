@@ -316,7 +316,8 @@ def confirm_delivery(request, order_id):
     order = get_object_or_404(Order, id=order_id, buyer=request.user)
     
     if order.status != 'ESCROW':
-        return JsonResponse({'success': False, 'message': 'Order is not in Escrow state.'}, status=400)
+        messages.error(request, 'Order is not in Escrow state.')
+        return redirect('dashboard')
 
     # Update status to Delivered (or directly to PAID_OUT as per user flow step 6)
     # User said: Buyer clicks "Confirm Delivery" -> System Calls B2C -> Updates order.status = "PAID_OUT"
@@ -350,15 +351,15 @@ def confirm_delivery(request, order_id):
                 message=f'Order #{order.id} delivered and funds released to your M-Pesa.'
             )
             
-            return JsonResponse({
-                'success': True,
-                'message': 'Delivery confirmed and funds released to farmer.'
-            })
+            messages.success(request, 'Delivery confirmed and funds released to farmer.')
+            return redirect('dashboard')
         else:
-             return JsonResponse({'success': False, 'message': 'Failed to release funds. Please contact support.'}, status=500)
+             messages.error(request, 'Failed to release funds. Please contact support.')
+             return redirect('dashboard')
 
     except Exception as e:
-        return JsonResponse({'success': False, 'message': str(e)}, status=500)
+        messages.error(request, f"Error: {str(e)}")
+        return redirect('dashboard')
 
 @login_required
 def view_saved_products(request):

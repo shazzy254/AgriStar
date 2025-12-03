@@ -2,10 +2,6 @@
 {% load static %}
 {% block title %}Notifications - AgriStar{% endblock %}
 
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
-{% endblock %}
-
 {% block content %}
 <div class="row mb-4">
     <div class="col-md-8">
@@ -14,9 +10,9 @@
     </div>
     <div class="col-md-4 text-end">
         {% if unread_count > 0 %}
-        <button id="mark-all-read-btn" class="btn btn-outline-primary">
+        <a href="{% url 'mark_all_notifications_read' %}" class="btn btn-outline-primary rounded-pill">
             <i class="bi bi-check-all me-2"></i>Mark All as Read
-        </button>
+        </a>
         {% endif %}
     </div>
 </div>
@@ -24,76 +20,70 @@
 {% if notifications %}
 <!-- Unread Count Badge -->
 {% if unread_count > 0 %}
-<div class="alert alert-info d-flex align-items-center mb-4">
-    <i class="bi bi-info-circle me-2"></i>
+<div class="alert alert-info d-flex align-items-center mb-4 glass-card border-0 text-dark">
+    <i class="bi bi-info-circle-fill text-primary me-2 fs-4"></i>
     <span>You have <strong>{{ unread_count }}</strong> unread notification{{ unread_count|pluralize }}</span>
 </div>
 {% endif %}
 
 <!-- Notifications List -->
-<div class="card glass-card">
-    <div class="card-body">
-        {% for notification in notifications %}
-        <div class="notification-item {% if not notification.is_read %}unread{% endif %} 
-                    {% if notification.notification_type == 'ORDER_PLACED' %}success{% elif notification.notification_type == 'ORDER_REJECTED' %}danger{% else %}warning{% endif %}"
-            data-notification-id="{{ notification.id }}" data-is-read="{{ notification.is_read|lower }}">
-            <div class="row align-items-start">
-                <div class="col-md-1 text-center">
-                    <i class="bi bi-{% if notification.notification_type == 'ORDER_PLACED' %}check-circle-fill text-success{% elif notification.notification_type == 'ORDER_ACCEPTED' %}hand-thumbs-up-fill text-warning{% else %}x-circle-fill text-danger{% endif %}"
-                        style="font-size: 2rem;"></i>
+<div class="d-grid gap-3">
+    {% for notification in notifications %}
+    <div class="card glass-card border-0 animate__animated animate__fadeInUp"
+        style="animation-delay: {{ forloop.counter0|add:'1' }}00ms;">
+        <div class="card-body p-4">
+            <div class="row align-items-center">
+                <div class="col-auto">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center"
+                        style="width: 50px; height: 50px; background: {% if notification.notification_type == 'ORDER_PLACED' %}rgba(25, 135, 84, 0.1){% elif notification.notification_type == 'ORDER_REJECTED' %}rgba(220, 53, 69, 0.1){% else %}rgba(255, 193, 7, 0.1){% endif %};">
+                        <i
+                            class="bi bi-{% if notification.notification_type == 'ORDER_PLACED' %}check-circle-fill text-success{% elif notification.notification_type == 'ORDER_ACCEPTED' %}hand-thumbs-up-fill text-success{% elif notification.notification_type == 'ORDER_REJECTED' %}x-circle-fill text-danger{% else %}bell-fill text-warning{% endif %} fs-4"></i>
+                    </div>
                 </div>
-                <div class="col-md-9">
-                    <h6 class="mb-1">
-                        {{ notification.get_notification_type_display }}
-                        {% if not notification.is_read %}
-                        <span class="badge bg-primary ms-2">New</span>
-                        {% endif %}
-                    </h6>
-                    <p class="mb-2">{{ notification.message }}</p>
+                <div class="col">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <h6 class="fw-bold mb-1">
+                            {{ notification.get_notification_type_display }}
+                            {% if not notification.is_read %}
+                            <span class="badge bg-primary rounded-pill ms-2" style="font-size: 0.7rem;">NEW</span>
+                            {% endif %}
+                        </h6>
+                        <small class="text-muted"><i class="bi bi-clock me-1"></i>{{ notification.created_at|timesince
+                            }} ago</small>
+                    </div>
+                    <p class="mb-2 text-muted">{{ notification.message }}</p>
 
                     {% if notification.order %}
-                    <div class="d-flex gap-2 align-items-center">
-                        <span class="badge bg-secondary">Order #{{ notification.order.id }}</span>
-                        <span class="badge bg-info">{{ notification.order.product.name }}</span>
-                        <span class="badge bg-success">${{ notification.order.total_price }}</span>
+                    <div class="d-flex gap-2 align-items-center mt-2">
+                        <span class="badge bg-light text-dark border">Order #{{ notification.order.id }}</span>
+                        <span class="badge bg-light text-dark border">{{ notification.order.product.name }}</span>
                     </div>
                     {% endif %}
                 </div>
-                <div class="col-md-2 text-end">
-                    <small class="text-muted d-block mb-2">
-                        <i class="bi bi-clock me-1"></i>{{ notification.created_at|timesince }} ago
-                    </small>
-                    {% if not notification.is_read %}
-                    <button class="btn btn-sm btn-outline-primary mark-read-btn"
-                        onclick="markNotificationAsRead('{{ notification.id }}')">
-                        <i class="bi bi-check me-1"></i>Mark as Read
-                    </button>
-                    {% endif %}
+                {% if not notification.is_read %}
+                <div class="col-auto">
+                    <a href="{% url 'mark_notification_read' notification.id %}"
+                        class="btn btn-sm btn-light rounded-circle" data-bs-toggle="tooltip" title="Mark as read">
+                        <i class="bi bi-check-lg"></i>
+                    </a>
                 </div>
+                {% endif %}
             </div>
         </div>
-        {% endfor %}
     </div>
-</div>
-
-<!-- Pagination or Load More (if needed in future) -->
-<div class="text-center mt-4">
-    <p class="text-muted">Showing {{ notifications.count }} notification{{ notifications.count|pluralize }}</p>
+    {% endfor %}
 </div>
 
 {% else %}
 <!-- Empty State -->
-<div class="empty-state">
-    <i class="bi bi-bell-slash"></i>
-    <h3>No notifications yet</h3>
-    <p>You'll see notifications here when you place orders or when farmers respond to your orders.</p>
-    <a href="{% url 'product_list' %}" class="btn btn-primary-gradient mt-3">
+<div class="text-center py-5 glass-card">
+    <i class="bi bi-bell-slash text-muted" style="font-size: 4rem;"></i>
+    <h3 class="text-muted mt-3">No notifications yet</h3>
+    <p class="text-muted">You'll see notifications here when you place orders or when farmers respond to your orders.
+    </p>
+    <a href="{% url 'product_list' %}" class="btn btn-primary-gradient mt-3 rounded-pill px-4">
         <i class="bi bi-shop me-2"></i>Start Shopping
     </a>
 </div>
 {% endif %}
-{% endblock %}
-
-{% block extra_js %}
-<script src="{% static 'js/notifications.js' %}"></script>
 {% endblock %}

@@ -1,41 +1,102 @@
 {% extends 'base.html' %}
-{% block title %}{{ product.name }}{% endblock %}
+{% block title %}{{ product.name }} - AgriStar{% endblock %}
 
 {% block content %}
-<div class="row">
+<div class="row g-4">
+    <!-- Product Image -->
     <div class="col-md-6">
-        {% if product.image %}
-        <img src="{{ product.image.url }}" class="img-fluid rounded shadow-sm" alt="{{ product.name }}">
-        {% else %}
-        <div class="bg-light d-flex align-items-center justify-content-center rounded" style="height: 400px;">
-            <span class="text-muted h4">No Image Available</span>
-        </div>
-        {% endif %}
-    </div>
-    <div class="col-md-6">
-        <h2>{{ product.name }}</h2>
-        <h3 class="text-success">Ksh {{ product.price }} / {{ product.unit }}</h3>
-        <p class="text-muted">Category: {{ product.get_category_display }}</p>
-        <p class="text-muted">Location: {{ product.location }}</p>
-        <p class="text-muted">Seller: {{ product.seller.username }}</p>
-        <hr>
-        <p>{{ product.description }}</p>
-
-        <div class="d-grid gap-2 mt-4">
-            {% if request.user == product.seller %}
-            <a href="{% url 'edit_product' product.id %}" class="btn btn-warning btn-lg">
-                <i class="bi bi-pencil me-2"></i>Edit Product
-            </a>
-            <a href="{% url 'delete_product' product.id %}" class="btn btn-danger btn-lg">
-                <i class="bi bi-trash me-2"></i>Delete Product
-            </a>
+        <div class="card glass-card border-0 overflow-hidden h-100">
+            {% if product.image %}
+            <img src="{{ product.image.url }}" class="img-fluid w-100 h-100 object-fit-cover" alt="{{ product.name }}"
+                style="min-height: 400px;">
             {% else %}
-            <button type="button" class="btn btn-success btn-lg" data-bs-toggle="modal"
-                data-bs-target="#contactSellerModal">
-                <i class="bi bi-chat-dots me-2"></i>Contact Seller
-            </button>
-            <button class="btn btn-outline-primary btn-lg">Add to Favorites</button>
+            <div class="bg-light d-flex align-items-center justify-content-center h-100" style="min-height: 400px;">
+                <div class="text-center text-muted">
+                    <i class="bi bi-image fs-1 mb-2"></i>
+                    <h4>No Image Available</h4>
+                </div>
+            </div>
             {% endif %}
+        </div>
+    </div>
+
+    <!-- Product Details -->
+    <div class="col-md-6">
+        <div class="card glass-card border-0 h-100">
+            <div class="card-body p-4 p-lg-5">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <span class="badge bg-success rounded-pill px-3 py-2">{{ product.get_category_display }}</span>
+                    {% if request.user != product.seller %}
+                    <a href="{% url 'toggle_favorite' product.id %}" class="btn btn-outline-danger rounded-circle p-2"
+                        style="width: 40px; height: 40px;">
+                        <i class="bi bi-heart{% if product in user.favorites.all %}-fill{% endif %}"></i>
+                    </a>
+                    {% endif %}
+                </div>
+
+                <h1 class="fw-bold mb-2">{{ product.name }}</h1>
+                <div class="d-flex align-items-center text-muted mb-4">
+                    <i class="bi bi-geo-alt-fill text-danger me-2"></i>
+                    <span>{{ product.location }}</span>
+                    <span class="mx-2">•</span>
+                    <i class="bi bi-person-circle me-2"></i>
+                    <span>{{ product.seller.username }}</span>
+                </div>
+
+                <h2 class="text-success fw-bold mb-4">
+                    KSh {{ product.price }} <span class="fs-6 text-muted fw-normal">/ {{ product.unit }}</span>
+                </h2>
+
+                <div class="mb-4">
+                    <h5 class="fw-bold mb-2">Description</h5>
+                    <p class="text-muted">{{ product.description }}</p>
+                </div>
+
+                <hr class="my-4">
+
+                <div class="d-grid gap-3">
+                    {% if request.user == product.seller %}
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <a href="{% url 'edit_product' product.id %}"
+                                class="btn btn-warning w-100 rounded-pill py-3 fw-bold">
+                                <i class="bi bi-pencil-square me-2"></i>Edit
+                            </a>
+                        </div>
+                        <div class="col-6">
+                            <a href="{% url 'delete_product' product.id %}"
+                                class="btn btn-danger w-100 rounded-pill py-3 fw-bold">
+                                <i class="bi bi-trash me-2"></i>Delete
+                            </a>
+                        </div>
+                    </div>
+                    {% else %}
+                    <form action="{% url 'add_to_cart' product.id %}" method="POST" class="d-grid gap-3">
+                        {% csrf_token %}
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0 fw-bold">Quantity</span>
+                            <input type="number" name="quantity" class="form-control border-start-0 ps-0 text-center"
+                                value="1" min="1" required>
+                            <span class="input-group-text bg-white border-start-0 text-muted">{{ product.unit }}s</span>
+                        </div>
+
+                        <div class="row g-2">
+                            <div class="col-12">
+                                <button type="submit"
+                                    class="btn btn-primary-gradient w-100 rounded-pill py-3 fw-bold shadow-sm">
+                                    <i class="bi bi-cart-plus me-2"></i>Add to Cart
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <button type="button" class="btn btn-outline-success w-100 rounded-pill py-3 fw-bold"
+                        data-bs-toggle="modal" data-bs-target="#contactSellerModal">
+                        <i class="bi bi-chat-dots me-2"></i>Contact Seller
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -43,33 +104,37 @@
 
 {% block extra_modals %}
 <!-- Contact Seller Modal -->
-<div class="modal fade" id="contactSellerModal" tabindex="-1" aria-labelledby="contactSellerModalLabel"
-    aria-hidden="true">
+<div class="modal fade" id="contactSellerModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content glass-card border-0">
             <div class="modal-header border-0">
-                <h5 class="modal-title" id="contactSellerModalLabel">Contact {{ product.seller.username }}</h5>
+                <h5 class="modal-title fw-bold">Contact {{ product.seller.username }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body text-center py-4">
-                <p class="mb-4">Choose your preferred method to contact the seller:</p>
+                <div class="rounded-circle bg-success d-inline-flex align-items-center justify-content-center mb-4"
+                    style="width: 80px; height: 80px;">
+                    <i class="bi bi-person-lines-fill text-white fs-1"></i>
+                </div>
+                <p class="mb-4 text-muted">Choose your preferred method to contact the seller:</p>
 
-                <div class="d-grid gap-3 col-8 mx-auto">
+                <div class="d-grid gap-3 col-10 mx-auto">
                     {% if product.seller.profile.phone_number %}
-                    <a href="tel:{{ product.seller.profile.phone_number }}" class="btn btn-outline-primary btn-lg">
+                    <a href="tel:{{ product.seller.profile.phone_number }}"
+                        class="btn btn-outline-primary rounded-pill py-2">
                         <i class="bi bi-telephone-fill me-2"></i>Call Now
                     </a>
                     {% endif %}
 
                     {% if product.seller.profile.whatsapp_number %}
                     <a href="https://wa.me/{{ product.seller.profile.whatsapp_number }}" target="_blank"
-                        class="btn btn-outline-success btn-lg">
+                        class="btn btn-outline-success rounded-pill py-2">
                         <i class="bi bi-whatsapp me-2"></i>WhatsApp
                     </a>
                     {% endif %}
 
                     {% if not product.seller.profile.phone_number and not product.seller.profile.whatsapp_number %}
-                    <div class="alert alert-warning">
+                    <div class="alert alert-warning rounded-3">
                         <i class="bi bi-exclamation-triangle me-2"></i>
                         This seller hasn't provided contact details yet.
                     </div>

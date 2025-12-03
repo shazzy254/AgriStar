@@ -3,170 +3,125 @@
 
 {% block title %}Register - AgriStar{% endblock %}
 
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/register.css' %}">
-<style>
-    .role-card {
-        border: 2px solid transparent;
-        transition: all 0.3s ease;
-        cursor: pointer;
-        padding: 15px;
-        border-radius: 10px;
-        margin-bottom: 10px;
-    }
-
-    .role-card:hover {
-        border-color: #198754;
-        background-color: rgba(25, 135, 84, 0.05);
-    }
-
-    .role-card.selected {
-        border-color: #198754;
-        background-color: rgba(25, 135, 84, 0.1);
-    }
-
-    .role-card input[type="radio"] {
-        margin-right: 10px;
-    }
-
-    .role-icon {
-        font-size: 2rem;
-        margin-bottom: 10px;
-    }
-</style>
-{% endblock %}
-
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card shadow-lg border-0 glass-card">
+<div class="row justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="col-md-6">
+        <div class="card shadow-lg border-0 glass-card animate__animated animate__fadeInUp">
             <div class="card-body p-5">
-                <h2 class="text-center mb-4">Join AgriStar</h2>
-                <p class="text-center text-muted mb-4">Create your account and start your agricultural journey</p>
+                <div class="text-center mb-4">
+                    <div class="rounded-circle bg-primary d-inline-flex align-items-center justify-content-center mb-3"
+                        style="width: 60px; height: 60px;">
+                        <i class="bi bi-person-plus-fill text-white fs-2"></i>
+                    </div>
+                    <h2 class="fw-bold">Create Account</h2>
+                    <p class="text-muted">Join the AgriStar community today</p>
+                </div>
 
-                <form method="POST" id="registerForm">
+                <form method="POST">
                     {% csrf_token %}
 
-                    <!-- Username Field -->
+                    {% for field in form %}
                     <div class="mb-3">
-                        <label class="form-label fw-bold">{{ form.username.label }}</label>
-                        {{ form.username }}
-                        {% if form.username.errors %}
-                        <div class="text-danger small">{{ form.username.errors.0 }}</div>
-                        {% endif %}
-                    </div>
-
-                    <!-- Email Field -->
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">{{ form.email.label }}</label>
-                        {{ form.email }}
-                        {% if form.email.errors %}
-                        <div class="text-danger small">{{ form.email.errors.0 }}</div>
-                        {% endif %}
-                    </div>
-
-                    <!-- Password Fields -->
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Password</label>
-                        {{ form.password1 }}
-                        {% if form.password1.errors %}
-                        <div class="text-danger small">{{ form.password1.errors.0 }}</div>
-                        {% endif %}
-                    </div>
-
-                    <div class="mb-4">
-                        <label class="form-label fw-bold">Confirm Password</label>
-                        {{ form.password2 }}
-                        {% if form.password2.errors %}
-                        <div class="text-danger small">{{ form.password2.errors.0 }}</div>
-                        {% endif %}
-                    </div>
-
-                    <!-- Role Selection -->
-                    <div class="mb-4">
-                        <label class="form-label fw-bold d-block mb-3">I am a...</label>
-
-                        <div class="role-card" onclick="selectRole('FARMER')">
-                            <div class="d-flex align-items-start">
-                                <input type="radio" name="role" value="FARMER" id="role_farmer"
-                                    class="form-check-input mt-1">
-                                <div class="flex-grow-1">
-                                    <label for="role_farmer" class="fw-bold mb-1" style="cursor: pointer;">
-                                        <i class="bi bi-flower1 text-success"></i> Farmer
-                                    </label>
-                                    <p class="small text-muted mb-0">I grow crops and want to sell my produce directly
-                                        to buyers.</p>
-                                </div>
+                        <label class="form-label fw-bold">{{ field.label }}</label>
+                        {% if field.name == 'role' %}
+                        <div class="row">
+                            {% for radio in field %}
+                            <div class="col-md-4">
+                                <label class="role-card d-block text-center p-3 border rounded cursor-pointer h-100">
+                                    {{ radio.tag }}
+                                    <div class="mt-2 fw-bold">{{ radio.choice_label }}</div>
+                                </label>
                             </div>
+                            {% endfor %}
                         </div>
-
-                        <div class="role-card" onclick="selectRole('BUYER')">
-                            <div class="d-flex align-items-start">
-                                <input type="radio" name="role" value="BUYER" id="role_buyer"
-                                    class="form-check-input mt-1">
-                                <div class="flex-grow-1">
-                                    <label for="role_buyer" class="fw-bold mb-1" style="cursor: pointer;">
-                                        <i class="bi bi-cart text-primary"></i> Buyer
-                                    </label>
-                                    <p class="small text-muted mb-0">I want to purchase fresh produce directly from
-                                        farmers.</p>
-                                </div>
-                            </div>
+                        {% else %}
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0">
+                                {% if 'username' in field.name %}<i class="bi bi-person"></i>
+                                {% elif 'email' in field.name %}<i class="bi bi-envelope"></i>
+                                {% elif 'password' in field.name %}<i class="bi bi-lock"></i>
+                                {% else %}<i class="bi bi-pencil"></i>{% endif %}
+                            </span>
+                            {{ field }}
                         </div>
-
-                        <div class="role-card" onclick="selectRole('SUPPLIER')">
-                            <div class="d-flex align-items-start">
-                                <input type="radio" name="role" value="SUPPLIER" id="role_supplier"
-                                    class="form-check-input mt-1">
-                                <div class="flex-grow-1">
-                                    <label for="role_supplier" class="fw-bold mb-1" style="cursor: pointer;">
-                                        <i class="bi bi-truck text-warning"></i> Supplier
-                                    </label>
-                                    <p class="small text-muted mb-0">I provide agricultural supplies, tools, and
-                                        equipment to farmers.</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {% if form.role.errors %}
-                        <div class="text-danger small mt-2">{{ form.role.errors.0 }}</div>
+                        {% endif %}
+                        {% if field.errors %}
+                        <div class="text-danger small mt-1">{{ field.errors|striptags }}</div>
+                        {% endif %}
+                        {% if field.help_text %}
+                        <div class="form-text small">{{ field.help_text }}</div>
                         {% endif %}
                     </div>
+                    {% endfor %}
 
-                    <button type="submit" class="btn btn-success w-100 py-2 fw-bold">Create Account</button>
+                    <button type="submit" class="btn btn-primary-gradient w-100 py-2 fw-bold shadow-sm mt-3">
+                        Register <i class="bi bi-arrow-right ms-2"></i>
+                    </button>
                 </form>
 
-                <div class="text-center mt-3">
-                    <small>Already have an account? <a href="{% url 'login' %}">Login here</a></small>
+                <div class="text-center mt-4">
+                    <p class="mb-0">Already have an account? <a href="{% url 'login' %}"
+                            class="text-primary fw-bold">Login here</a></p>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<script>
-    function selectRole(role) {
-        // Remove selected class from all cards
-        document.querySelectorAll('.role-card').forEach(card => {
-            card.classList.remove('selected');
-        });
-
-        // Add selected class to clicked card
-        event.currentTarget.classList.add('selected');
-
-        // Check the radio button
-        document.getElementById('role_' + role.toLowerCase()).checked = true;
+<style>
+    /* Custom styles for form fields rendered by Django */
+    .form-control {
+        border-left: 0;
     }
 
-    // Add selected class on page load if a role is already selected
-    document.addEventListener('DOMContentLoaded', function () {
-        const checkedRadio = document.querySelector('input[name="role"]:checked');
-        if (checkedRadio) {
-            const roleCard = checkedRadio.closest('.role-card');
-            if (roleCard) {
-                roleCard.classList.add('selected');
-            }
+    .form-control:focus {
+        box-shadow: none;
+        border-color: #ced4da;
+    }
+
+    .input-group-text {
+        background-color: white;
+    }
+
+    /* Role Card Styling */
+    .role-card {
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .role-card:hover {
+        border-color: var(--primary-color) !important;
+        background-color: rgba(46, 204, 113, 0.05);
+        transform: translateY(-2px);
+    }
+
+    .role-card input[type="radio"]:checked+div {
+        color: var(--primary-color);
+    }
+
+    /* Hide default radio if desired, or keep it */
+</style>
+
+<script>
+    // Add form-control class to Django rendered inputs
+    document.querySelectorAll('input, select, textarea').forEach(element => {
+        if (!element.classList.contains('form-control') && element.type !== 'radio' && element.type !== 'checkbox') {
+            element.classList.add('form-control');
+            element.classList.add('border-start-0');
+            element.classList.add('ps-0');
         }
+    });
+
+    // Highlight selected role card
+    document.querySelectorAll('input[name="role"]').forEach(radio => {
+        radio.addEventListener('change', function () {
+            document.querySelectorAll('.role-card').forEach(card => {
+                card.classList.remove('selected', 'border-success', 'bg-light');
+            });
+            if (this.checked) {
+                this.closest('.role-card').classList.add('selected', 'border-success', 'bg-light');
+            }
+        });
     });
 </script>
 {% endblock %}

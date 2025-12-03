@@ -3,28 +3,61 @@
 {% block title %}Community Feed - AgriStar{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-8 offset-md-2">
-        <h2 class="mb-4">Community Feed</h2>
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0"><i class="bi bi-people-fill me-2"></i>Community Feed</h2>
+            <a href="#" class="btn btn-success rounded-pill"><i class="bi bi-plus-lg me-1"></i>New Post</a>
+        </div>
 
         {% for post in posts %}
-        <div class="card mb-4">
-            <div class="card-header">
-                <strong>{{ post.author.username }}</strong>
-                <small class="text-muted float-end">{{ post.created_at|date:"M d, Y H:i" }}</small>
+        <div class="card glass-card mb-4 animate__animated animate__fadeInUp">
+            <div class="card-header bg-transparent border-bottom-0 pt-4 px-4">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center me-3"
+                        style="width: 45px; height: 45px; font-size: 1.2rem;">
+                        {{ post.author.username|make_list|first|upper }}
+                    </div>
+                    <div>
+                        <h5 class="mb-0 fw-bold">{{ post.author.username }}</h5>
+                        <small class="text-muted"><i class="bi bi-clock me-1"></i>{{ post.created_at|date:"M d, Y H:i"
+                            }}</small>
+                    </div>
+                </div>
             </div>
+
             {% if post.image %}
-            <img src="{{ post.image.url }}" class="card-img-top" alt="Post image">
-            {% endif %}
-            <div class="card-body">
-                <p class="card-text">{{ post.content }}</p>
+            <div class="px-4 mt-2">
+                <img src="{{ post.image.url }}" class="img-fluid rounded-3 w-100 shadow-sm" alt="Post image"
+                    style="max-height: 400px; object-fit: cover;">
             </div>
-            <div class="card-footer text-muted">
-                {{ post.likes.count }} Likes
+            {% endif %}
+
+            <div class="card-body px-4">
+                <p class="card-text fs-5">{{ post.content }}</p>
+            </div>
+
+            <div class="card-footer bg-transparent border-top-0 pb-4 px-4">
+                <div class="d-flex gap-3">
+                    <button class="btn btn-outline-danger btn-sm rounded-pill px-3">
+                        <i class="bi bi-heart me-1"></i> {{ post.likes.count }} Likes
+                    </button>
+                    <button class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                        <i class="bi bi-chat me-1"></i> Comment
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm rounded-pill px-3 ms-auto">
+                        <i class="bi bi-share me-1"></i> Share
+                    </button>
+                </div>
             </div>
         </div>
         {% empty %}
-        <div class="alert alert-info">No posts yet. Be the first to share something!</div>
+        <div class="text-center py-5 glass-card">
+            <i class="bi bi-chat-square-quote text-muted" style="font-size: 4rem;"></i>
+            <h4 class="text-muted mt-3">No posts yet</h4>
+            <p class="text-muted">Be the first to share something with the community!</p>
+            <a href="#" class="btn btn-success mt-2">Create Post</a>
+        </div>
         {% endfor %}
     </div>
 </div>

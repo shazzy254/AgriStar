@@ -31,7 +31,22 @@ def dashboard(request):
         }
         return render(request, 'users/dashboard_farmer.html', context)
     elif user.role == User.Role.BUYER:
-        return render(request, 'users/dashboard_buyer.html')
+        from marketplace.models import Order, CartItem
+        
+        # Get buyer stats
+        orders = Order.objects.filter(buyer=user).order_by('-created_at')
+        recent_orders = orders[:5]
+        total_orders = orders.count()
+        pending_orders_count = orders.filter(status='PENDING').count()
+        cart_item_count = CartItem.objects.filter(buyer=user).count()
+        
+        context = {
+            'recent_orders': recent_orders,
+            'total_orders': total_orders,
+            'pending_orders_count': pending_orders_count,
+            'cart_item_count': cart_item_count,
+        }
+        return render(request, 'users/dashboard_buyer.html', context)
     elif user.role == User.Role.SUPPLIER:
         return render(request, 'users/dashboard_supplier.html')
     else:

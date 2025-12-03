@@ -4,32 +4,162 @@
 
 {% block content %}
 <div class="row">
+    <!-- Sidebar -->
     <div class="col-md-3">
-        <div class="card mb-4">
-            <div class="card-header bg-success text-white">
-                Menu
+        <div class="card glass-card mb-4 border-0">
+            <div class="card-body text-center py-4">
+                <div class="rounded-circle bg-primary d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                    <i class="bi bi-person-fill text-white fs-1"></i>
+                </div>
+                <h5 class="fw-bold">{{ user.username }}</h5>
+                <span class="badge bg-primary rounded-pill">Buyer Account</span>
             </div>
-            <div class="list-group list-group-flush">
-                <a href="{% url 'dashboard' %}" class="list-group-item list-group-item-action active">Dashboard</a>
-                <a href="{% url 'product_list' %}" class="list-group-item list-group-item-action">Marketplace</a>
-                <a href="{% url 'feed' %}" class="list-group-item list-group-item-action">Community Feed</a>
-                <a href="{% url 'profile' %}" class="list-group-item list-group-item-action">Profile</a>
+            <div class="list-group list-group-flush bg-transparent">
+                <a href="{% url 'dashboard' %}" class="list-group-item list-group-item-action bg-transparent border-0 active fw-bold text-primary">
+                    <i class="bi bi-speedometer2 me-2"></i>Dashboard
+                </a>
+                <a href="{% url 'product_list' %}" class="list-group-item list-group-item-action bg-transparent border-0">
+                    <i class="bi bi-shop me-2"></i>Marketplace
+                </a>
+                <a href="{% url 'view_cart' %}" class="list-group-item list-group-item-action bg-transparent border-0">
+                    <i class="bi bi-cart3 me-2"></i>My Cart
+                    {% if cart_item_count > 0 %}
+                    <span class="badge bg-danger rounded-pill float-end">{{ cart_item_count }}</span>
+                    {% endif %}
+                </a>
+                <a href="{% url 'feed' %}" class="list-group-item list-group-item-action bg-transparent border-0">
+                    <i class="bi bi-people me-2"></i>Community Feed
+                </a>
+                <a href="{% url 'profile' %}" class="list-group-item list-group-item-action bg-transparent border-0">
+                    <i class="bi bi-person-gear me-2"></i>Profile Settings
+                </a>
             </div>
         </div>
     </div>
-    <div class="col-md-9">
-        <h2 class="mb-4">Buyer Dashboard</h2>
-        <p>Welcome back, {{ user.username }}!</p>
 
-        <div class="row">
-            <div class="col-md-6">
-                <div class="card mb-3">
+    <!-- Main Content -->
+    <div class="col-md-9">
+        <h2 class="mb-4 fw-bold text-dark">Dashboard Overview</h2>
+
+        <!-- Stats Cards -->
+        <div class="row mb-4 g-4">
+            <div class="col-md-4">
+                <div class="card glass-card border-0 h-100 bg-primary text-white" style="background: linear-gradient(135deg, #3498db, #2980b9);">
                     <div class="card-body">
-                        <h5 class="card-title">Browse Marketplace</h5>
-                        <p class="card-text">Find fresh produce directly from farmers.</p>
-                        <a href="{% url 'product_list' %}" class="btn btn-success">Go to Market</a>
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="card-title opacity-75">Total Orders</h6>
+                                <h2 class="fw-bold mb-0">{{ total_orders }}</h2>
+                            </div>
+                            <i class="bi bi-bag-check fs-1 opacity-50"></i>
+                        </div>
+                        <p class="card-text small mt-3 opacity-75">Lifetime purchases</p>
                     </div>
                 </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card glass-card border-0 h-100 bg-warning text-white" style="background: linear-gradient(135deg, #f1c40f, #f39c12);">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="card-title opacity-75">Pending Orders</h6>
+                                <h2 class="fw-bold mb-0">{{ pending_orders_count }}</h2>
+                            </div>
+                            <i class="bi bi-clock-history fs-1 opacity-50"></i>
+                        </div>
+                        <p class="card-text small mt-3 opacity-75">Awaiting delivery</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card glass-card border-0 h-100 bg-success text-white" style="background: linear-gradient(135deg, #2ecc71, #27ae60);">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="card-title opacity-75">Cart Items</h6>
+                                <h2 class="fw-bold mb-0">{{ cart_item_count }}</h2>
+                            </div>
+                            <i class="bi bi-cart fs-1 opacity-50"></i>
+                        </div>
+                        <p class="card-text small mt-3 opacity-75">Items ready to checkout</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Orders -->
+        <div class="card glass-card border-0">
+            <div class="card-header bg-transparent border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                <h4 class="mb-0 fw-bold">Recent Orders</h4>
+                <a href="{% url 'product_list' %}" class="btn btn-sm btn-outline-primary rounded-pill">Shop More</a>
+            </div>
+            <div class="card-body px-4">
+                {% if recent_orders %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Product</th>
+                                <th>Seller</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in recent_orders %}
+                            <tr>
+                                <td class="fw-bold text-primary">#{{ order.id }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="rounded bg-light me-2" style="width: 40px; height: 40px;">
+                                            {% if order.product.image %}
+                                            <img src="{{ order.product.image.url }}" class="w-100 h-100 rounded object-fit-cover" alt="">
+                                            {% else %}
+                                            <i class="bi bi-image text-muted d-flex align-items-center justify-content-center h-100"></i>
+                                            {% endif %}
+                                        </div>
+                                        {{ order.product.name }}
+                                        <span class="text-muted small ms-1">(x{{ order.quantity }})</span>
+                                    </div>
+                                </td>
+                                <td>{{ order.product.seller.username }}</td>
+                                <td>{{ order.created_at|date:"M d, Y" }}</td>
+                                <td>
+                                    {% if order.status == 'PENDING' %}
+                                    <span class="badge bg-warning text-dark rounded-pill">Pending</span>
+                                    {% elif order.status == 'ACCEPTED' %}
+                                    <a href="{% url 'payment_page' order.id %}" class="btn btn-sm btn-success rounded-pill px-3">
+                                        <i class="bi bi-credit-card me-1"></i> Pay Now
+                                    </a>
+                                    {% elif order.status == 'ESCROW' %}
+                                    <a href="{% url 'confirm_delivery' order.id %}" class="btn btn-sm btn-primary rounded-pill px-3">
+                                        <i class="bi bi-check-circle me-1"></i> Confirm Delivery
+                                    </a>
+                                    {% elif order.status == 'COMPLETED' or order.status == 'PAID_OUT' %}
+                                    <span class="badge bg-success rounded-pill">Completed</span>
+                                    {% elif order.status == 'CANCELLED' %}
+                                    <span class="badge bg-danger rounded-pill">Cancelled</span>
+                                    {% elif order.status == 'REJECTED' %}
+                                    <span class="badge bg-danger rounded-pill">Rejected</span>
+                                    {% else %}
+                                    <span class="badge bg-info rounded-pill">{{ order.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="fw-bold">KSh {{ order.total_price }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-basket text-muted" style="font-size: 3rem;"></i>
+                    <p class="text-muted mt-3">You haven't placed any orders yet.</p>
+                    <a href="{% url 'product_list' %}" class="btn btn-success rounded-pill px-4">Start Shopping</a>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
