@@ -1,0 +1,70 @@
+{% extends 'administration/base_admin.html' %}
+
+{% block title %}Product Approval - AgriStar Admin{% endblock %}
+{% block header %}Product Approval{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        {% if products %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Seller</th>
+                        <th>Price</th>
+                        <th>Category</th>
+                        <th>Submitted</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                {% if product.image %}
+                                <img src="{{ product.image.url }}" class="rounded me-3" width="50" height="50"
+                                    style="object-fit: cover;">
+                                {% else %}
+                                <div class="bg-light rounded me-3 d-flex align-items-center justify-content-center"
+                                    style="width: 50px; height: 50px;">
+                                    <i class="bi bi-image text-muted"></i>
+                                </div>
+                                {% endif %}
+                                <div>
+                                    <h6 class="mb-0">{{ product.name }}</h6>
+                                    <small class="text-muted">{{ product.location }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ product.seller.username }}</td>
+                        <td class="fw-bold">${{ product.price }}</td>
+                        <td><span class="badge bg-light text-dark border">{{ product.get_category_display }}</span></td>
+                        <td>{{ product.created_at|timesince }} ago</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'admin_approve_product' product.id %}" class="btn btn-success">
+                                    <i class="bi bi-check-lg me-1"></i>Approve
+                                </a>
+                                <a href="{% url 'admin_reject_product' product.id %}" class="btn btn-danger">
+                                    <i class="bi bi-x-lg me-1"></i>Reject
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-check-circle text-success display-1"></i>
+            <h4 class="mt-3">All Caught Up!</h4>
+            <p class="text-muted">No pending products to review.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

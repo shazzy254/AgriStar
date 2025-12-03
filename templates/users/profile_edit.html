@@ -1,0 +1,295 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Profile - AgriStar{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card shadow border-0">
+            <div class="card-body text-center">
+                <!-- Profile Photo with Camera Icon -->
+                <div class="position-relative d-inline-block mb-3">
+                    <img src="{{ user.profile.avatar.url }}" id="profilePhoto" class="rounded-circle img-thumbnail"
+                        style="width: 150px; height: 150px; object-fit: cover;">
+                    <!-- Camera Icon Overlay -->
+                    <button type="button" class="btn btn-primary btn-sm rounded-circle position-absolute"
+                        style="bottom: 5px; right: 5px; width: 40px; height: 40px; padding: 0;" data-bs-toggle="modal"
+                        data-bs-target="#photoOptionsModal">
+                        <i class="bi bi-camera-fill"></i>
+                    </button>
+                </div>
+                <h4>{{ user.username }}</h4>
+                <p class="text-muted">{{ user.get_role_display }}</p>
+                <p class="small">{{ user.email }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card shadow border-0">
+            <div class="card-header bg-white border-0">
+                <h5 class="mb-0">Edit Profile</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <fieldset class="mb-4">
+                        <legend class="h6 text-muted">User Info</legend>
+                        {{ u_form.as_p }}
+                    </fieldset>
+                    <fieldset>
+                        <legend class="h6 text-muted">Profile Details</legend>
+                        {{ p_form.as_p }}
+                    </fieldset>
+                    <button type="submit" class="btn btn-primary">Update Profile</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Photo Options Modal -->
+<div class="modal fade" id="photoOptionsModal" tabindex="-1" aria-labelledby="photoOptionsModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="photoOptionsModalLabel">Profile Photo Options</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-grid gap-2">
+                    <!-- Upload Photo Option -->
+                    <button type="button" class="btn btn-outline-primary btn-lg"
+                        onclick="document.getElementById('uploadPhotoInput').click()">
+                        <i class="bi bi-image me-2"></i> Upload Photo
+                    </button>
+                    <input type="file" id="uploadPhotoInput" accept="image/*" style="display: none;"
+                        onchange="handlePhotoUpload(event)">
+
+                    <!-- Take Photo Option -->
+                    <button type="button" class="btn btn-outline-success btn-lg" data-bs-dismiss="modal"
+                        data-bs-toggle="modal" data-bs-target="#cameraModal" onclick="startCamera()">
+                        <i class="bi bi-camera me-2"></i> Take Photo
+                    </button>
+
+                    <!-- View Full Picture Option -->
+                    <button type="button" class="btn btn-outline-info btn-lg" data-bs-dismiss="modal"
+                        data-bs-toggle="modal" data-bs-target="#viewPhotoModal">
+                        <i class="bi bi-eye me-2"></i> View Full Picture
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Camera Modal -->
+<div class="modal fade" id="cameraModal" tabindex="-1" aria-labelledby="cameraModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cameraModalLabel">Take Photo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+                    onclick="stopCamera()"></button>
+            </div>
+            <div class="modal-body text-center">
+                <!-- Camera Preview -->
+                <div id="cameraPreview" style="display: block;">
+                    <video id="cameraVideo" autoplay playsinline
+                        style="width: 100%; max-width: 500px; border-radius: 10px;"></video>
+                    <div class="mt-3">
+                        <button type="button" class="btn btn-success btn-lg" onclick="capturePhoto()">
+                            <i class="bi bi-camera-fill me-2"></i> Capture
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-lg ms-2" data-bs-dismiss="modal"
+                            onclick="stopCamera()">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Photo Preview after Capture -->
+                <div id="photoPreview" style="display: none;">
+                    <canvas id="photoCanvas" style="width: 100%; max-width: 500px; border-radius: 10px;"></canvas>
+                    <div class="mt-3">
+                        <button type="button" class="btn btn-primary btn-lg" onclick="confirmPhoto()">
+                            <i class="bi bi-check-circle me-2"></i> Use This Photo
+                        </button>
+                        <button type="button" class="btn btn-warning btn-lg ms-2" onclick="retakePhoto()">
+                            <i class="bi bi-arrow-clockwise me-2"></i> Retake
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-lg ms-2" data-bs-dismiss="modal"
+                            onclick="cancelPhoto()">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View Full Photo Modal -->
+<div class="modal fade" id="viewPhotoModal" tabindex="-1" aria-labelledby="viewPhotoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="viewPhotoModalLabel">Profile Picture</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img src="{{ user.profile.avatar.url }}" class="img-fluid rounded" style="max-height: 70vh;">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for Camera and Photo Upload -->
+<script>
+    let videoStream = null;
+    let capturedPhotoBlob = null;
+
+    // Start Camera
+    function startCamera() {
+        const video = document.getElementById('cameraVideo');
+
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false })
+            .then(stream => {
+                videoStream = stream;
+                video.srcObject = stream;
+            })
+            .catch(err => {
+                console.error('Error accessing camera:', err);
+                alert('Unable to access camera. Please check permissions.');
+            });
+    }
+
+    // Stop Camera
+    function stopCamera() {
+        if (videoStream) {
+            videoStream.getTracks().forEach(track => track.stop());
+            videoStream = null;
+        }
+        // Reset views
+        document.getElementById('cameraPreview').style.display = 'block';
+        document.getElementById('photoPreview').style.display = 'none';
+    }
+
+    // Capture Photo from Camera
+    function capturePhoto() {
+        const video = document.getElementById('cameraVideo');
+        const canvas = document.getElementById('photoCanvas');
+        const context = canvas.getContext('2d');
+
+        // Set canvas dimensions to match video
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+
+        // Draw video frame to canvas
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        // Convert canvas to blob
+        canvas.toBlob(blob => {
+            capturedPhotoBlob = blob;
+        }, 'image/jpeg', 0.95);
+
+        // Stop camera and show preview
+        if (videoStream) {
+            videoStream.getTracks().forEach(track => track.stop());
+            videoStream = null;
+        }
+
+        document.getElementById('cameraPreview').style.display = 'none';
+        document.getElementById('photoPreview').style.display = 'block';
+    }
+
+    // Retake Photo
+    function retakePhoto() {
+        capturedPhotoBlob = null;
+        document.getElementById('cameraPreview').style.display = 'block';
+        document.getElementById('photoPreview').style.display = 'none';
+        startCamera();
+    }
+
+    // Cancel Photo
+    function cancelPhoto() {
+        capturedPhotoBlob = null;
+        stopCamera();
+    }
+
+    // Confirm and Upload Captured Photo
+    function confirmPhoto() {
+        if (capturedPhotoBlob) {
+            uploadPhoto(capturedPhotoBlob, 'captured_photo.jpg');
+        }
+    }
+
+    // Handle Photo Upload from Gallery
+    function handlePhotoUpload(event) {
+        const file = event.target.files[0];
+        if (file) {
+            uploadPhoto(file, file.name);
+        }
+    }
+
+    // Upload Photo to Server
+    function uploadPhoto(photoBlob, filename) {
+        const formData = new FormData();
+        formData.append('avatar', photoBlob, filename);
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+        // Show loading state
+        const profilePhoto = document.getElementById('profilePhoto');
+        const originalSrc = profilePhoto.src;
+
+        fetch('{% url "update_profile_photo" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update profile photo with new image (add timestamp to avoid cache)
+                    profilePhoto.src = data.avatar_url + '?t=' + new Date().getTime();
+
+                    // Close all modals
+                    const modals = document.querySelectorAll('.modal');
+                    modals.forEach(modal => {
+                        const bsModal = bootstrap.Modal.getInstance(modal);
+                        if (bsModal) bsModal.hide();
+                    });
+
+                    // Show success message
+                    alert('Profile photo updated successfully!');
+
+                    // Reset camera state
+                    stopCamera();
+                    capturedPhotoBlob = null;
+                } else {
+                    alert('Error updating photo: ' + (data.error || 'Unknown error'));
+                    profilePhoto.src = originalSrc;
+                }
+            })
+            .catch(error => {
+                console.error('Error uploading photo:', error);
+                alert('Error uploading photo. Please try again.');
+                profilePhoto.src = originalSrc;
+            });
+    }
+
+    // Cleanup when modals are closed
+    document.getElementById('cameraModal').addEventListener('hidden.bs.modal', function () {
+        stopCamera();
+    });
+
+    document.getElementById('photoOptionsModal').addEventListener('hidden.bs.modal', function () {
+        // Reset file input
+        document.getElementById('uploadPhotoInput').value = '';
+    });
+</script>
+
+{% endblock %}

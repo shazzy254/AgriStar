@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}Supplier Dashboard - AgriStar{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3">
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                Menu
+            </div>
+            <div class="list-group list-group-flush">
+                <a href="{% url 'dashboard' %}" class="list-group-item list-group-item-action active">Dashboard</a>
+                <a href="{% url 'feed' %}" class="list-group-item list-group-item-action">Community Feed</a>
+                <a href="{% url 'profile' %}" class="list-group-item list-group-item-action">Profile</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-9">
+        <h2 class="mb-4">Supplier Dashboard</h2>
+        <p>Welcome back, {{ user.username }}!</p>
+
+        <div class="alert alert-info">
+            Supplier features are coming soon.
+        </div>
+    </div>
+</div>
+{% endblock %}

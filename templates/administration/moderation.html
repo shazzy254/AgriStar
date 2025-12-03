@@ -1,0 +1,96 @@
+{% extends 'administration/base_admin.html' %}
+
+{% block title %}Content Moderation - AgriStar Admin{% endblock %}
+{% block header %}Content Moderation{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Flagged Posts -->
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0 text-danger"><i class="bi bi-flag-fill me-2"></i>Flagged Posts</h5>
+            </div>
+            <div class="card-body">
+                {% if posts %}
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Author</th>
+                                <th>Content Preview</th>
+                                <th>Posted</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for post in posts %}
+                            <tr>
+                                <td>{{ post.author.username }}</td>
+                                <td>{{ post.content|truncatechars:100 }}</td>
+                                <td>{{ post.created_at|timesince }} ago</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'admin_dismiss_flag' 'post' post.id %}"
+                                            class="btn btn-outline-secondary">Dismiss</a>
+                                        <a href="{% url 'admin_delete_content' 'post' post.id %}"
+                                            class="btn btn-outline-danger">Delete</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">No flagged posts.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Flagged Comments -->
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0 text-warning"><i class="bi bi-exclamation-triangle-fill me-2"></i>Flagged Comments</h5>
+            </div>
+            <div class="card-body">
+                {% if comments %}
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Author</th>
+                                <th>Comment</th>
+                                <th>On Post</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for comment in comments %}
+                            <tr>
+                                <td>{{ comment.author.username }}</td>
+                                <td>{{ comment.content|truncatechars:100 }}</td>
+                                <td>Post #{{ comment.post.id }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'admin_dismiss_flag' 'comment' comment.id %}"
+                                            class="btn btn-outline-secondary">Dismiss</a>
+                                        <a href="{% url 'admin_delete_content' 'comment' comment.id %}"
+                                            class="btn btn-outline-danger">Delete</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">No flagged comments.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

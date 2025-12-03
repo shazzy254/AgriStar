@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Shopping Cart - AgriStar{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2><i class="bi bi-cart3 me-2"></i>Shopping Cart</h2>
+        <p class="text-muted">Review your items before checkout</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'product_list' %}" class="btn btn-outline-success">
+            <i class="bi bi-arrow-left me-2"></i>Continue Shopping
+        </a>
+    </div>
+</div>
+
+{% if grouped_items %}
+<!-- Cart Items Grouped by Farmer -->
+{% for group in grouped_items %}
+<div class="card glass-card mb-4">
+    <div class="farmer-group-header">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-person-circle me-2" style="font-size: 1.5rem;"></i>
+            <div>
+                <h5 class="mb-0">{{ group.farmer.username }}</h5>
+                <small class="text-muted">{{ group.items|length }} item{{ group.items|length|pluralize }}</small>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        {% for item in group.items %}
+        <div class="cart-item-card card mb-3" id="cart-item-{{ item.id }}">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-2">
+                        {% if item.product.image %}
+                        <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="img-fluid rounded"
+                            style="max-height: 100px; object-fit: cover;">
+                        {% else %}
+                        <div class="bg-light rounded d-flex align-items-center justify-content-center"
+                            style="height: 100px;">
+                            <i class="bi bi-image text-muted" style="font-size: 2rem;"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-3">
+                        <h5 class="mb-1">{{ item.product.name }}</h5>
+                        <p class="text-muted small mb-0">
+                            <i class="bi bi-geo-alt me-1"></i>{{ item.product.location }}
+                        </p>
+                        <p class="text-muted small mb-0">
+                            <i class="bi bi-tag me-1"></i>{{ item.product.get_category_display }}
+                        </p>
+                    </div>
+                    <div class="col-md-2">
+                        <p class="text-success fw-bold mb-0">KSh {{ item.product.price }}</p>
+                        <small class="text-muted">per unit</small>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="quantity-control">
+                            <button class="quantity-btn qty-decrement" data-item-id="{{ item.id }}">
+                                <i class="bi bi-dash"></i>
+                            </button>
+                            <input type="number" class="quantity-input" id="quantity-{{ item.id }}"
+                                value="{{ item.quantity }}" min="1" readonly>
+                            <button class="quantity-btn qty-increment" data-item-id="{{ item.id }}">
+                                <i class="bi bi-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-2 text-end">
+                        <h5 class="text-success mb-2" id="item-total-{{ item.id }}">KSh {{ item.total_price }}</h5>
+                        <button class="btn btn-sm btn-outline-danger remove-cart-item-btn" data-item-id="{{ item.id }}">
+                            <i class="bi bi-trash me-1"></i>Remove
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        <!-- Farmer Subtotal -->
+        <div class="text-end mt-3">
+            <h6 class="text-muted">Subtotal from {{ group.farmer.username }}:
+                <span class="text-success">KSh {{ group.subtotal }}</span>
+            </h6>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Cart Summary -->
+<div class="row">
+    <div class="col-md-8">
+        <div class="card glass-card">
+            <div class="card-body">
+                <h5><i class="bi bi-info-circle me-2"></i>Order Information</h5>
+                <p class="text-muted mb-0">
+                    <i class="bi bi-check-circle text-success me-2"></i>
+                    Your order will be split into {{ grouped_items|length }} separate order{{
+                    grouped_items|length|pluralize }}
+                    (one per farmer)
+                </p>
+                <p class="text-muted mb-0">
+                    <i class="bi bi-truck text-primary me-2"></i>
+                    Each farmer will process their order independently
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card glass-card">
+            <div class="card-body">
+                <h5 class="mb-3">Cart Summary</h5>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Total Items:</span>
+                    <strong>{{ total_items }}</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-3">
+                    <span>Number of Farmers:</span>
+                    <strong>{{ grouped_items|length }}</strong>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between mb-3">
+                    <h5>Total:</h5>
+                    <h5 class="text-success" id="cart-total">KSh {{ cart_total }}</h5>
+                </div>
+                <form method="POST" action="{% url 'checkout_cart' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary-gradient w-100">
+                        <i class="bi bi-check-circle me-2"></i>Proceed to Checkout
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<!-- Empty Cart State -->
+<div class="empty-state">
+    <i class="bi bi-cart-x"></i>
+    <h3>Your cart is empty</h3>
+    <p>Start adding products to your cart!</p>
+    <a href="{% url 'product_list' %}" class="btn btn-primary-gradient mt-3">
+        <i class="bi bi-shop me-2"></i>Browse Marketplace
+    </a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/cart.js' %}"></script>
+{% endblock %}

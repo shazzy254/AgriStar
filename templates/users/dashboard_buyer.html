@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}Buyer Dashboard - AgriStar{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3">
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                Menu
+            </div>
+            <div class="list-group list-group-flush">
+                <a href="{% url 'dashboard' %}" class="list-group-item list-group-item-action active">Dashboard</a>
+                <a href="{% url 'product_list' %}" class="list-group-item list-group-item-action">Marketplace</a>
+                <a href="{% url 'feed' %}" class="list-group-item list-group-item-action">Community Feed</a>
+                <a href="{% url 'profile' %}" class="list-group-item list-group-item-action">Profile</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-9">
+        <h2 class="mb-4">Buyer Dashboard</h2>
+        <p>Welcome back, {{ user.username }}!</p>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">Browse Marketplace</h5>
+                        <p class="card-text">Find fresh produce directly from farmers.</p>
+                        <a href="{% url 'product_list' %}" class="btn btn-success">Go to Market</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

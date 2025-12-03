@@ -1,0 +1,71 @@
+{% extends 'administration/base_admin.html' %}
+
+{% block title %}User Management - AgriStar Admin{% endblock %}
+{% block header %}User Management{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Verification</th>
+                        <th>Joined</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <img src="{{ user.profile.avatar.url }}" class="rounded-circle me-3" width="40"
+                                    height="40">
+                                <div>
+                                    <h6 class="mb-0">{{ user.username }}</h6>
+                                    <small class="text-muted">{{ user.email }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="badge bg-secondary">{{ user.get_role_display }}</span></td>
+                        <td>
+                            {% if user.is_active %}
+                            <span class="badge bg-success">Active</span>
+                            {% else %}
+                            <span class="badge bg-danger">Suspended</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if user.profile.is_verified %}
+                            <span class="badge bg-info"><i class="bi bi-patch-check-fill me-1"></i>Verified</span>
+                            {% else %}
+                            <span class="badge bg-light text-dark">Unverified</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ user.date_joined|date:"M d, Y" }}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                {% if not user.profile.is_verified %}
+                                <a href="{% url 'admin_verify_user' user.id %}" class="btn btn-outline-success"
+                                    title="Verify User">
+                                    <i class="bi bi-check-lg"></i>
+                                </a>
+                                {% endif %}
+                                <a href="{% url 'admin_suspend_user' user.id %}" class="btn btn-outline-danger"
+                                    title="{% if user.is_active %}Suspend{% else %}Activate{% endif %}">
+                                    <i class="bi bi-power"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

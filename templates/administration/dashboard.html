@@ -1,0 +1,140 @@
+{% extends 'administration/base_admin.html' %}
+
+{% block title %}Dashboard - AgriStar Admin{% endblock %}
+{% block header %}Overview{% endblock %}
+
+{% block content %}
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card bg-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Total Users</h6>
+                        <h3 class="mb-0">{{ total_users }}</h3>
+                    </div>
+                    <div class="icon-box bg-light rounded-circle p-3">
+                        <i class="bi bi-people text-primary fs-4"></i>
+                    </div>
+                </div>
+                <small class="text-muted">{{ total_farmers }} Farmers</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card bg-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Total Orders</h6>
+                        <h3 class="mb-0">{{ total_orders }}</h3>
+                    </div>
+                    <div class="icon-box bg-light rounded-circle p-3">
+                        <i class="bi bi-cart text-success fs-4"></i>
+                    </div>
+                </div>
+                <small class="text-success fw-bold">${{ total_revenue }} Revenue</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card bg-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Pending Products</h6>
+                        <h3 class="mb-0">{{ pending_products }}</h3>
+                    </div>
+                    <div class="icon-box bg-light rounded-circle p-3">
+                        <i class="bi bi-box-seam text-warning fs-4"></i>
+                    </div>
+                </div>
+                <a href="{% url 'admin_product_approval' %}" class="small text-decoration-none">Review Now</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card bg-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Flagged Content</h6>
+                        <h3 class="mb-0">{{ flagged_content }}</h3>
+                    </div>
+                    <div class="icon-box bg-light rounded-circle p-3">
+                        <i class="bi bi-flag text-danger fs-4"></i>
+                    </div>
+                </div>
+                <a href="{% url 'admin_moderation' %}" class="small text-decoration-none text-danger">Take Action</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts and Recent Activity -->
+<div class="row">
+    <div class="col-md-8 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0">Platform Growth</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="growthChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0">Recent Activity</h5>
+            </div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush">
+                    {% for user in recent_users %}
+                    <li class="list-group-item d-flex align-items-center py-3">
+                        <img src="{{ user.profile.avatar.url }}" class="rounded-circle me-3" width="40" height="40">
+                        <div>
+                            <h6 class="mb-0">{{ user.username }}</h6>
+                            <small class="text-muted">Joined as {{ user.get_role_display }}</small>
+                        </div>
+                        <span class="ms-auto small text-muted">{{ user.date_joined|timesince }} ago</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const ctx = document.getElementById('growthChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            datasets: [{
+                label: 'New Users',
+                data: [12, 19, 3, 5, 2, 3],
+                borderColor: '#27ae60',
+                tension: 0.4
+            }, {
+                label: 'Orders',
+                data: [5, 15, 8, 12, 6, 10],
+                borderColor: '#2980b9',
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

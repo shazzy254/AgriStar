@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Login - AgriStar{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/login.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="card shadow-lg border-0 glass-card">
+            <div class="card-body p-5">
+                <h2 class="text-center mb-4">Welcome Back</h2>
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Username</label>
+                        <input type="text" name="username" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <input type="password" name="password" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100 py-2">Login</button>
+                </form>
+                <div class="text-center mt-3">
+                    <small>New to AgriStar? <a href="{% url 'register' %}">Create an account</a></small>
+                    <br>
+                    <small><a href="{% url 'password_reset' %}">Forgot Password?</a></small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

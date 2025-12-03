@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Register - AgriStar{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/register.css' %}">
+<style>
+    .role-card {
+        border: 2px solid transparent;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+    }
+
+    .role-card:hover {
+        border-color: #198754;
+        background-color: rgba(25, 135, 84, 0.05);
+    }
+
+    .role-card.selected {
+        border-color: #198754;
+        background-color: rgba(25, 135, 84, 0.1);
+    }
+
+    .role-card input[type="radio"] {
+        margin-right: 10px;
+    }
+
+    .role-icon {
+        font-size: 2rem;
+        margin-bottom: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-lg border-0 glass-card">
+            <div class="card-body p-5">
+                <h2 class="text-center mb-4">Join AgriStar</h2>
+                <p class="text-center text-muted mb-4">Create your account and start your agricultural journey</p>
+
+                <form method="POST" id="registerForm">
+                    {% csrf_token %}
+
+                    <!-- Username Field -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">{{ form.username.label }}</label>
+                        {{ form.username }}
+                        {% if form.username.errors %}
+                        <div class="text-danger small">{{ form.username.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Email Field -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">{{ form.email.label }}</label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                        <div class="text-danger small">{{ form.email.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Password Fields -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Password</label>
+                        {{ form.password1 }}
+                        {% if form.password1.errors %}
+                        <div class="text-danger small">{{ form.password1.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Confirm Password</label>
+                        {{ form.password2 }}
+                        {% if form.password2.errors %}
+                        <div class="text-danger small">{{ form.password2.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Role Selection -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold d-block mb-3">I am a...</label>
+
+                        <div class="role-card" onclick="selectRole('FARMER')">
+                            <div class="d-flex align-items-start">
+                                <input type="radio" name="role" value="FARMER" id="role_farmer"
+                                    class="form-check-input mt-1">
+                                <div class="flex-grow-1">
+                                    <label for="role_farmer" class="fw-bold mb-1" style="cursor: pointer;">
+                                        <i class="bi bi-flower1 text-success"></i> Farmer
+                                    </label>
+                                    <p class="small text-muted mb-0">I grow crops and want to sell my produce directly
+                                        to buyers.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="role-card" onclick="selectRole('BUYER')">
+                            <div class="d-flex align-items-start">
+                                <input type="radio" name="role" value="BUYER" id="role_buyer"
+                                    class="form-check-input mt-1">
+                                <div class="flex-grow-1">
+                                    <label for="role_buyer" class="fw-bold mb-1" style="cursor: pointer;">
+                                        <i class="bi bi-cart text-primary"></i> Buyer
+                                    </label>
+                                    <p class="small text-muted mb-0">I want to purchase fresh produce directly from
+                                        farmers.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="role-card" onclick="selectRole('SUPPLIER')">
+                            <div class="d-flex align-items-start">
+                                <input type="radio" name="role" value="SUPPLIER" id="role_supplier"
+                                    class="form-check-input mt-1">
+                                <div class="flex-grow-1">
+                                    <label for="role_supplier" class="fw-bold mb-1" style="cursor: pointer;">
+                                        <i class="bi bi-truck text-warning"></i> Supplier
+                                    </label>
+                                    <p class="small text-muted mb-0">I provide agricultural supplies, tools, and
+                                        equipment to farmers.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if form.role.errors %}
+                        <div class="text-danger small mt-2">{{ form.role.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <button type="submit" class="btn btn-success w-100 py-2 fw-bold">Create Account</button>
+                </form>
+
+                <div class="text-center mt-3">
+                    <small>Already have an account? <a href="{% url 'login' %}">Login here</a></small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function selectRole(role) {
+        // Remove selected class from all cards
+        document.querySelectorAll('.role-card').forEach(card => {
+            card.classList.remove('selected');
+        });
+
+        // Add selected class to clicked card
+        event.currentTarget.classList.add('selected');
+
+        // Check the radio button
+        document.getElementById('role_' + role.toLowerCase()).checked = true;
+    }
+
+    // Add selected class on page load if a role is already selected
+    document.addEventListener('DOMContentLoaded', function () {
+        const checkedRadio = document.querySelector('input[name="role"]:checked');
+        if (checkedRadio) {
+            const roleCard = checkedRadio.closest('.role-card');
+            if (roleCard) {
+                roleCard.classList.add('selected');
+            }
+        }
+    });
+</script>
+{% endblock %}

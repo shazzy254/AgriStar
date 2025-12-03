@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Saved Products - AgriStar{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2><i class="bi bi-heart-fill text-danger me-2"></i>Saved Products</h2>
+        <p class="text-muted">Your favorite products</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'product_list' %}" class="btn btn-outline-success">
+            <i class="bi bi-shop me-2"></i>Browse More
+        </a>
+    </div>
+</div>
+
+{% if favorites %}
+<div class="row">
+    {% for favorite in favorites %}
+    <div class="col-md-3 mb-4">
+        <div class="card product-card h-100 position-relative">
+            <!-- Favorite Button -->
+            <button class="favorite-btn active" data-product-id="{{ favorite.product.id }}">
+                <i class="bi bi-heart-fill"></i>
+            </button>
+
+            {% if favorite.product.image %}
+            <img src="{{ favorite.product.image.url }}" class="card-img-top" alt="{{ favorite.product.name }}"
+                style="height: 200px; object-fit: cover;">
+            {% else %}
+            <div class="bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+            </div>
+            {% endif %}
+
+            <div class="card-body">
+                <h5 class="card-title">{{ favorite.product.name }}</h5>
+                <p class="card-text text-success fw-bold">${{ favorite.product.price }}</p>
+                <p class="card-text small text-muted mb-2">
+                    <i class="bi bi-geo-alt me-1"></i>{{ favorite.product.location }}
+                </p>
+                <p class="card-text small text-muted mb-3">
+                    <i class="bi bi-person me-1"></i>{{ favorite.product.seller.username }}
+                </p>
+
+                <div class="d-flex gap-2">
+                    <form method="POST" action="{% url 'add_to_cart' favorite.product.id %}" class="flex-grow-1">
+                        {% csrf_token %}
+                        <input type="hidden" name="quantity" value="1">
+                        <button type="submit" class="btn btn-success w-100 btn-sm">
+                            <i class="bi bi-cart-plus me-1"></i>Add to Cart
+                        </button>
+                    </form>
+                    <a href="{% url 'product_detail' favorite.product.id %}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-eye"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="card-footer bg-white border-0">
+                <small class="text-muted">
+                    <i class="bi bi-clock me-1"></i>Saved {{ favorite.created_at|timesince }} ago
+                </small>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% else %}
+<!-- Empty State -->
+<div class="empty-state">
+    <i class="bi bi-heart"></i>
+    <h3>No saved products yet</h3>
+    <p>Start saving your favorite products by clicking the heart icon!</p>
+    <a href="{% url 'product_list' %}" class="btn btn-primary-gradient mt-3">
+        <i class="bi bi-shop me-2"></i>Browse Marketplace
+    </a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/notifications.js' %}"></script>
+{% endblock %}

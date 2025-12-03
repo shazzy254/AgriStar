@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Notifications - AgriStar{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2><i class="bi bi-bell me-2"></i>Notifications</h2>
+        <p class="text-muted">Stay updated with your orders</p>
+    </div>
+    <div class="col-md-4 text-end">
+        {% if unread_count > 0 %}
+        <button id="mark-all-read-btn" class="btn btn-outline-primary">
+            <i class="bi bi-check-all me-2"></i>Mark All as Read
+        </button>
+        {% endif %}
+    </div>
+</div>
+
+{% if notifications %}
+<!-- Unread Count Badge -->
+{% if unread_count > 0 %}
+<div class="alert alert-info d-flex align-items-center mb-4">
+    <i class="bi bi-info-circle me-2"></i>
+    <span>You have <strong>{{ unread_count }}</strong> unread notification{{ unread_count|pluralize }}</span>
+</div>
+{% endif %}
+
+<!-- Notifications List -->
+<div class="card glass-card">
+    <div class="card-body">
+        {% for notification in notifications %}
+        <div class="notification-item {% if not notification.is_read %}unread{% endif %} 
+                    {% if notification.notification_type == 'ORDER_PLACED' %}success{% elif notification.notification_type == 'ORDER_REJECTED' %}danger{% else %}warning{% endif %}"
+            data-notification-id="{{ notification.id }}" data-is-read="{{ notification.is_read|lower }}">
+            <div class="row align-items-start">
+                <div class="col-md-1 text-center">
+                    <i class="bi bi-{% if notification.notification_type == 'ORDER_PLACED' %}check-circle-fill text-success{% elif notification.notification_type == 'ORDER_ACCEPTED' %}hand-thumbs-up-fill text-warning{% else %}x-circle-fill text-danger{% endif %}"
+                        style="font-size: 2rem;"></i>
+                </div>
+                <div class="col-md-9">
+                    <h6 class="mb-1">
+                        {{ notification.get_notification_type_display }}
+                        {% if not notification.is_read %}
+                        <span class="badge bg-primary ms-2">New</span>
+                        {% endif %}
+                    </h6>
+                    <p class="mb-2">{{ notification.message }}</p>
+
+                    {% if notification.order %}
+                    <div class="d-flex gap-2 align-items-center">
+                        <span class="badge bg-secondary">Order #{{ notification.order.id }}</span>
+                        <span class="badge bg-info">{{ notification.order.product.name }}</span>
+                        <span class="badge bg-success">${{ notification.order.total_price }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-2 text-end">
+                    <small class="text-muted d-block mb-2">
+                        <i class="bi bi-clock me-1"></i>{{ notification.created_at|timesince }} ago
+                    </small>
+                    {% if not notification.is_read %}
+                    <button class="btn btn-sm btn-outline-primary mark-read-btn"
+                        onclick="markNotificationAsRead('{{ notification.id }}')">
+                        <i class="bi bi-check me-1"></i>Mark as Read
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Pagination or Load More (if needed in future) -->
+<div class="text-center mt-4">
+    <p class="text-muted">Showing {{ notifications.count }} notification{{ notifications.count|pluralize }}</p>
+</div>
+
+{% else %}
+<!-- Empty State -->
+<div class="empty-state">
+    <i class="bi bi-bell-slash"></i>
+    <h3>No notifications yet</h3>
+    <p>You'll see notifications here when you place orders or when farmers respond to your orders.</p>
+    <a href="{% url 'product_list' %}" class="btn btn-primary-gradient mt-3">
+        <i class="bi bi-shop me-2"></i>Start Shopping
+    </a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/notifications.js' %}"></script>
+{% endblock %}

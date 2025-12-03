@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">Complete Your Payment</h4>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">Order Summary</h5>
+                    <p class="text-muted">Order #{{ order.id }}</p>
+
+                    <div class="d-flex align-items-center mb-3">
+                        {% if order.product.image %}
+                        <img src="{{ order.product.image.url }}" alt="{{ order.product.name }}"
+                            class="img-thumbnail me-3" style="width: 100px; height: 100px; object-fit: cover;">
+                        {% else %}
+                        <div class="bg-light d-flex align-items-center justify-content-center me-3"
+                            style="width: 100px; height: 100px;">
+                            <span class="text-muted">No Image</span>
+                        </div>
+                        {% endif %}
+                        <div>
+                            <h6>{{ order.product.name }}</h6>
+                            <p class="mb-1">Quantity: {{ order.quantity }}</p>
+                            <p class="mb-1">Price per unit: KES {{ order.product.price }}</p>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5>Total Amount:</h5>
+                        <h4 class="text-success">KES {{ order.total_price }}</h4>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> Your payment will be held securely in <strong>Escrow</strong>
+                        until you confirm delivery.
+                    </div>
+
+                    <form action="{% url 'initiate_payment' order.id %}" method="POST">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">M-Pesa Phone Number</label>
+                            <input type="text" class="form-control" id="phone" name="phone"
+                                value="{{ user.profile.phone_number }}" placeholder="07..." required>
+                            <div class="form-text">Enter the M-Pesa number you want to pay with.</div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-mobile-alt me-2"></i> Pay via M-Pesa
+                            </button>
+                            <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

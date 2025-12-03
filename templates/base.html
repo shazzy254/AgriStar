@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AgriStar{% endblock %}</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    </div>
+    </nav>
+
+    <div class="container mt-4">
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <footer class="modern-footer mt-5">
+        <div class="footer-content">
+            <div class="scrolling-text-container">
+                <div class="scrolling-text">
+                    <span class="footer-item">
+                        <i class="bi bi-c-circle"></i> 2025 AgriStar Platform
+                    </span>
+                    <span class="footer-separator">•</span>
+                    <span class="footer-item">
+                        <i class="bi bi-heart-fill text-danger"></i> Connecting Farmers & Buyers
+                    </span>
+                    <span class="footer-separator">•</span>
+                    <span class="footer-item">
+                        <i class="bi bi-shield-check"></i> All Rights Reserved
+                    </span>
+                    <span class="footer-separator">•</span>
+                    <span class="footer-item">
+                        <i class="bi bi-globe"></i> Empowering Agriculture
+                    </span>
+                    <span class="footer-separator">•</span>
+                    <span class="footer-item">
+                        <i class="bi bi-leaf"></i> Sustainable Farming Solutions
+                    </span>
+                    <span class="footer-separator">•</span>
+                    <!-- Duplicate for seamless loop -->
+                    <span class="footer-item">
+                        <i class="bi bi-c-circle"></i> 2025 AgriStar Platform
+                    </span>
+                    <span class="footer-separator">•</span>
+                    <span class="footer-item">
+                        <i class="bi bi-heart-fill text-danger"></i> Connecting Farmers & Buyers
+                    </span>
+                    <span class="footer-separator">•</span>
+                    <span class="footer-item">
+                        <i class="bi bi-shield-check"></i> All Rights Reserved
+                    </span>
+                    <span class="footer-separator">•</span>
+                    <span class="footer-item">
+                        <i class="bi bi-globe"></i> Empowering Agriculture
+                    </span>
+                    <span class="footer-separator">•</span>
+                    <span class="footer-item">
+                        <i class="bi bi-leaf"></i> Sustainable Farming Solutions
+                    </span>
+                    <span class="footer-separator">•</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <style>
+        .modern-footer {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #1e3c72 100%);
+            background-size: 200% 200%;
+            animation: gradientShift 15s ease infinite;
+            padding: 20px 0;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .modern-footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg,
+                    transparent,
+                    #4CAF50,
+                    #8BC34A,
+                    #4CAF50,
+                    transparent);
+            animation: shimmer 3s linear infinite;
+        }
+
+        @keyframes gradientShift {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        @keyframes shimmer {
+            0% {
+                transform: translateX(-100%);
+            }
+
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        .footer-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .scrolling-text-container {
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .scrolling-text {
+            display: flex;
+            white-space: nowrap;
+            animation: scroll 30s linear infinite;
+            will-change: transform;
+        }
+
+        @keyframes scroll {
+            0% {
+                transform: translateX(0);
+            }
+
+            100% {
+                transform: translateX(-50%);
+            }
+        }
+
+        .footer-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: 500;
+            padding: 0 20px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .footer-item i {
+            font-size: 18px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 0.8;
+            }
+        }
+
+        .footer-separator {
+            color: #4CAF50;
+            font-size: 20px;
+            margin: 0 10px;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from {
+                text-shadow: 0 0 5px #4CAF50, 0 0 10px #4CAF50;
+            }
+
+            to {
+                text-shadow: 0 0 10px #4CAF50, 0 0 20px #4CAF50, 0 0 30px #4CAF50;
+            }
+        }
+
+        /* Pause animation on hover */
+        .modern-footer:hover .scrolling-text {
+            animation-play-state: paused;
+        }
+
+        .modern-footer:hover .footer-item {
+            transform: scale(1.05);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .footer-item {
+                font-size: 14px;
+                padding: 0 15px;
+            }
+
+            .scrolling-text {
+                animation-duration: 20s;
+            }
+        }
+
+        /* Add sparkle effect */
+        .modern-footer::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg,
+                    transparent 0%,
+                    rgba(255, 255, 255, 0.3) 50%,
+                    transparent 100%);
+            animation: sparkle 4s linear infinite;
+        }
+
+        @keyframes sparkle {
+            0% {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+    </style>
+
+    <!-- Bootstrap JS -->
+    <!-- Modals -->
+    {% block extra_modals %}{% endblock %}
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+    </body>
+
+</html>
