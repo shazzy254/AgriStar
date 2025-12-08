@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}Assign Rider - AgriStar{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card glass-card border-0">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h4 class="fw-bold mb-0">Assign Rider for Order #{{ order.id }}</h4>
+                    <p class="text-muted">{{ order.product.name }} (x{{ order.quantity }})</p>
+                </div>
+                <div class="card-body px-4">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Showing active riders near your location.
+                    </div>
+
+                    {% if riders %}
+                    <div class="list-group">
+                        {% for rider, distance in riders %}
+                        <div
+                            class="list-group-item bg-transparent border-bottom py-3 d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <div class="rounded-circle bg-light d-flex align-items-center justify-content-center me-3"
+                                    style="width: 50px; height: 50px;">
+                                    <i class="bi bi-person-badge fs-4 text-muted"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0 fw-bold">{{ rider.username }}</h6>
+                                    <small class="text-muted">
+                                        <i class="bi bi-geo-alt-fill text-danger"></i> {{ distance }} km away
+                                        &bull; {{ rider.rider_profile.get_vehicle_type_display }}
+                                    </small>
+                                </div>
+                            </div>
+                            <form method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="rider_id" value="{{ rider.id }}">
+                                <button type="submit" class="btn btn-primary rounded-pill btn-sm px-4">
+                                    Assign
+                                </button>
+                            </form>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-bicycle text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-3">No active riders found nearby.</p>
+                        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary rounded-pill">Back to
+                            Dashboard</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

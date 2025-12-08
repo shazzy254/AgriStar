@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+
+{% block title %}Assign Rider - AgriStar{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card glass-card border-0">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="fw-bold mb-0">Assign Rider</h4>
+                            <p class="text-muted">Order #{{ order.id }} - {{ order.product.name }}</p>
+                        </div>
+                        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary rounded-pill">
+                            <i class="bi bi-arrow-left me-2"></i>Back
+                        </a>
+                    </div>
+                </div>
+
+                <div class="card-body px-4">
+                    <!-- Filter Form -->
+                    <form method="get" class="mb-4">
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white border-end-0">
+                                        <i class="bi bi-geo-alt text-danger"></i>
+                                    </span>
+                                </div>
+                    </form>
+
+                    <div class="alert alert-info d-flex align-items-center">
+                        <i class="bi bi-info-circle-fill fs-4 me-3"></i>
+                        <div>
+                            <strong>Smart Matching:</strong>
+                            Showing active riders near your location ({{ user.profile.location|default:"Unknown" }}).
+                            <br>
+                            <small>Riders are sorted by proximity to ensure fast delivery.</small>
+                        </div>
+                    </div>
+
+                    {% if riders %}
+                    <div class="row g-3">
+                        {% for rider, distance in riders %}
+                        <div class="col-md-6">
+                            <div class="card h-100 border-0 shadow-sm hover-shadow transition-all">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-start mb-3">
+                                        <div class="rounded-circle bg-light d-flex align-items-center justify-content-center me-3"
+                                            style="width: 60px; height: 60px; flex-shrink: 0;">
+                                            {% if rider.profile.avatar %}
+                                            <img src="{{ rider.profile.avatar.url }}"
+                                                class="rounded-circle w-100 h-100 object-fit-cover">
+                                            {% else %}
+                                            <i class="bi bi-person-badge fs-3 text-muted"></i>
+                                            {% endif %}
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <h5 class="mb-1 fw-bold">{{ rider.username }}</h5>
+                                                    <div class="mb-2">
+                                                        <span class="badge bg-success-subtle text-success rounded-pill">
+                                                            <i class="bi bi-check-circle-fill me-1"></i>Available
+                                                        </span>
+                                                        <span class="badge bg-info-subtle text-info rounded-pill ms-1">
+                                                            <i class="bi bi-truck me-1"></i>{{
+                                                            rider.rider_profile.get_vehicle_type_display }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <span class="badge bg-light text-dark border">
+                                                    <i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ distance }} km
+                                                </span>
+                                            </div>
+
+                                            <p class="small text-muted mb-2">
+                                                <i class="bi bi-geo me-1"></i>{{ rider.profile.location|default:"Unknown
+                                                Location" }}
+                                            </p>
+
+                                            <div class="d-flex gap-2 mb-3">
+                                                {% if rider.profile.phone_number %}
+                                                <a href="tel:{{ rider.profile.phone_number }}"
+                                                    class="btn btn-sm btn-outline-secondary rounded-pill" title="Call">
+                                                    <i class="bi bi-telephone-fill"></i>
+                                                </a>
+                                                {% endif %}
+                                                {% if rider.profile.whatsapp_number %}
+                                                <a href="https://wa.me/{{ rider.profile.whatsapp_number }}"
+                                                    target="_blank" class="btn btn-sm btn-outline-success rounded-pill"
+                                                    title="WhatsApp">
+                                                    <i class="bi bi-whatsapp"></i>
+                                                </a>
+                                                {% endif %}
+                                            </div>
+
+                                            <form method="post">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="rider_id" value="{{ rider.id }}">
+                                                <button type="submit" class="btn btn-primary w-100 rounded-pill">
+                                                    Assign Rider
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+
+                                    {% if rider.rider_profile.license_plate %}
+                                    <div class="bg-light rounded p-2 text-center small text-muted">
+                                        <i class="bi bi-card-text me-1"></i>Plate: {{ rider.rider_profile.license_plate
+                                        }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <div class="mb-3">
+                            <i class="bi bi-bicycle text-muted opacity-50" style="font-size: 4rem;"></i>
+                        </div>
+                        <h5 class="text-muted">No riders found nearby.</h5>
+                        <p class="text-muted">Try expanding your search or waiting for riders to become available.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-shadow:hover {
+        transform: translateY(-2px);
+        box_shadow: 0 .5rem 1rem rgba(0, 0, 0, .15) !important;
+    }
+
+    .transition-all {
+        transition: all .3s ease;
+    }
+</style>
+{% endblock %}

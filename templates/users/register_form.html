@@ -1,0 +1,430 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Complete Registration - AgriStar{% endblock %}
+
+{% block navbar_menu %}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/landing.css' %}">
+<style>
+    .navbar {
+        padding: 0.5rem 0 !important;
+        min-height: 50px !important;
+    }
+
+    .navbar-brand {
+        font-size: 1.25rem !important;
+    }
+
+    body {
+        background: url('{% static "images/hero-background.png" %}') no-repeat center center fixed;
+        background-size: cover;
+        position: relative;
+    }
+
+    body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: -1;
+    }
+
+    .registration-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 3rem 0;
+    }
+
+    .form-glass {
+        background: transparent;
+        backdrop-filter: blur(20px);
+        border-radius: 25px;
+        padding: 3rem;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .role-badge {
+        display: inline-block;
+        padding: 0.5rem 1.5rem;
+        border-radius: 50px;
+        font-weight: bold;
+        margin-bottom: 1rem;
+    }
+
+    .role-badge.farmer {
+        background: linear-gradient(135deg, #2ecc71, #27ae60);
+        color: white;
+    }
+
+    .role-badge.buyer {
+        background: linear-gradient(135deg, #f39c12, #e67e22);
+        color: white;
+    }
+
+    .role-badge.supplier {
+        background: linear-gradient(135deg, #3498db, #2980b9);
+        color: white;
+    }
+
+    .role-badge.rider {
+        background: linear-gradient(135deg, #9b59b6, #8e44ad);
+        color: white;
+    }
+
+    .form-control,
+    .form-select {
+        border: 2px solid #e0e0e0;
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
+        transition: all 0.3s;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #2ecc71;
+        box-shadow: 0 0 0 0.2rem rgba(46, 204, 113, 0.25);
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+
+    .input-icon {
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #95a5a6;
+    }
+
+    .submit-btn {
+        background: linear-gradient(135deg, #2ecc71, #27ae60);
+        border: none;
+        color: white;
+        padding: 1rem 3rem;
+        border-radius: 50px;
+        font-weight: bold;
+        font-size: 1.1rem;
+        transition: all 0.3s;
+        box-shadow: 0 10px 30px rgba(46, 204, 113, 0.4);
+        width: 100%;
+    }
+
+    .submit-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 40px rgba(46, 204, 113, 0.6);
+        background: linear-gradient(135deg, #27ae60, #229954);
+    }
+
+    .back-link {
+        color: #7f8c8d;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+
+    .back-link:hover {
+        color: #2ecc71;
+        transform: translateX(-5px);
+    }
+
+    .role-specific-info {
+        background: linear-gradient(135deg, rgba(46, 204, 113, 0.1), rgba(46, 204, 113, 0.05));
+        border-left: 4px solid #2ecc71;
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+
+    .progress-steps {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+    }
+
+    .step {
+        flex: 1;
+        text-align: center;
+        position: relative;
+    }
+
+    .step::before {
+        content: '';
+        position: absolute;
+        top: 15px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: #e0e0e0;
+        z-index: -1;
+    }
+
+    .step:first-child::before {
+        left: 50%;
+    }
+
+    .step:last-child::before {
+        right: 50%;
+    }
+
+    .step-circle {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: #e0e0e0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: white;
+        margin-bottom: 0.5rem;
+    }
+
+    .step.active .step-circle {
+        background: #2ecc71;
+    }
+
+    .step.completed .step-circle {
+        background: #27ae60;
+    }
+
+    .error-message {
+        background: #fee;
+        border-left: 4px solid #e74c3c;
+        padding: 0.75rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="registration-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="form-glass">
+                    <!-- Progress Steps -->
+                    <div class="progress-steps">
+                        <div class="step completed">
+                            <div class="step-circle">✓</div>
+                            <small>Choose Role</small>
+                        </div>
+                        <div class="step active">
+                            <div class="step-circle">2</div>
+                            <small>Your Details</small>
+                        </div>
+                        <div class="step">
+                            <div class="step-circle">3</div>
+                            <small>Get Started</small>
+                        </div>
+                    </div>
+
+                    <!-- Header -->
+                    <div class="text-center mb-4">
+                        <span class="role-badge {{ role|lower }}">
+                            {% if role == 'FARMER' %}<i class="bi bi-flower1 me-2"></i>Farmer
+                            {% elif role == 'BUYER' %}<i class="bi bi-cart3 me-2"></i>Buyer
+                            {% elif role == 'SUPPLIER' %}<i class="bi bi-tools me-2"></i>Supplier
+                            {% elif role == 'RIDER' %}<i class="bi bi-bicycle me-2"></i>Rider
+                            {% endif %}
+                        </span>
+                        <h2 class="fw-bold mt-3">Complete Your Registration</h2>
+                        <p class="text-muted">Just a few more details to get you started</p>
+                    </div>
+
+                    <!-- Role-Specific Info -->
+                    <div class="role-specific-info">
+                        <strong><i class="bi bi-info-circle me-2"></i>What you'll get:</strong>
+                        <ul class="mb-0 mt-2">
+                            {% if role == 'FARMER' %}
+                            <li>Personalized farmer dashboard</li>
+                            <li>AI-powered farming assistant</li>
+                            <li>Farm calendar and journal</li>
+                            <li>Direct access to buyers</li>
+                            {% elif role == 'BUYER' %}
+                            <li>Browse fresh produce from local farmers</li>
+                            <li>Secure M-Pesa escrow payments</li>
+                            <li>Track your orders in real-time</li>
+                            <li>Compare prices easily</li>
+                            {% elif role == 'SUPPLIER' %}
+                            <li>Reach thousands of farmers</li>
+                            <li>Manage your inventory</li>
+                            <li>Build your supplier brand</li>
+                            <li>Analytics and insights</li>
+                            {% elif role == 'RIDER' %}
+                            <li>Flexible delivery schedule</li>
+                            <li>Earn competitive rates</li>
+                            <li>Track your earnings</li>
+                            <li>Choose your vehicle type</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+
+                    <!-- Errors -->
+                    {% if form.non_field_errors %}
+                    <div class="error-message">
+                        {{ form.non_field_errors }}
+                    </div>
+                    {% endif %}
+
+                    <!-- Registration Form -->
+                    <form method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="role" value="{{ role }}">
+
+                        <div class="row g-3">
+                            <!-- Username -->
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="bi bi-person me-2"></i>Username
+                                </label>
+                                {{ form.username }}
+                                {% if form.username.errors %}
+                                <div class="text-danger small mt-1">{{ form.username.errors|striptags }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Email -->
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="bi bi-envelope me-2"></i>Email Address
+                                </label>
+                                {{ form.email }}
+                                {% if form.email.errors %}
+                                <div class="text-danger small mt-1">{{ form.email.errors|striptags }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Password 1 -->
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="bi bi-lock me-2"></i>Password
+                                </label>
+                                {{ form.password1 }}
+                                {% if form.password1.errors %}
+                                <div class="text-danger small mt-1">{{ form.password1.errors|striptags }}</div>
+                                {% endif %}
+                                <small class="text-muted">Must be at least 8 characters</small>
+                            </div>
+
+                            <!-- Password 2 -->
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="bi bi-lock-fill me-2"></i>Confirm Password
+                                </label>
+                                {{ form.password2 }}
+                                {% if form.password2.errors %}
+                                <div class="text-danger small mt-1">{{ form.password2.errors|striptags }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Role-Specific Fields -->
+                            {% if role == 'FARMER' %}
+                            <div class="col-12">
+                                <hr class="my-3">
+                                <h5 class="mb-3"><i class="bi bi-geo-alt me-2"></i>Farm Information</h5>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Farm Location</label>
+                                <input type="text" name="location" class="form-control"
+                                    placeholder="e.g., Kiambu, Kenya" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Phone Number</label>
+                                <input type="tel" name="phone_number" class="form-control" placeholder="+254..."
+                                    required>
+                            </div>
+
+                            {% elif role == 'RIDER' %}
+                            <div class="col-12">
+                                <hr class="my-3">
+                                <h5 class="mb-3"><i class="bi bi-truck me-2"></i>Delivery Information</h5>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Base Location</label>
+                                <input type="text" name="location" class="form-control" placeholder="e.g., Nairobi CBD"
+                                    required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Phone Number</label>
+                                <input type="tel" name="phone_number" class="form-control" placeholder="+254..."
+                                    required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Vehicle Type</label>
+                                <select name="vehicle_type" class="form-select" required>
+                                    <option value="">Select vehicle...</option>
+                                    <option value="MOTORBIKE">Motorbike</option>
+                                    <option value="BICYCLE">Bicycle</option>
+                                    <option value="TUKTUK">TukTuk</option>
+                                    <option value="PICKUP">Pickup Truck</option>
+                                    <option value="LORRY">Lorry/Truck</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">License Plate</label>
+                                <input type="text" name="license_plate" class="form-control"
+                                    placeholder="e.g., KAA 123A" required>
+                            </div>
+
+                            {% elif role == 'SUPPLIER' %}
+                            <div class="col-12">
+                                <hr class="my-3">
+                                <h5 class="mb-3"><i class="bi bi-building me-2"></i>Business Information</h5>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Company Name</label>
+                                <input type="text" name="company_name" class="form-control"
+                                    placeholder="Your business name" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Business Location</label>
+                                <input type="text" name="location" class="form-control" placeholder="e.g., Nairobi"
+                                    required>
+                            </div>
+
+                            {% elif role == 'BUYER' %}
+                            <div class="col-12">
+                                <hr class="my-3">
+                                <h5 class="mb-3"><i class="bi bi-geo me-2"></i>Delivery Information</h5>
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label">Delivery Location</label>
+                                <input type="text" name="location" class="form-control"
+                                    placeholder="Where should we deliver?" required>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mt-4">
+                            <button type="submit" class="submit-btn">
+                                <i class="bi bi-check-circle me-2"></i>Create My Account
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="text-center mt-4">
+                        <a href="{% url 'register' %}" class="back-link">
+                            <i class="bi bi-arrow-left me-2"></i>Change Role
+                        </a>
+                        <span class="mx-3">|</span>
+                        <a href="{% url 'login' %}" class="back-link">
+                            Already have an account? Login
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

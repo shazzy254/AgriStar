@@ -1,0 +1,388 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Welcome to AgriStar{% endblock %}
+
+{% block navbar_menu %}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/landing.css' %}">
+<style>
+    .navbar {
+        padding-top: 0.25rem !important;
+        padding-bottom: 0.25rem !important;
+        min-height: 50px;
+    }
+
+    .navbar-brand {
+        font-size: 1.25rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section text-center">
+    <div class="container">
+        <h1 class="hero-title display-3 fw-bold mb-4">Empowering Farmers. Connecting Buyers. Growing Together.</h1>
+        <p class="hero-subtitle lead mb-5">AgriStar is a modern agricultural marketplace and AI-powered assistant
+            helping farmers sell, learn, and grow.</p>
+        <div class="d-flex justify-content-center gap-3 hero-buttons">
+            {% if not user.is_authenticated %}
+            <a href="{% url 'register' %}" class="btn-glass btn-primary-glow btn-lg">Get Started</a>
+            <a href="{% url 'product_list' %}" class="btn-glass btn-lg">Shop Marketplace</a>
+            <a href="{% url 'login' %}" class="btn-glass btn-lg"><i class="bi bi-box-arrow-in-right"></i> Login</a>
+            {% else %}
+            <a href="{% url 'dashboard' %}" class="btn-glass btn-primary-glow btn-lg">Go to Dashboard</a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- About Section -->
+<section id="about" class="about-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <div class="glass-card p-5">
+                    <h2 class="section-title mb-4">About AgriStar</h2>
+                    <p class="lead">Bridging the gap between Kenyan farmers and the market.</p>
+                    <p>AgriStar is dedicated to transforming the agricultural landscape in Kenya. We provide a
+                        comprehensive ecosystem that empowers farmers with AI-driven insights, connects them directly
+                        with buyers to maximize profits, and ensures consumers receive the freshest produce. From secure
+                        M-Pesa payments to trusted delivery, we are building a community of growth and trust.</p>
+                </div>
+            </div>
+            <div class="col-md-6 text-center">
+                <div class="glass-card p-5 d-inline-block">
+                    <i class="bi bi-people-fill display-1 text-white"></i>
+                    <p class="mt-3 text-white-50">Community Driven</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- User Type Selector -->
+<section class="user-types-section">
+    <div class="container">
+        <div class="row g-4">
+            <!-- Farmer Card -->
+            <div class="col-md-4">
+                <div class="glass-card user-card text-center h-100">
+                    <div class="icon-wrapper mb-3">
+                        <i class="bi bi-flower1 display-4 text-success"></i>
+                    </div>
+                    <h3>Farmers</h3>
+                    <p>Sell produce directly, get AI farming help, and manage your farm calendar.</p>
+                    <a href="{% url 'register' %}" class="btn btn-sm btn-outline-light mt-auto">Get Started</a>
+                </div>
+            </div>
+            <!-- Buyer Card -->
+            <div class="col-md-4">
+                <div class="glass-card user-card text-center h-100">
+                    <div class="icon-wrapper mb-3">
+                        <i class="bi bi-cart3 display-4 text-warning"></i>
+                    </div>
+                    <h3>Buyers</h3>
+                    <p>Shop fresh produce near you, compare prices, and pay securely with M-Pesa.</p>
+                    <a href="{% url 'product_list' %}" class="btn btn-sm btn-outline-light mt-auto">Start Shopping</a>
+                </div>
+            </div>
+            <!-- Supplier Card -->
+            <div class="col-md-4">
+                <div class="glass-card user-card text-center h-100">
+                    <div class="icon-wrapper mb-3">
+                        <i class="bi bi-tools display-4 text-info"></i>
+                    </div>
+                    <h3>Suppliers</h3>
+                    <p>Sell tools, seeds, and fertilizers. Reach farmers instantly.</p>
+                    <a href="{% url 'register' %}" class="btn btn-sm btn-outline-light mt-auto">Join as Supplier</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works -->
+<section class="how-it-works-section">
+    <div class="container">
+        <h2 class="text-center text-white mb-5 fw-bold">How AgriStar Works</h2>
+        <div class="row g-4 text-center">
+            <div class="col-md-3">
+                <div class="step-card">
+                    <div class="step-icon glass-circle mb-3"><i class="bi bi-upload"></i></div>
+                    <h5>1. Farmers Upload</h5>
+                    <p class="small">List your fresh produce easily.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="step-card">
+                    <div class="step-icon glass-circle mb-3"><i class="bi bi-search"></i></div>
+                    <h5>2. Buyers Order</h5>
+                    <p class="small">Search and order what you need.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="step-card">
+                    <div class="step-icon glass-circle mb-3"><i class="bi bi-shield-lock"></i></div>
+                    <h5>3. Secure Payment</h5>
+                    <p class="small">Safe M-Pesa escrow payments.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="step-card">
+                    <div class="step-icon glass-circle mb-3"><i class="bi bi-truck"></i></div>
+                    <h5>4. Delivery</h5>
+                    <p class="small">Trusted riders bring it to you.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Marketplace Preview -->
+<section class="marketplace-preview-section">
+    <div class="container">
+        <h2 class="text-center text-white mb-5 fw-bold">Fresh from the Farm</h2>
+        <div class="row g-4">
+            <!-- Sample Products (Static for Landing Page) -->
+            <div class="col-md-4 col-lg-3">
+                <div class="glass-card product-card p-0 overflow-hidden">
+                    <img src="{% static 'images/tomatoes.jpg' %}" alt="Tomatoes" class="img-fluid w-100"
+                        style="height: 200px; object-fit: cover;" onerror="this.src='tomatoes.jpg'">
+                    <div class="p-3">
+                        <h5>Tomatoes</h5>
+                        <p class="mb-0 text-success fw-bold">Ksh 50 / kg</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 col-lg-3">
+                <div class="glass-card product-card p-0 overflow-hidden">
+                    <img src="{% static 'images/products/maize.jpg' %}" alt="Maize" class="img-fluid w-100"
+                        style="height: 200px; object-fit: cover;"
+                        onerror="this.src='https://placehold.co/400x300?text=Maize'">
+                    <div class="p-3">
+                        <h5>Maize</h5>
+                        <p class="mb-0 text-success fw-bold">Ksh 3000 / bag</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 col-lg-3">
+                <div class="glass-card product-card p-0 overflow-hidden">
+                    <img src="{% static 'images/eggs.jpg' %}" alt="Eggs" class="img-fluid w-100"
+                        style="height: 200px; object-fit: cover;" onerror="this.src='eggs.jpg'">
+                    <div class="p-3">
+                        <h5>Eggs (Tray)</h5>
+                        <p class="mb-0 text-success fw-bold">Ksh 450 / tray</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 col-lg-3">
+                <div class="glass-card product-card p-0 overflow-hidden">
+                    <img src="{% static 'images/avocado.jpg' %}" alt="Avocados" class="img-fluid w-100"
+                        style="height: 200px; object-fit: cover;" onerror="this.src='avocado.jpg'">
+                    <div class="p-3">
+                        <h5>Avocados</h5>
+                        <p class="mb-0 text-success fw-bold">Ksh 20 / pc</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="text-center mt-4">
+            <a href="{% url 'product_list' %}" class="btn-glass">View All Products</a>
+        </div>
+    </div>
+</section>
+
+<!-- AI Assistant Section -->
+<section class="ai-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <div class="glass-card p-5">
+                    <h2 class="mb-4">Your Personal Farm Expert</h2>
+                    <ul class="list-unstyled fs-5">
+                        <li class="mb-3"><i class="bi bi-chat-dots text-success me-2"></i> Ask questions in Swahili or
+                            English</li>
+                        <li class="mb-3"><i class="bi bi-camera text-success me-2"></i> Upload plant disease photos</li>
+                        <li class="mb-3"><i class="bi bi-mic text-success me-2"></i> Voice chat for hands-free help</li>
+                    </ul>
+                    <a href="{% url 'ai_assistant:chat' %}" class="btn-glass btn-primary-glow mt-3">Try AI Assistant</a>
+                </div>
+            </div>
+            <div class="col-md-6 text-center">
+                <div class="glass-card p-5 d-inline-block">
+                    <i class="bi bi-robot display-1 text-white"></i>
+                    <p class="mt-3 text-white-50">Powered by Advanced AI</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Trust & Safety -->
+<section class="trust-section">
+    <div class="container">
+        <h2 class="text-center text-white mb-5 fw-bold">Trust & Safety</h2>
+        <div class="row g-4 text-center">
+            <div class="col-md-3">
+                <div class="glass-card h-100 p-4">
+                    <i class="bi bi-shield-check display-5 text-success mb-3"></i>
+                    <h5>Verified Profiles</h5>
+                    <p class="small">We verify all farmers and suppliers.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="glass-card h-100 p-4">
+                    <i class="bi bi-wallet2 display-5 text-success mb-3"></i>
+                    <h5>Escrow Payments</h5>
+                    <p class="small">Funds held safely until delivery.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="glass-card h-100 p-4">
+                    <i class="bi bi-bicycle display-5 text-success mb-3"></i>
+                    <h5>Trusted Riders</h5>
+                    <p class="small">Vetted delivery partners.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="glass-card h-100 p-4">
+                    <i class="bi bi-phone display-5 text-success mb-3"></i>
+                    <h5>M-Pesa Integrated</h5>
+                    <p class="small">Seamless mobile payments.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials -->
+<section class="testimonials-section">
+    <div class="container">
+        <h2 class="text-center text-white mb-5 fw-bold">Community Stories</h2>
+        <div id="testimonialCarousel" class="carousel slide" data-bs-ride="carousel">
+            <div class="carousel-inner">
+                <div class="carousel-item active">
+                    <div class="row justify-content-center">
+                        <div class="col-md-8">
+                            <div class="glass-card text-center p-5">
+                                <img src="https://ui-avatars.com/api/?name=John+Kamau&background=random"
+                                    class="rounded-circle mb-3" width="80" alt="John">
+                                <p class="fs-4 fst-italic">"AgriStar changed my life. I sell my maize directly to buyers
+                                    in Nairobi without middlemen."</p>
+                                <h5 class="mt-3 fw-bold">- John Kamau, Farmer</h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <div class="row justify-content-center">
+                        <div class="col-md-8">
+                            <div class="glass-card text-center p-5">
+                                <img src="https://ui-avatars.com/api/?name=Mary+Wanjiku&background=random"
+                                    class="rounded-circle mb-3" width="80" alt="Mary">
+                                <p class="fs-4 fst-italic">"The AI assistant helped me identify a pest on my sukuma
+                                    wiki. Saved my whole harvest!"</p>
+                                <h5 class="mt-3 fw-bold">- Mary Wanjiku, Organic Farmer</h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#testimonialCarousel"
+                data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Previous</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#testimonialCarousel"
+                data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Next</span>
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section text-center">
+    <div class="container">
+        <div class="glass-card p-5">
+            <h2 class="display-4 fw-bold mb-4">Ready to Grow?</h2>
+            <p class="lead mb-4">Join thousands of farmers and buyers on AgriStar today.</p>
+            <div class="d-flex justify-content-center gap-3">
+                <a href="{% url 'register' %}" class="btn-glass btn-primary-glow btn-lg">Register Now</a>
+                <a href="{% url 'product_list' %}" class="btn-glass btn-lg">Browse Market</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer-section mt-5">
+    <div class="glass-card rounded-0 border-start-0 border-end-0 border-bottom-0 p-5">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <h3 class="fw-bold mb-3">AgriStar</h3>
+                    <p>Connecting farmers, buyers, and suppliers for a better agricultural future.</p>
+                </div>
+                <div class="col-md-4">
+                    <h5 class="fw-bold mb-3">Quick Links</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#about" class="text-white text-decoration-none">About Us</a></li>
+                        <li><a href="#" class="text-white text-decoration-none">Contact</a></li>
+                        <li><a href="{% url 'terms' %}" class="text-white text-decoration-none">Terms & Conditions</a>
+                        </li>
+                        <li><a href="{% url 'privacy' %}" class="text-white text-decoration-none">Privacy Policy</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5 class="fw-bold mb-3">Connect</h5>
+                    <div class="d-flex gap-3 fs-4">
+                        <a href="https://www.facebook.com/profile.php?id=61573606007261" class="text-white"
+                            target="_blank"><i class="bi bi-facebook"></i></a>
+                        <a href="https://x.com/shazel81?t=yTYQ6fBRBE5R49-N_h1fhA&s=09" class="text-white"
+                            target="_blank"><i class="bi bi-twitter-x"></i></a>
+                        <a href="https://www.instagram.com/mon.ish6512?igsh=MTc0MDNvN202YWh4bQ==" class="text-white"
+                            target="_blank"><i class="bi bi-instagram"></i></a>
+                        <a href="https://wa.me/message/JFMVWLPUGMHGI1" class="text-white" target="_blank"><i
+                                class="bi bi-whatsapp"></i></a>
+                    </div>
+                </div>
+            </div>
+            <hr class="my-4 border-white">
+            <div class="text-center">
+                <p class="mb-0">&copy; {% now "Y" %} AgriStar. All rights reserved.</p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- Chatbot Widget -->
+<div id="chatbot-widget">
+    <button id="chatbot-toggle" class="btn-glass btn-circle">
+        <i class="bi bi-chat-dots-fill"></i>
+    </button>
+    <div id="chatbot-window" class="glass-card d-none">
+        <div class="chatbot-header">
+            <h5>AgriBot</h5>
+            <button id="chatbot-close" class="btn-close btn-close-white"></button>
+        </div>
+        <div class="chatbot-body" id="chatbot-messages">
+            <div class="bot-message">Hello! How can I help you navigate AgriStar today?</div>
+        </div>
+        <div class="chatbot-footer">
+            <input type="text" id="chatbot-input" class="form-control glass-input" placeholder="Type a message...">
+            <button id="chatbot-send" class="btn btn-sm btn-light"><i class="bi bi-send"></i></button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/chatbot.js' %}"></script>
+{% endblock %}
