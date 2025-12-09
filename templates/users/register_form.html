@@ -8,6 +8,19 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/landing.css' %}">
 <style>
+    /* Hide navigation links and toggler */
+    .navbar-nav,
+    .navbar-toggler {
+        display: none !important;
+    }
+
+    /* Reduce navbar height */
+    .navbar {
+        padding-top: 0.5rem !important;
+        padding-bottom: 0.5rem !important;
+        min-height: auto !important;
+    }
+
     .navbar {
         padding: 0.5rem 0 !important;
         min-height: 50px !important;
@@ -17,11 +30,13 @@
         font-size: 1.25rem !important;
     }
 
+
     body {
-        background: url('{% static "images/hero-background.png" %}') no-repeat center center fixed;
+        background: url('{% static "images/tomatoes_bg.jpg" %}') no-repeat center center fixed;
         background-size: cover;
         position: relative;
     }
+
 
     body::before {
         content: '';

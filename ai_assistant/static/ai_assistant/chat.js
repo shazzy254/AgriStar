@@ -319,6 +319,23 @@ function speakText(text, lang) {
 }
 
 // Image handling
+const cameraInput = document.getElementById('camera-input');
+const cameraOption = document.getElementById('camera-option');
+const galleryOption = document.getElementById('gallery-option');
+
+// Handle gallery option
+galleryOption.addEventListener('click', (e) => {
+    e.preventDefault();
+    imageInput.click();
+});
+
+// Handle camera option
+cameraOption.addEventListener('click', (e) => {
+    e.preventDefault();
+    cameraInput.click();
+});
+
+// Handle image selection from gallery
 imageInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -343,9 +360,30 @@ imageInput.addEventListener('change', (e) => {
     reader.readAsDataURL(file);
 });
 
+// Handle image capture from camera
+cameraInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+        alert('Image too large (max 5MB)');
+        return;
+    }
+
+    selectedImage = file;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        imagePreview.src = e.target.result;
+        imagePreviewArea.classList.remove('d-none');
+    };
+    reader.readAsDataURL(file);
+});
+
 function clearImagePreview() {
     selectedImage = null;
     imageInput.value = '';
+    cameraInput.value = '';
     imagePreview.src = '';
     imagePreviewArea.classList.add('d-none');
 }
@@ -417,7 +455,6 @@ langSwBtn.addEventListener('click', () => {
 // Event Listeners
 sendBtn.addEventListener('click', sendMessage);
 voiceBtn.addEventListener('click', startVoiceInput);
-uploadBtn.addEventListener('click', () => imageInput.click());
 removeImageBtn.addEventListener('click', clearImagePreview);
 
 userInput.addEventListener('keypress', (e) => {

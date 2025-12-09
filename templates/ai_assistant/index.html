@@ -1,0 +1,660 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}AI Assistant - AgriStar{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* Override base template container */
+    .container,
+    .container-fluid {
+        padding: 0 !important;
+        margin: 0 !important;
+        margin-top: 0 !important;
+        max-width: 100% !important;
+    }
+
+    /* Keep navbar visible */
+
+    /* Ensure body takes full viewport */
+    html,
+    body {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+    }
+</style>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Global Reset & Background */
+    body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background: url('{% static "images/background.jpg" %}') no-repeat center center fixed;
+        background-size: cover;
+        font-family: 'Inter', sans-serif;
+        color: #fff;
+    }
+
+    /* Base Layout Container */
+    .ai-full-container {
+        position: fixed !important;
+        top: 56px !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        width: 100vw !important;
+        height: calc(100vh - 56px) !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        display: flex;
+        overflow: hidden;
+        background: rgba(0, 0, 0, 0.4);
+        /* Dark overlay */
+        backdrop-filter: blur(5px);
+    }
+
+    /* GLASSMORPHISM SIDEBAR */
+    .chat-sidebar {
+        width: 280px;
+        background: rgba(20, 20, 20, 0.6);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 1000;
+        flex-shrink: 0;
+    }
+
+    /* Mobile Sidebar Logic */
+    @media (max-width: 768px) {
+        .chat-sidebar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 85%;
+            max-width: 320px;
+            transform: translateX(-100%);
+            background: rgba(10, 10, 10, 0.95);
+        }
+
+        .chat-sidebar.open {
+            transform: translateX(0);
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 999;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+    }
+
+    /* Sidebar Content */
+    .new-chat-btn {
+        margin: 20px;
+        padding: 12px 15px;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-weight: 500;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .new-chat-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .history-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 0 15px;
+    }
+
+    .history-item {
+        padding: 12px;
+        border-radius: 10px;
+        margin-bottom: 5px;
+        cursor: pointer;
+        color: rgba(255, 255, 255, 0.8);
+        transition: all 0.2s;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border: 1px solid transparent;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .history-item:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+    }
+
+    .history-item.active {
+        background: linear-gradient(90deg, rgba(46, 204, 113, 0.2), transparent);
+        border-left: 3px solid #2ecc71;
+        color: #2ecc71;
+    }
+
+    /* Context Menu */
+    .context-menu {
+        position: fixed;
+        background: rgba(20, 20, 20, 0.95);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        padding: 5px 0;
+        min-width: 150px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        z-index: 10000;
+        display: none;
+    }
+
+    .context-menu.show {
+        display: block;
+    }
+
+    .context-menu-item {
+        padding: 10px 15px;
+        cursor: pointer;
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        transition: background 0.2s;
+    }
+
+    .context-menu-item:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .context-menu-item.danger:hover {
+        background: rgba(231, 76, 60, 0.2);
+        color: #e74c3c;
+    }
+
+    /* User Profile Bottom */
+    .user-profile-stub {
+        padding: 20px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: rgba(0, 0, 0, 0.2);
+    }
+
+    /* MAIN CHAT AREA */
+    .chat-main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        height: 100%;
+        background: transparent;
+    }
+
+    /* Message Area */
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+        scroll-behavior: smooth;
+    }
+
+    .message-row {
+        display: flex;
+        margin-bottom: 20px;
+        animation: slideIn 0.3s ease;
+    }
+
+    .message-row.bot {
+        justify-content: flex-start;
+    }
+
+    .message-row.user {
+        justify-content: flex-end;
+    }
+
+    .message-content-wrapper {
+        max-width: 70%;
+        display: flex;
+        gap: 12px;
+        align-items: flex-end;
+    }
+
+    .message-row.user .message-content-wrapper {
+        flex-direction: row-reverse;
+    }
+
+    .avatar-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .avatar-bot {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+    }
+
+    .avatar-user {
+        background: linear-gradient(135deg, #8b5cf6, #6366f1);
+        color: white;
+    }
+
+    /* Chat Bubble Styling */
+    .message-bubble {
+        padding: 14px 18px;
+        border-radius: 20px;
+        font-size: 1rem;
+        line-height: 1.6;
+        color: white;
+        word-wrap: break-word;
+        position: relative;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+    }
+
+    /* Bot Messages - Glassmorphism with gradient border */
+    .message-row.bot .message-bubble {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.1));
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        border-radius: 20px 20px 20px 4px;
+    }
+
+    /* User Messages - Premium gradient */
+    .message-row.user .message-bubble {
+        background: linear-gradient(135deg, #8b5cf6, #6366f1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 20px 20px 4px 20px;
+        box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
+    }
+
+    /* Hover effects */
+    .message-bubble:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        transition: all 0.2s ease;
+    }
+
+    /* Animation */
+
+    .input-box-wrapper {
+        max-width: 800px;
+        margin: 0 auto;
+        background: rgba(20, 20, 20, 0.6);
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 16px;
+        padding: 8px 12px;
+        display: flex;
+        align-items: flex-end;
+        gap: 10px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .input-box-wrapper:focus-within {
+        border-color: rgba(46, 204, 113, 0.5);
+        box-shadow: 0 8px 32px rgba(46, 204, 113, 0.15);
+    }
+
+    .chat-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .chat-input {
+        flex: 1;
+        background: transparent;
+        border: none;
+        color: white;
+        padding: 12px;
+        max-height: 200px;
+        min-height: 24px;
+        font-size: 1rem;
+        line-height: 1.5;
+        resize: none;
+    }
+
+    .chat-input:focus {
+        outline: none;
+    }
+
+    .chat-input::placeholder {
+        color: rgba(255, 255, 255, 0.4);
+    }
+
+    .action-icon {
+        padding: 10px;
+        border-radius: 10px;
+        color: rgba(255, 255, 255, 0.6);
+        cursor: pointer;
+        background: transparent;
+        border: none;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .action-icon:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        transform: scale(1.1);
+    }
+
+    .send-icon {
+        background: #2ecc71;
+        color: white !important;
+        border-radius: 10px;
+    }
+
+    .send-icon:hover {
+        background: #27ae60;
+    }
+
+    /* Dropdown Menu for Image Upload */
+    .btn-group .dropdown-menu {
+        background: rgba(20, 20, 20, 0.95);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 15px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+        padding: 0.5rem;
+        min-width: 200px;
+    }
+
+    .btn-group .dropdown-item {
+        color: rgba(255, 255, 255, 0.9);
+        border-radius: 10px;
+        padding: 0.75rem 1rem;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+    }
+
+    .btn-group .dropdown-item:hover {
+        background: rgba(46, 204, 113, 0.3);
+        color: white;
+        transform: translateX(5px);
+    }
+
+    .btn-group .dropdown-item i {
+        color: #2ecc71;
+    }
+
+    /* Audio Review UI */
+    .audio-review-box {
+        max-width: 800px;
+        margin: 0 auto 10px;
+        background: rgba(20, 20, 20, 0.8);
+        backdrop-filter: blur(10px);
+        padding: 10px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .recording-indicator {
+        position: absolute;
+        top: -50px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #e74c3c;
+        color: white;
+        padding: 8px 20px;
+        border-radius: 30px;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        animation: fadeIn 0.2s;
+        box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+    }
+
+    /* Mobile Header */
+    .mobile-header {
+        display: none;
+        padding: 15px 20px;
+        background: rgba(20, 20, 20, 0.8);
+        backdrop-filter: blur(20px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        align-items: center;
+        justify-content: space-between;
+        z-index: 100;
+    }
+
+    @media (max-width: 768px) {
+        .mobile-header {
+            display: flex;
+        }
+    }
+
+    /* Footer Hide */
+    footer {
+        display: none !important;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+</div> <!-- Close base.html container -->
+
+<div class="ai-full-container">
+    <!-- Mobile Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <!-- Sidebar -->
+    <div class="chat-sidebar" id="chat-sidebar">
+        <button class="new-chat-btn" id="new-chat-btn">
+            <i class="bi bi-plus-lg fs-5"></i> New chat
+        </button>
+        <div class="history-list" id="history-list">
+            {% for session in sessions %}
+            <div class="history-item" data-session-id="{{ session.id }}">
+                <i class="bi bi-chat-left text-white-50 me-2"></i> {{ session.title|default:"New Conversation" }}
+            </div>
+            {% empty %}
+            <div class="text-white-50 p-3 small">No chat history.</div>
+            {% endfor %}
+        </div>
+        <!-- User Profile Stub -->
+        <div class="user-profile-stub">
+            <div class="avatar-icon avatar-user" style="width:32px;height:32px;font-size:1rem;">
+                <i class="bi bi-person"></i>
+            </div>
+            <div class="small fw-bold">{{ user.username }}</div>
+        </div>
+    </div>
+
+    <!-- Main Chat -->
+    <div class="chat-main">
+        <!-- Mobile Header -->
+        <div class="chat-header-mobile mobile-header">
+            <button class="action-icon" id="mobile-menu-btn"><i class="bi bi-list fs-3"></i></button>
+            <span class="fw-bold fs-5">AgriStar AI</span>
+            <button class="action-icon" id="new-chat-mobile"><i class="bi bi-plus-lg fs-4"></i></button>
+        </div>
+
+        <!-- Messages -->
+        <div class="chat-messages" id="chat-messages">
+            <!-- Initial Welcome -->
+            <div class="message-row bot">
+                <div class="message-content-wrapper">
+                    <div class="avatar-icon avatar-bot"><i class="bi bi-robot"></i></div>
+                    <div class="message-bubble">
+                        Hello {{ user.first_name }}! I am your AgriStar agricultural assistant.
+                        Ask me about crops, pests, market prices, or upload an image for diagnosis.
+                        I can also analyze voice notes!
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="input-container">
+            <!-- Recording Indicator -->
+            <div id="recording-ui" class="d-none recording-indicator">
+                <i class="bi bi-record-circle-fill"></i> Recording <span id="record-timer">0:00</span>
+                <button class="btn btn-sm btn-light ms-2 text-danger fw-bold rounded-pill px-3"
+                    id="stop-record-btn">STOP</button>
+            </div>
+
+            <!-- Audio Review UI -->
+            <div id="audio-review-ui" class="d-none audio-review-box">
+                <button class="action-icon text-danger" id="discard-audio-btn"><i class="bi bi-trash fs-5"></i></button>
+                <audio id="audio-preview" controls class="w-100" style="height:40px;"></audio>
+                <button class="action-icon text-success" id="send-audio-btn"><i
+                        class="bi bi-send-fill fs-5"></i></button>
+            </div>
+
+            <!-- File Preview -->
+            <div id="file-preview-area" class="d-none mb-2 text-center"></div>
+
+            <div class="input-box-wrapper" id="standard-inputs">
+                <!-- Attachments -->
+                <div class="chat-actions">
+                    <!-- Hidden file inputs -->
+                    <input type="file" id="image-upload" accept="image/*" class="d-none">
+                    <input type="file" id="camera-upload" accept="image/*" capture="environment" class="d-none">
+
+                    <!-- Image Upload with Dropdown -->
+                    <div class="btn-group">
+                        <button class="action-icon dropdown-toggle" id="upload-btn" data-bs-toggle="dropdown"
+                            aria-expanded="false" title="Upload Image">
+                            <i class="bi bi-image fs-5"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-dark">
+                            <li>
+                                <a class="dropdown-item" href="#" id="camera-option">
+                                    <i class="bi bi-camera me-2"></i>Take Photo
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="#" id="gallery-option">
+                                    <i class="bi bi-images me-2"></i>Choose from Gallery
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <button class="action-icon" id="mic-btn" title="Voice Message"><i
+                            class="bi bi-mic fs-5"></i></button>
+                </div>
+
+                <!-- Text Input -->
+                <textarea id="chat-input" class="chat-input" rows="1" placeholder="Send a message..."></textarea>
+
+                <!-- Send -->
+                <button class="action-icon send-icon" id="send-input-btn"><i class="bi bi-send-fill"></i></button>
+            </div>
+
+            <div class="text-center text-white-50 mt-3 small" style="font-size:0.75rem; letter-spacing:0.5px;">
+                AgriStar AI can make mistakes. Consider checking important information.
+            </div>
+        </div>
+    </div>
+
+    <!-- Context Menu -->
+    <div id="context-menu" class="context-menu">
+        <div class="context-menu-item" id="rename-chat">
+            <i class="bi bi-pencil"></i> Rename
+        </div>
+        <div class="context-menu-item danger" id="delete-chat">
+            <i class="bi bi-trash"></i> Delete
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/ai_chat.js' %}?v=2.1"></script>
+<script>
+    // Hamburger Menu Logic
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const sidebar = document.getElementById('chat-sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+
+    function toggleSidebar() {
+        sidebar.classList.toggle('open');
+        overlay.classList.toggle('active');
+    }
+
+    if (mobileMenuBtn) {
+        mobileMenuBtn.addEventListener('click', toggleSidebar);
+        overlay.addEventListener('click', toggleSidebar);
+    }
+
+    // Auto-resize textarea
+    const chatInput = document.getElementById('chat-input');
+    if (chatInput) {
+        chatInput.addEventListener('input', function () {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+            if (this.value === '') this.style.height = 'auto';
+        });
+    }
+
+    // New Chat Mobile
+    const mobileNewChat = document.getElementById('new-chat-mobile');
+    if (mobileNewChat) {
+        mobileNewChat.addEventListener('click', () => document.getElementById('new-chat-btn').click());
+    }
+</script>
+{% endblock %}

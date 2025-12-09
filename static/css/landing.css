@@ -1,23 +1,11 @@
 /* Landing Page Styles */
-:root {
-    --glass-bg: rgba(255, 255, 255, 0.1);
-    --glass-border: rgba(255, 255, 255, 0.2);
-    --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-    --primary-glow: rgba(46, 204, 113, 0.6);
-    --text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-}
-
 body {
-    background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
-    /* Fallback */
-    background: url('../images/background.jpg') no-repeat center center fixed;
+    background: url('../images/hero-background.png') no-repeat center center fixed;
     background-size: cover;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    color: white;
-    min-height: 100vh;
+    position: relative;
+    color: #fff;
 }
 
-/* Overlay to darken background for better readability */
 body::before {
     content: '';
     position: fixed;
@@ -25,12 +13,19 @@ body::before {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    /* Slightly darker for better contrast */
+    background: rgba(0, 0, 0, 0.6);
+    /* Dark overlay for text visibility */
     z-index: -1;
 }
 
-/* Glassmorphism Card */
+:root {
+    --glass-bg: rgba(255, 255, 255, 0.1);
+    --glass-border: rgba(255, 255, 255, 0.2);
+    --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    --primary-glow: rgba(46, 204, 113, 0.6);
+    --text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
 .glass-card {
     background: var(--glass-bg);
     backdrop-filter: blur(10px);

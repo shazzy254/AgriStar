@@ -5,23 +5,193 @@
 
 {% block extra_css %}
 <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-    .calendar-container {
-        background: white;
-        border-radius: 15px;
-        padding: 20px;
-        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+    * {
+        font-family: 'Inter', sans-serif;
+    }
+
+    body {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        min-height: 100vh;
+        position: relative;
+        overflow-x: hidden;
+    }
+
+    body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
         height: 100%;
+        background-image: url('{% static "images/farm-bg.jpg" %}');
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+        opacity: 0.15;
+        z-index: -1;
+    }
+
+    .page-header {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 25px;
+        padding: 30px;
+        margin-bottom: 30px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .page-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+        animation: rotate 20s linear infinite;
+    }
+
+    @keyframes rotate {
+        from {
+            transform: rotate(0deg);
+        }
+
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .page-header h2 {
+        color: white;
+        font-weight: 700;
+        margin: 0;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        position: relative;
+        z-index: 1;
+    }
+
+    .page-header p {
+        color: rgba(255, 255, 255, 0.9);
+        margin: 5px 0 0 0;
+        position: relative;
+        z-index: 1;
+    }
+
+    .calendar-container {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(30px);
+        -webkit-backdrop-filter: blur(30px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 25px;
+        padding: 30px;
+        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15);
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .calendar-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 5px;
+        background: linear-gradient(90deg, #11998e, #38ef7d, #56ab2f, #a8e063);
+        background-size: 300% 100%;
+        animation: gradientShift 5s ease infinite;
+    }
+
+    @keyframes gradientShift {
+
+        0%,
+        100% {
+            background-position: 0% 50%;
+        }
+
+        50% {
+            background-position: 100% 50%;
+        }
+    }
+
+    .calendar-container:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
     }
 
     .journal-container {
-        background: white;
-        border-radius: 15px;
-        padding: 20px;
-        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(30px);
+        -webkit-backdrop-filter: blur(30px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 25px;
+        padding: 30px;
+        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15);
         height: 100%;
         display: flex;
         flex-direction: column;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .journal-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 5px;
+        background: linear-gradient(90deg, #56ab2f, #a8e063, #38ef7d, #11998e);
+        background-size: 300% 100%;
+        animation: gradientShift 5s ease infinite;
+    }
+
+    .journal-container:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    }
+
+    .journal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid rgba(17, 153, 142, 0.1);
+    }
+
+    .journal-header h4 {
+        margin: 0;
+        font-weight: 700;
+        background: linear-gradient(135deg, #11998e, #38ef7d);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .btn-add-journal {
+        background: linear-gradient(135deg, #11998e, #38ef7d);
+        border: none;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 15px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(17, 153, 142, 0.3);
+    }
+
+    .btn-add-journal:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 25px rgba(17, 153, 142, 0.4);
+        background: linear-gradient(135deg, #38ef7d, #11998e);
     }
 
     .journal-list {
@@ -32,91 +202,304 @@
     }
 
     .journal-entry {
-        border-left: 4px solid #28a745;
-        background: #f8f9fa;
-        padding: 15px;
-        margin-bottom: 15px;
-        border-radius: 0 10px 10px 0;
+        background: linear-gradient(135deg, rgba(17, 153, 142, 0.05), rgba(56, 239, 125, 0.05));
+        border-left: 4px solid;
+        border-image: linear-gradient(180deg, #11998e, #38ef7d) 1;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-radius: 0 15px 15px 0;
         transition: all 0.3s ease;
         position: relative;
+        overflow: hidden;
+    }
+
+    .journal-entry::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, rgba(17, 153, 142, 0.1), rgba(56, 239, 125, 0.1));
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .journal-entry:hover::before {
+        opacity: 1;
     }
 
     .journal-entry:hover {
-        transform: translateX(5px);
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        transform: translateX(10px);
+        box-shadow: 0 8px 25px rgba(17, 153, 142, 0.15);
     }
 
     .journal-date {
-        font-size: 0.8rem;
-        color: #6c757d;
-        margin-bottom: 5px;
+        font-size: 0.85rem;
+        color: #11998e;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+
+    .journal-entry h5 {
+        font-weight: 700;
+        color: #2d3748;
+        margin-bottom: 10px;
     }
 
     .journal-content {
         white-space: pre-wrap;
+        color: #4a5568;
+        line-height: 1.6;
     }
 
     .delete-btn {
         position: absolute;
-        top: 10px;
-        right: 10px;
+        top: 15px;
+        right: 15px;
         opacity: 0;
-        transition: opacity 0.3s;
+        transition: all 0.3s;
         cursor: pointer;
-        color: #dc3545;
+        color: #f56565;
+        font-size: 1.2rem;
+        z-index: 10;
     }
 
     .journal-entry:hover .delete-btn {
         opacity: 1;
     }
 
-    .fc-event {
-        cursor: pointer;
-        border: none;
-        padding: 2px 5px;
+    .delete-btn:hover {
+        transform: scale(1.2);
+        color: #e53e3e;
+    }
+
+    /* FullCalendar Customization */
+    .fc {
+        background: transparent;
     }
 
     .fc-toolbar-title {
-        font-size: 1.5rem !important;
+        font-size: 1.75rem !important;
+        font-weight: 700 !important;
+        background: linear-gradient(135deg, #11998e, #38ef7d);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
     }
 
     .fc-button-primary {
-        background-color: #28a745 !important;
-        border-color: #28a745 !important;
+        background: linear-gradient(135deg, #11998e, #38ef7d) !important;
+        border: none !important;
+        border-radius: 12px !important;
+        padding: 8px 16px !important;
+        font-weight: 600 !important;
+        transition: all 0.3s ease !important;
+        box-shadow: 0 4px 15px rgba(17, 153, 142, 0.3) !important;
     }
 
     .fc-button-primary:hover {
-        background-color: #218838 !important;
-        border-color: #1e7e34 !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 25px rgba(17, 153, 142, 0.4) !important;
     }
 
-    /* Custom scrollbar for journal */
+    .fc-button-primary:not(:disabled):active,
+    .fc-button-primary:not(:disabled).fc-button-active {
+        background: linear-gradient(135deg, #38ef7d, #11998e) !important;
+    }
+
+    .fc-event {
+        cursor: pointer;
+        border: none !important;
+        padding: 4px 8px !important;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+        transition: all 0.2s ease !important;
+    }
+
+    .fc-event:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .fc-daygrid-day:hover {
+        background: rgba(17, 153, 142, 0.05);
+    }
+
+    .fc-day-today {
+        background: rgba(17, 153, 142, 0.1) !important;
+    }
+
+    /* Modal Styling */
+    .modal-content {
+        background: rgba(255, 255, 255, 0.98);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 25px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-header {
+        border-bottom: 2px solid rgba(17, 153, 142, 0.1);
+        padding: 25px 30px;
+        background: linear-gradient(135deg, rgba(17, 153, 142, 0.05), rgba(56, 239, 125, 0.05));
+        border-radius: 25px 25px 0 0;
+    }
+
+    .modal-title {
+        font-weight: 700;
+        background: linear-gradient(135deg, #11998e, #38ef7d);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .modal-body {
+        padding: 30px;
+    }
+
+    .modal-footer {
+        border-top: 2px solid rgba(17, 153, 142, 0.1);
+        padding: 20px 30px;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 8px;
+    }
+
+    .form-control,
+    .form-select {
+        border: 2px solid rgba(17, 153, 142, 0.2);
+        border-radius: 12px;
+        padding: 12px 16px;
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.9);
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #11998e;
+        box-shadow: 0 0 0 4px rgba(17, 153, 142, 0.1);
+        background: white;
+    }
+
+    .btn-success {
+        background: linear-gradient(135deg, #48bb78, #38a169) !important;
+        border: none !important;
+        border-radius: 12px !important;
+        padding: 10px 24px !important;
+        font-weight: 600 !important;
+        transition: all 0.3s ease !important;
+        box-shadow: 0 4px 15px rgba(72, 187, 120, 0.3) !important;
+    }
+
+    .btn-success:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 25px rgba(72, 187, 120, 0.4) !important;
+    }
+
+    .btn-danger {
+        background: linear-gradient(135deg, #f56565, #e53e3e) !important;
+        border: none !important;
+        border-radius: 12px !important;
+        padding: 10px 24px !important;
+        font-weight: 600 !important;
+        transition: all 0.3s ease !important;
+        box-shadow: 0 4px 15px rgba(245, 101, 101, 0.3) !important;
+    }
+
+    .btn-danger:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 25px rgba(245, 101, 101, 0.4) !important;
+    }
+
+    .btn-secondary {
+        background: linear-gradient(135deg, #718096, #4a5568) !important;
+        border: none !important;
+        border-radius: 12px !important;
+        padding: 10px 24px !important;
+        font-weight: 600 !important;
+        transition: all 0.3s ease !important;
+    }
+
+    .btn-secondary:hover {
+        transform: translateY(-2px) !important;
+    }
+
+    /* Custom scrollbar */
     .journal-list::-webkit-scrollbar {
-        width: 6px;
+        width: 8px;
     }
 
     .journal-list::-webkit-scrollbar-track {
-        background: #f1f1f1;
+        background: rgba(17, 153, 142, 0.1);
+        border-radius: 10px;
     }
 
     .journal-list::-webkit-scrollbar-thumb {
-        background: #ccc;
-        border-radius: 3px;
+        background: linear-gradient(180deg, #11998e, #38ef7d);
+        border-radius: 10px;
     }
 
     .journal-list::-webkit-scrollbar-thumb:hover {
-        background: #aaa;
+        background: linear-gradient(180deg, #38ef7d, #11998e);
+    }
+
+    /* Loading spinner */
+    .spinner-border {
+        border-color: rgba(17, 153, 142, 0.2);
+        border-right-color: #11998e;
+    }
+
+    /* Empty state */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #718096;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        background: linear-gradient(135deg, #11998e, #38ef7d);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 15px;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .calendar-container,
+    .journal-container {
+        animation: fadeIn 0.6s ease;
+    }
+
+    .journal-entry {
+        animation: fadeIn 0.4s ease;
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid py-4">
-    <div class="row mb-4">
-        <div class="col-12">
-            <h2 class="mb-1"><i class="bi bi-calendar-check me-2"></i>Planner & Journal</h2>
-            <p class="text-muted">Manage your farm activities and keep track of your progress</p>
-        </div>
+    <!-- Page Header -->
+    <div class="page-header">
+        <h2><i class="bi bi-calendar-check me-3"></i>Planner & Journal</h2>
+        <p>Manage your farm activities and keep track of your progress</p>
     </div>
 
     <div class="row g-4">
@@ -130,18 +513,17 @@
         <!-- Journal Section -->
         <div class="col-lg-4">
             <div class="journal-container">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h4 class="mb-0"><i class="bi bi-journal-text me-2"></i>Journal</h4>
-                    <button class="btn btn-outline-success btn-sm" data-bs-toggle="modal"
-                        data-bs-target="#journalModal">
-                        <i class="bi bi-plus-lg"></i> New Entry
+                <div class="journal-header">
+                    <h4><i class="bi bi-journal-text me-2"></i>Journal</h4>
+                    <button class="btn btn-add-journal" data-bs-toggle="modal" data-bs-target="#journalModal">
+                        <i class="bi bi-plus-lg me-2"></i>New Entry
                     </button>
                 </div>
 
                 <div id="journalList" class="journal-list">
                     <!-- Journal entries will be loaded here -->
-                    <div class="text-center py-5 text-muted">
-                        <div class="spinner-border text-success" role="status">
+                    <div class="text-center py-5">
+                        <div class="spinner-border" role="status">
                             <span class="visually-hidden">Loading...</span>
                         </div>
                     </div>
@@ -153,7 +535,7 @@
 
 <!-- Event Modal -->
 <div class="modal fade" id="eventModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="eventModalTitle">Add Event</h5>
@@ -179,12 +561,12 @@
                     <div class="mb-3">
                         <label class="form-label">Type</label>
                         <select class="form-select" id="eventType">
-                            <option value="PLANTING">Planting</option>
-                            <option value="HARVESTING">Harvesting</option>
-                            <option value="FERTILIZING">Fertilizing</option>
-                            <option value="IRRIGATION">Irrigation</option>
-                            <option value="MEETING">Meeting</option>
-                            <option value="OTHER">Other</option>
+                            <option value="PLANTING">🌱 Planting</option>
+                            <option value="HARVESTING">🌾 Harvesting</option>
+                            <option value="FERTILIZING">🧪 Fertilizing</option>
+                            <option value="IRRIGATION">💧 Irrigation</option>
+                            <option value="MEETING">👥 Meeting</option>
+                            <option value="OTHER">📋 Other</option>
                         </select>
                     </div>
                     <div class="mb-3">
@@ -196,7 +578,7 @@
                         <label class="form-check-label">Set Reminder</label>
                     </div>
                     <div class="mb-3" id="reminderTimeGroup">
-                        <label class="form-label">Notify me before (minutes)</label>
+                        <label class="form-label">Notify me before</label>
                         <select class="form-select" id="eventReminderMinutes">
                             <option value="15">15 minutes</option>
                             <option value="30" selected>30 minutes</option>
@@ -207,10 +589,13 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-danger me-auto" id="deleteEventBtn"
-                    style="display: none;">Delete</button>
+                <button type="button" class="btn btn-danger me-auto" id="deleteEventBtn" style="display: none;">
+                    <i class="bi bi-trash me-2"></i>Delete
+                </button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-success" id="saveEventBtn">Save Event</button>
+                <button type="button" class="btn btn-success" id="saveEventBtn">
+                    <i class="bi bi-check-lg me-2"></i>Save Event
+                </button>
             </div>
         </div>
     </div>
@@ -218,7 +603,7 @@
 
 <!-- Journal Modal -->
 <div class="modal fade" id="journalModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">New Journal Entry</h5>
@@ -244,7 +629,9 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-success" id="saveJournalBtn">Save Entry</button>
+                <button type="button" class="btn btn-success" id="saveJournalBtn">
+                    <i class="bi bi-check-lg me-2"></i>Save Entry
+                </button>
             </div>
         </div>
     </div>
@@ -391,6 +778,7 @@
                         loadJournalEntries();
                         bootstrap.Modal.getInstance(document.getElementById('journalModal')).hide();
                         document.getElementById('journalForm').reset();
+                        document.getElementById('journalDate').valueAsDate = new Date();
                         showToast(data.message, 'success');
                     } else {
                         showToast('Error: ' + data.error, 'error');
@@ -410,9 +798,10 @@
                 var container = document.getElementById('journalList');
                 if (data.length === 0) {
                     container.innerHTML = `
-                    <div class="text-center py-5 text-muted">
-                        <i class="bi bi-journal-bookmark" style="font-size: 2rem;"></i>
+                    <div class="empty-state">
+                        <i class="bi bi-journal-bookmark d-block"></i>
                         <p class="mt-2">No journal entries yet.</p>
+                        <small class="text-muted">Start documenting your farm journey!</small>
                     </div>
                 `;
                     return;
@@ -424,8 +813,8 @@
                     <div class="journal-date">
                         <i class="bi bi-calendar3 me-1"></i>${formatDate(entry.date)}
                     </div>
-                    <h5 class="mb-2">${entry.title}</h5>
-                    <div class="journal-content text-muted small">${entry.content}</div>
+                    <h5>${entry.title}</h5>
+                    <div class="journal-content">${entry.content}</div>
                 </div>
             `).join('');
             });
@@ -484,13 +873,19 @@
     }
 
     function showToast(message, type = 'info') {
-        // Reuse existing toast function or create simple one
         const toast = document.createElement('div');
         toast.className = `alert alert-${type === 'error' ? 'danger' : 'success'} position-fixed top-0 end-0 m-3`;
-        toast.style.zIndex = '1050';
-        toast.textContent = message;
+        toast.style.zIndex = '9999';
+        toast.style.borderRadius = '15px';
+        toast.style.boxShadow = '0 10px 30px rgba(0,0,0,0.2)';
+        toast.style.backdropFilter = 'blur(10px)';
+        toast.style.animation = 'fadeIn 0.3s ease';
+        toast.innerHTML = `<i class="bi bi-${type === 'error' ? 'exclamation-circle' : 'check-circle'} me-2"></i>${message}`;
         document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
+        setTimeout(() => {
+            toast.style.animation = 'fadeOut 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
     }
 </script>
 {% endblock %}

@@ -18,10 +18,27 @@
                 <p class="small">{{ user.email }}</p>
 
                 {% if is_own_profile %}
-                <div class="d-grid gap-2 mt-3">
-                    <a href="{% url 'edit_profile' %}" class="btn btn-outline-primary">
-                        <i class="bi bi-pencil me-2"></i>Edit Profile
-                    </a>
+                <div class="dropdown mt-3">
+                    <button class="btn btn-outline-primary w-100 dropdown-toggle" type="button" id="settingsDropdown"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-gear me-2"></i>Settings
+                    </button>
+                    <ul class="dropdown-menu w-100" aria-labelledby="settingsDropdown">
+                        <li>
+                            <a class="dropdown-item" href="{% url 'edit_profile' %}">
+                                <i class="bi bi-pencil me-2"></i>Edit Profile
+                            </a>
+                        </li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li>
+                            <a class="dropdown-item text-danger" href="#" data-bs-toggle="modal"
+                                data-bs-target="#deleteAccountModal">
+                                <i class="bi bi-trash me-2"></i>Delete Account
+                            </a>
+                        </li>
+                    </ul>
                 </div>
                 {% endif %}
             </div>
@@ -81,6 +98,47 @@
         </div>
         {% endif %}
 
+    </div>
+</div>
+
+<!-- Delete Account Confirmation Modal -->
+<div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteAccountModalLabel">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Delete Account
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-circle me-2"></i>
+                    <strong>Warning:</strong> This action cannot be undone!
+                </div>
+                <p class="mb-3">Are you sure you want to delete your account? This will permanently remove:</p>
+                <ul>
+                    <li>Your profile information</li>
+                    <li>All your products and listings</li>
+                    <li>Your order history</li>
+                    <li>All associated data</li>
+                </ul>
+                <p class="text-danger fw-bold">Do you want to continue?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-2"></i>No, Cancel
+                </button>
+                <form method="POST" action="{% url 'delete_account' %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash me-2"></i>Yes, Delete My Account
+                    </button>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}

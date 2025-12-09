@@ -5,6 +5,45 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/login.css' %}">
+<style>
+    /* Hide navigation links and toggler */
+    .navbar-nav,
+    .navbar-toggler {
+        display: none !important;
+    }
+
+    /* Reduce navbar height */
+    .navbar {
+        padding-top: 0.5rem !important;
+        padding-bottom: 0.5rem !important;
+        min-height: auto !important;
+    }
+
+    body {
+        background: url('{% static "images/tomatoes_bg.jpg" %}') no-repeat center center fixed;
+        background-size: cover;
+        position: relative;
+    }
+
+    body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(3px);
+        z-index: -1;
+    }
+
+    .glass-card {
+        background: rgba(255, 255, 255, 0.15) !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    }
+</style>
 {% endblock %}
 
 {% block content %}

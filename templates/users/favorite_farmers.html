@@ -4,111 +4,90 @@
 {% block title %}My Favorite Farmers - AgriStar{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="fw-bold mb-1">My Favorite Farmers</h2>
-            <p class="text-muted">Farmers you follow and love</p>
+<div class="row">
+    <!-- Sidebar -->
+    <div class="col-md-3">
+        <div class="card glass-card mb-4 border-0">
+            <div class="card-body text-center py-4">
+                <div class="rounded-circle bg-primary d-inline-flex align-items-center justify-content-center mb-3"
+                    style="width: 80px; height: 80px;">
+                    <i class="bi bi-person-fill text-white fs-1"></i>
+                </div>
+                <h5 class="fw-bold">{{ user.username }}</h5>
+                <span class="badge bg-primary rounded-pill">Buyer Account</span>
+            </div>
+            <div class="list-group list-group-flush bg-transparent">
+                <a href="{% url 'dashboard' %}" class="list-group-item list-group-item-action bg-transparent border-0">
+                    <i class="bi bi-speedometer2 me-2"></i>Dashboard
+                </a>
+                <a href="{% url 'product_list' %}"
+                    class="list-group-item list-group-item-action bg-transparent border-0">
+                    <i class="bi bi-shop me-2"></i>Marketplace
+                </a>
+                <a href="{% url 'favorite_farmers_list' %}"
+                    class="list-group-item list-group-item-action bg-transparent border-0 active fw-bold text-primary">
+                    <i class="bi bi-heart me-2"></i>Favorite Farmers
+                </a>
+                <a href="{% url 'view_cart' %}" class="list-group-item list-group-item-action bg-transparent border-0">
+                    <i class="bi bi-cart3 me-2"></i>My Cart
+                </a>
+                <a href="{% url 'profile' %}" class="list-group-item list-group-item-action bg-transparent border-0">
+                    <i class="bi bi-person-circle me-2"></i>My Profile
+                </a>
+            </div>
         </div>
-        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
-        </a>
     </div>
 
-    {% if favorites %}
-    <div class="row g-4">
-        {% for fav in favorites %}
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm h-100 farmer-card">
-                <div class="card-body text-center p-4">
-                    <img src="{{ fav.farmer.profile.avatar.url }}" class="rounded-circle mb-3 shadow-sm" width="100"
-                        height="100" style="object-fit: cover; border: 4px solid #fff;">
+    <!-- Main Content -->
+    <div class="col-md-9">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold text-dark">My Favorite Farmers</h2>
+            <a href="{% url 'product_list' %}" class="btn btn-outline-success rounded-pill">Find More Farmers</a>
+        </div>
 
-                    <h5 class="fw-bold mb-1">{{ fav.farmer.username }}</h5>
-                    <p class="text-muted small mb-3">
-                        <i class="bi bi-geo-alt-fill me-1"></i>{{ fav.farmer.profile.location|default:"Unknown Location"
-                        }}
-                    </p>
-
-                    <div class="d-flex justify-content-center gap-3 mb-3">
-                        <div class="text-center">
-                            <h6 class="fw-bold mb-0">{{ fav.farmer.products.count }}</h6>
-                            <small class="text-muted">Products</small>
-                        </div>
-                        <div class="text-center">
-                            <h6 class="fw-bold mb-0">{{ fav.farmer.profile.average_rating|default:0|floatformat:1 }} <i
-                                    class="bi bi-star-fill text-warning"></i></h6>
-                            <small class="text-muted">Rating</small>
-                        </div>
+        {% if favorite_farmers %}
+        <div class="row g-4">
+            {% for farmer in favorite_farmers %}
+            <div class="col-md-4">
+                <div class="card glass-card border-0 h-100 product-card">
+                    <div class="text-center pt-4">
+                        <img src="{{ farmer.profile.avatar.url }}" alt="{{ farmer.username }}"
+                            class="rounded-circle shadow-sm" style="width: 100px; height: 100px; object-fit: cover;">
                     </div>
+                    <div class="card-body text-center">
+                        <h5 class="card-title fw-bold">{{ farmer.profile.display_name|default:farmer.username }}</h5>
+                        <p class="text-muted small mb-2"><i class="bi bi-geo-alt me-1"></i>{{
+                            farmer.profile.location|default:"Unknown Location" }}</p>
 
-                    {% if fav.farmer.profile.badge != 'NONE' %}
-                    <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-2 mb-3">
-                        <i class="{{ fav.farmer.profile.get_badge_icon }} me-1"></i> {{
-                        fav.farmer.profile.get_badge_display }}
-                    </span>
-                    {% endif %}
+                        <div class="mb-3">
+                            <span class="badge bg-light text-dark border">
+                                {{ farmer.product_set.count }} Products
+                            </span>
+                        </div>
 
-                    <div class="d-grid gap-2">
-                        <a href="{% url 'public_profile' fav.farmer.id %}" class="btn btn-success">
-                            <i class="bi bi-shop me-2"></i>Visit Shop
-                        </a>
-                        <button onclick="toggleFavorite(this, {{ fav.farmer.id }})" class="btn btn-outline-danger">
-                            <i class="bi bi-heart-fill me-2"></i>Remove
-                        </button>
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'farmer_profile_public' farmer.id %}"
+                                class="btn btn-primary rounded-pill">View Profile</a>
+                            <a href="{% url 'toggle_favorite_farmer' farmer.id %}"
+                                class="btn btn-sm btn-outline-danger rounded-pill">Remove</a>
+                        </div>
                     </div>
                 </div>
             </div>
+            {% endfor %}
         </div>
-        {% endfor %}
-    </div>
-    {% else %}
-    <div class="text-center py-5">
-        <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
-            style="width: 80px; height: 80px;">
-            <i class="bi bi-heart text-muted fs-1"></i>
+        {% else %}
+        <div class="text-center py-5">
+            <div class="mb-4">
+                <i class="bi bi-heart-break text-muted" style="font-size: 4rem; opacity: 0.5;"></i>
+            </div>
+            <h4 class="text-muted">No favorite farmers yet</h4>
+            <p class="text-muted mb-4">Start exploring the marketplace to find and favorite farmers!</p>
+            <a href="{% url 'product_list' %}" class="btn btn-success rounded-pill px-4 py-2">
+                Explore Marketplace
+            </a>
         </div>
-        <h4>No Favorites Yet</h4>
-        <p class="text-muted mb-4">You haven't added any farmers to your favorites list yet.</p>
-        <a href="{% url 'product_list' %}" class="btn btn-success rounded-pill px-4">
-            <i class="bi bi-search me-2"></i>Browse Farmers
-        </a>
+        {% endif %}
     </div>
-    {% endif %}
 </div>
-
-<script>
-    function toggleFavorite(btn, farmerId) {
-        if (confirm('Remove this farmer from favorites?')) {
-            fetch(`/users/favorite/${farmerId}/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token }}',
-                    'Content-Type': 'application/json'
-                }
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (!data.favorited) {
-                        // If successfully removed (favorited is false), remove the card
-                        btn.closest('.col-md-4').remove();
-                        // Check if any favorites left
-                        if (document.querySelectorAll('.col-md-4').length === 0) {
-                            location.reload(); // Reload to show empty state
-                        }
-                    }
-                });
-        }
-    }
-</script>
-
-<style>
-    .farmer-card {
-        transition: transform 0.2s;
-    }
-
-    .farmer-card:hover {
-        transform: translateY(-5px);
-    }
-</style>
 {% endblock %}

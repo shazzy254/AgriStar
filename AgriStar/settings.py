@@ -159,3 +159,7 @@ MPESA_CONSUMER_KEY = os.getenv('MPESA_CONSUMER_KEY')
 MPESA_CONSUMER_SECRET = os.getenv('MPESA_CONSUMER_SECRET')
 MPESA_SHORTCODE = os.getenv('MPESA_SHORTCODE')
 MPESA_PASSKEY = os.getenv('MPESA_PASSKEY')
+
+# AI Assistant Settings (Groq API)
+GROQ_API_KEY = os.getenv('GROQ_API_KEY')
+GROQ_MODEL = os.getenv('GROQ_MODEL', 'llama-3.3-70b-versatile')

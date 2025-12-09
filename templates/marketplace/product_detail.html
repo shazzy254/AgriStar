@@ -73,27 +73,33 @@
                     {% else %}
                     <form action="{% url 'add_to_cart' product.id %}" method="POST" class="d-grid gap-3">
                         {% csrf_token %}
-                        <div class="input-group">
-                            <span class="input-group-text bg-white border-end-0 fw-bold">Quantity</span>
-                            <input type="number" name="quantity" class="form-control border-start-0 ps-0 text-center"
-                                value="1" min="1" required>
-                            <span class="input-group-text bg-white border-start-0 text-muted">{{ product.unit }}s</span>
-                        </div>
+                        <input type="hidden" name="quantity" value="1">
 
                         <div class="row g-2">
+                            {% if product.seller.role == 'FARMER' %}
+                            <div class="col-12">
+                                <a href="{% url 'farmer_profile_public' product.seller.id %}"
+                                    class="btn btn-outline-success w-100 rounded-pill py-3 fw-bold">
+                                    <i class="bi bi-person-badge me-2"></i>View Farmer Profile
+                                </a>
+                            </div>
+                            {% endif %}
+
                             <div class="col-12">
                                 <button type="submit"
                                     class="btn btn-primary-gradient w-100 rounded-pill py-3 fw-bold shadow-sm">
                                     <i class="bi bi-cart-plus me-2"></i>Add to Cart
                                 </button>
                             </div>
+
+                            <div class="col-12">
+                                <button type="button" class="btn btn-outline-success w-100 rounded-pill py-3 fw-bold"
+                                    data-bs-toggle="modal" data-bs-target="#contactSellerModal">
+                                    <i class="bi bi-chat-dots me-2"></i>Contact Seller
+                                </button>
+                            </div>
                         </div>
                     </form>
-
-                    <button type="button" class="btn btn-outline-success w-100 rounded-pill py-3 fw-bold"
-                        data-bs-toggle="modal" data-bs-target="#contactSellerModal">
-                        <i class="bi bi-chat-dots me-2"></i>Contact Seller
-                    </button>
                     {% endif %}
                 </div>
             </div>

@@ -15,19 +15,78 @@ document.addEventListener('DOMContentLoaded', function () {
         chatWindow.classList.add('d-none');
     });
 
+    // Get CSRF Token helper
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
     // Send Message
-    function sendMessage() {
+    async function sendMessage() {
         const message = inputField.value.trim();
         if (message) {
             // Add User Message
             addMessage(message, 'user');
             inputField.value = '';
 
-            // Simulate Bot Response
-            setTimeout(() => {
-                const response = getBotResponse(message);
-                addMessage(response, 'bot');
-            }, 500);
+            // Show Loading Indicator
+            const loadingDiv = document.createElement('div');
+            loadingDiv.classList.add('bot-message', 'loading');
+            loadingDiv.innerHTML = '<span class="dots"><span>.</span><span>.</span><span>.</span></span>';
+            messagesContainer.appendChild(loadingDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+            try {
+                // Get CSRF token
+                const csrftoken = getCookie('csrftoken');
+
+                const response = await fetch('/ai/public-chat/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+
+                // Check content type to identify HTML errors (403/500)
+                const contentType = response.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    // Try to read text to log it
+                    const text = await response.text();
+                    console.error("Server returned non-JSON:", text.substring(0, 100)); // Log first 100 chars
+                    throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+
+                // Remove Loading Indicator
+                if (messagesContainer.contains(loadingDiv)) {
+                    messagesContainer.removeChild(loadingDiv);
+                }
+
+                if (response.ok) {
+                    addMessage(data.response, 'bot');
+                } else {
+                    addMessage(data.error || "Sorry, I can't answer that right now.", 'bot');
+                }
+            } catch (error) {
+                console.error("Chatbot Error:", error);
+                if (messagesContainer.contains(loadingDiv)) {
+                    messagesContainer.removeChild(loadingDiv);
+                }
+                addMessage("I'm having trouble connecting to the server. Please try again.", 'bot');
+            }
         }
     }
 
@@ -42,20 +101,5 @@ document.addEventListener('DOMContentLoaded', function () {
         div.textContent = text;
         messagesContainer.appendChild(div);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    }
-
-    function getBotResponse(input) {
-        input = input.toLowerCase();
-        if (input.includes('register') || input.includes('sign up')) {
-            return "You can register by clicking the 'Get Started' button in the hero section.";
-        } else if (input.includes('login') || input.includes('sign in')) {
-            return "Already have an account? Click the 'Login' button to access your dashboard.";
-        } else if (input.includes('price') || input.includes('cost')) {
-            return "Our marketplace offers competitive prices directly from farmers. Check the Marketplace section!";
-        } else if (input.includes('about')) {
-            return "AgriStar connects farmers and buyers directly. We also provide AI-driven farming advice.";
-        } else {
-            return "I'm here to help you navigate. You can ask about registration, login, or our features.";
-        }
     }
 });

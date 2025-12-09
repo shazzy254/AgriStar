@@ -3,125 +3,344 @@
 
 {% block title %}Register - AgriStar{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/landing.css' %}">
+<style>
+    /* Hide navigation links and toggler */
+    .navbar-nav,
+    .navbar-toggler {
+        display: none !important;
+    }
+
+    /* Reduce navbar height */
+    .navbar {
+        padding-top: 0.5rem !important;
+        padding-bottom: 0.5rem !important;
+        min-height: auto !important;
+    }
+
+    /* Registration Page Specific Styles */
+    body {
+        background: url('{% static "images/tomatoes_bg.jpg" %}') no-repeat center center fixed;
+        background-size: cover;
+        min-height: 100vh;
+        position: relative;
+    }
+
+    body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(8px);
+        z-index: -1;
+    }
+
+    .register-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px;
+    }
+
+    .register-card {
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 24px;
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        padding: 3rem;
+        max-width: 600px;
+        width: 100%;
+        animation: fadeInUp 0.6s ease-out;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .role-badge {
+        background: linear-gradient(135deg, rgba(46, 204, 113, 0.3), rgba(52, 152, 219, 0.3));
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50px;
+        padding: 12px 24px;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 2rem;
+        color: white;
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+
+    .role-badge i {
+        font-size: 1.5rem;
+    }
+
+    .register-card h2 {
+        color: white;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .register-card .subtitle {
+        color: rgba(255, 255, 255, 0.8);
+        margin-bottom: 2rem;
+    }
+
+    .form-section-title {
+        color: white;
+        font-weight: 600;
+        font-size: 1.1rem;
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid rgba(46, 204, 113, 0.5);
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+    }
+
+    .glass-input-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .glass-input-group label {
+        color: white;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+        display: block;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+    }
+
+    .glass-input-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .glass-input-icon {
+        position: absolute;
+        left: 16px;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 1.2rem;
+        z-index: 2;
+    }
+
+    .glass-input {
+        width: 100%;
+        padding: 14px 16px 14px 48px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        color: white;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+    }
+
+    .glass-input::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .glass-input:focus {
+        outline: none;
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(46, 204, 113, 0.6);
+        box-shadow: 0 0 20px rgba(46, 204, 113, 0.3);
+    }
+
+    .btn-register {
+        width: 100%;
+        padding: 16px;
+        background: linear-gradient(135deg, #2ecc71, #27ae60);
+        border: none;
+        border-radius: 12px;
+        color: white;
+        font-weight: 600;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(46, 204, 113, 0.4);
+        margin-top: 1.5rem;
+    }
+
+    .btn-register:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(46, 204, 113, 0.6);
+    }
+
+    .change-role-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        margin-top: 1rem;
+    }
+
+    .change-role-link:hover {
+        color: white;
+        transform: translateX(-5px);
+    }
+
+    .login-link {
+        text-align: center;
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .login-link a {
+        color: #2ecc71;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .login-link a:hover {
+        color: #27ae60;
+        text-shadow: 0 0 10px rgba(46, 204, 113, 0.5);
+    }
+
+    .error-message {
+        background: rgba(231, 76, 60, 0.2);
+        border: 1px solid rgba(231, 76, 60, 0.4);
+        border-radius: 8px;
+        padding: 10px 15px;
+        color: #fff;
+        margin-top: 0.5rem;
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="row justify-content-center align-items-center" style="min-height: 80vh;">
-    <div class="col-md-6">
-        <div class="card shadow-lg border-0 glass-card animate__animated animate__fadeInUp">
-            <div class="card-body p-5">
-                <div class="text-center mb-4">
-                    <div class="rounded-circle bg-primary d-inline-flex align-items-center justify-content-center mb-3"
-                        style="width: 60px; height: 60px;">
-                        <i class="bi bi-person-plus-fill text-white fs-2"></i>
-                    </div>
-                    <h2 class="fw-bold">Create Account</h2>
-                    <p class="text-muted">Join the AgriStar community today</p>
-                </div>
+<div class="register-container">
+    <div class="register-card">
+        {% if form.initial.role %}
+        <!-- Role Badge -->
+        <div class="role-badge">
+            {% if form.initial.role == 'FARMER' %}
+            <i class="bi bi-flower1"></i> Farmer Registration
+            {% elif form.initial.role == 'BUYER' %}
+            <i class="bi bi-cart3"></i> Buyer Registration
+            {% elif form.initial.role == 'SUPPLIER' %}
+            <i class="bi bi-tools"></i> Supplier Registration
+            {% elif form.initial.role == 'RIDER' %}
+            <i class="bi bi-bicycle"></i> Rider Registration
+            {% endif %}
+        </div>
+        {% endif %}
 
-                <form method="POST">
-                    {% csrf_token %}
+        <h2>Create Your Account</h2>
+        <p class="subtitle">Join the AgriStar community today</p>
 
-                    {% for field in form %}
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">{{ field.label }}</label>
-                        {% if field.name == 'role' %}
-                        <div class="row">
-                            {% for radio in field %}
-                            <div class="col-md-4">
-                                <label class="role-card d-block text-center p-3 border rounded cursor-pointer h-100">
-                                    {{ radio.tag }}
-                                    <div class="mt-2 fw-bold">{{ radio.choice_label }}</div>
-                                </label>
-                            </div>
-                            {% endfor %}
-                        </div>
-                        {% else %}
-                        <div class="input-group">
-                            <span class="input-group-text bg-white border-end-0">
-                                {% if 'username' in field.name %}<i class="bi bi-person"></i>
-                                {% elif 'email' in field.name %}<i class="bi bi-envelope"></i>
-                                {% elif 'password' in field.name %}<i class="bi bi-lock"></i>
-                                {% else %}<i class="bi bi-pencil"></i>{% endif %}
-                            </span>
-                            {{ field }}
-                        </div>
-                        {% endif %}
-                        {% if field.errors %}
-                        <div class="text-danger small mt-1">{{ field.errors|striptags }}</div>
-                        {% endif %}
-                        {% if field.help_text %}
-                        <div class="form-text small">{{ field.help_text }}</div>
-                        {% endif %}
-                    </div>
-                    {% endfor %}
+        <form method="POST">
+            {% csrf_token %}
 
-                    <button type="submit" class="btn btn-primary-gradient w-100 py-2 fw-bold shadow-sm mt-3">
-                        Register <i class="bi bi-arrow-right ms-2"></i>
-                    </button>
-                </form>
-
-                <div class="text-center mt-4">
-                    <p class="mb-0">Already have an account? <a href="{% url 'login' %}"
-                            class="text-primary fw-bold">Login here</a></p>
-                </div>
+            <!-- Account Details Section -->
+            <div class="form-section-title">
+                <i class="bi bi-person-circle me-2"></i>Account Details
             </div>
+
+            {% for field in form %}
+            {% if field.name != 'role' %}
+            <div class="glass-input-group">
+                <label>{{ field.label }}</label>
+                <div class="glass-input-wrapper">
+                    <i class="glass-input-icon 
+                            {% if 'username' in field.name %}bi bi-person
+                            {% elif 'email' in field.name %}bi bi-envelope
+                            {% elif 'password' in field.name %}bi bi-lock
+                            {% else %}bi bi-pencil{% endif %}">
+                    </i>
+                    {{ field }}
+                </div>
+                {% if field.errors %}
+                <div class="error-message">{{ field.errors|striptags }}</div>
+                {% endif %}
+            </div>
+            {% endif %}
+            {% endfor %}
+
+            <!-- Hidden role field -->
+            {% if form.initial.role %}
+            <input type="hidden" name="role" value="{{ form.initial.role }}">
+            {% endif %}
+
+            <!-- Profile Details Section -->
+            {% if profile_form %}
+            <div class="form-section-title">
+                <i class="bi bi-card-text me-2"></i>
+                {% if form.initial.role == 'FARMER' %}Farm Information
+                {% elif form.initial.role == 'RIDER' %}Personal Information
+                {% elif form.initial.role == 'SUPPLIER' %}Business Information
+                {% elif form.initial.role == 'BUYER' %}Delivery Information
+                {% else %}Additional Information{% endif %}
+            </div>
+
+            {% for field in profile_form %}
+            <div class="glass-input-group">
+                <label>{{ field.label }}</label>
+                <div class="glass-input-wrapper">
+                    <i class="glass-input-icon
+                        {% if 'phone' in field.name or 'whatsapp' in field.name %}bi bi-telephone
+                        {% elif 'location' in field.name %}bi bi-geo-alt
+                        {% elif 'address' in field.name %}bi bi-house
+                        {% elif 'farm' in field.name or 'crop' in field.name %}bi bi-flower1
+                        {% elif 'company' in field.name %}bi bi-building
+                        {% else %}bi bi-card-text{% endif %}">
+                    </i>
+                    {{ field }}
+                </div>
+                {% if field.errors %}
+                <div class="error-message">{{ field.errors|striptags }}</div>
+                {% endif %}
+            </div>
+            {% endfor %}
+            {% endif %}
+
+            <button type="submit" class="btn-register">
+                Create Account <i class="bi bi-arrow-right ms-2"></i>
+            </button>
+
+            {% if form.initial.role %}
+            <div class="text-center">
+                <a href="{% url 'select_role' %}" class="change-role-link">
+                    <i class="bi bi-arrow-left"></i> Change Role
+                </a>
+            </div>
+            {% endif %}
+        </form>
+
+        <div class="login-link">
+            <p class="text-white mb-0">Already have an account? <a href="{% url 'login' %}">Login here</a></p>
         </div>
     </div>
 </div>
 
-<style>
-    /* Custom styles for form fields rendered by Django */
-    .form-control {
-        border-left: 0;
-    }
-
-    .form-control:focus {
-        box-shadow: none;
-        border-color: #ced4da;
-    }
-
-    .input-group-text {
-        background-color: white;
-    }
-
-    /* Role Card Styling */
-    .role-card {
-        transition: all 0.3s ease;
-        cursor: pointer;
-    }
-
-    .role-card:hover {
-        border-color: var(--primary-color) !important;
-        background-color: rgba(46, 204, 113, 0.05);
-        transform: translateY(-2px);
-    }
-
-    .role-card input[type="radio"]:checked+div {
-        color: var(--primary-color);
-    }
-
-    /* Hide default radio if desired, or keep it */
-</style>
-
 <script>
-    // Add form-control class to Django rendered inputs
-    document.querySelectorAll('input, select, textarea').forEach(element => {
-        if (!element.classList.contains('form-control') && element.type !== 'radio' && element.type !== 'checkbox') {
-            element.classList.add('form-control');
-            element.classList.add('border-start-0');
-            element.classList.add('ps-0');
+    // Add glass-input class to all form inputs
+    document.querySelectorAll('input[type="text"], input[type="emailt[type="password"], select, textarea').forEach(element => {
+        if (!element.classList.contains('glass-input')) {
+            element.classList.add('glass-input');
         }
-    });
-
-    // Highlight selected role card
-    document.querySelectorAll('input[name="role"]').forEach(radio => {
-        radio.addEventListener('change', function () {
-            document.querySelectorAll('.role-card').forEach(card => {
-                card.classList.remove('selected', 'border-success', 'bg-light');
-            });
-            if (this.checked) {
-                this.closest('.role-card').classList.add('selected', 'border-success', 'bg-light');
-            }
-        });
     });
 </script>
 {% endblock %}

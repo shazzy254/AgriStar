@@ -5,6 +5,74 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/landing.css' %}">
+<style>
+    /* Hide navigation links and toggler on landing page */
+    .navbar-nav,
+    .navbar-toggler {
+        display: none !important;
+    }
+
+    /* Reduce navbar height */
+    .navbar {
+        padding-top: 0.5rem !important;
+        padding-bottom: 0.5rem !important;
+        min-height: auto !important;
+    }
+
+    /* Arrow divider animation */
+    .arrow-divider i {
+        animation: pulse-arrow 2s ease-in-out infinite;
+        transition: all 0.3s ease;
+    }
+
+    @keyframes pulse-arrow {
+
+        0%,
+        100% {
+            transform: scale(1);
+            opacity: 0.6;
+        }
+
+        50% {
+            transform: scale(1.2);
+            opacity: 1;
+        }
+    }
+
+    .arrow-divider:hover i {
+        color: #2ecc71 !important;
+        transform: translateX(5px);
+    }
+
+    /* Button icon animations */
+    .btn-glass i {
+        transition: transform 0.3s ease;
+    }
+
+    .btn-glass:hover i {
+        transform: scale(1.1);
+    }
+
+    .btn-primary-glow:hover .bi-rocket-takeoff {
+        animation: rocket-shake 0.5s ease;
+    }
+
+    @keyframes rocket-shake {
+
+        0%,
+        100% {
+            transform: rotate(0deg);
+        }
+
+        25% {
+            transform: rotate(-10deg);
+        }
+
+        75% {
+            transform: rotate(10deg);
+        }
+    }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -14,13 +82,24 @@
         <h1 class="hero-title display-3 fw-bold mb-4">Empowering Farmers. Connecting Buyers. Growing Together.</h1>
         <p class="hero-subtitle lead mb-5">AgriStar is a modern agricultural marketplace and AI-powered assistant
             helping farmers sell, learn, and grow.</p>
-        <div class="d-flex justify-content-center gap-3 hero-buttons">
+        <div class="d-flex justify-content-center align-items-center gap-4 hero-buttons flex-wrap">
             {% if not user.is_authenticated %}
-            <a href="{% url 'register' %}" class="btn-glass btn-primary-glow btn-lg">Join as Farmer</a>
-            <a href="{% url 'product_list' %}" class="btn-glass btn-lg">Shop Marketplace</a>
-            <a href="{% url 'ai_chat' %}" class="btn-glass btn-lg"><i class="bi bi-robot"></i> Talk to AI</a>
+            <a href="{% url 'select_role' %}" class="btn-glass btn-primary-glow btn-lg d-flex align-items-center gap-2">
+                <i class="bi bi-rocket-takeoff fs-5"></i>
+                Get Started
+            </a>
+            <div class="arrow-divider d-flex align-items-center">
+                <i class="bi bi-arrow-right-circle fs-3 text-white-50"></i>
+            </div>
+            <a href="{% url 'login' %}" class="btn-glass btn-lg d-flex align-items-center gap-2">
+                Login
+                <i class="bi bi-box-arrow-in-right fs-5"></i>
+            </a>
             {% else %}
-            <a href="{% url 'dashboard' %}" class="btn-glass btn-primary-glow btn-lg">Go to Dashboard</a>
+            <a href="{% url 'dashboard' %}" class="btn-glass btn-primary-glow btn-lg d-flex align-items-center gap-2">
+                <i class="bi bi-speedometer2 fs-5"></i>
+                Go to Dashboard
+            </a>
             {% endif %}
         </div>
     </div>
@@ -195,7 +274,8 @@
                         <li class="mb-3"><i class="bi bi-camera text-success me-2"></i> Upload plant disease photos</li>
                         <li class="mb-3"><i class="bi bi-mic text-success me-2"></i> Voice chat for hands-free help</li>
                     </ul>
-                    <a href="{% url 'ai_chat' %}" class="btn-glass btn-primary-glow mt-3">Try AI Assistant</a>
+                    <a href="{% url 'ai_assistant_index' %}" class="btn-glass btn-primary-glow mt-3">Try AI
+                        Assistant</a>
                 </div>
             </div>
             <div class="col-md-6 text-center">
@@ -305,6 +385,79 @@
         </div>
     </div>
 </section>
+
+<!-- Role Selection Modal -->
+<div class="modal fade" id="roleSelectionModal" tabindex="-1" aria-labelledby="roleSelectionModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content glass-card border-0">
+            <div class="modal-header border-0">
+                <h3 class="modal-title fw-bold text-white" id="roleSelectionModalLabel">Choose Your Role</h3>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="text-center text-white-50 mb-4">Select the role that best describes you to get started with
+                    AgriStar</p>
+                <div class="row g-3">
+                    <!-- Farmer Role -->
+                    <div class="col-md-6">
+                        <a href="{% url 'register' %}?role=FARMER" class="text-decoration-none">
+                            <div class="glass-card user-card text-center h-100 p-4">
+                                <div class="icon-wrapper mb-3">
+                                    <i class="bi bi-flower1 display-4 text-success"></i>
+                                </div>
+                                <h4 class="text-white">Farmer</h4>
+                                <p class="text-white-50 mb-0">Sell produce, get AI farming help, manage your farm</p>
+                            </div>
+                        </a>
+                    </div>
+                    <!-- Buyer Role -->
+                    <div class="col-md-6">
+                        <a href="{% url 'register' %}?role=BUYER" class="text-decoration-none">
+                            <div class="glass-card user-card text-center h-100 p-4">
+                                <div class="icon-wrapper mb-3">
+                                    <i class="bi bi-cart3 display-4 text-warning"></i>
+                                </div>
+                                <h4 class="text-white">Buyer</h4>
+                                <p class="text-white-50 mb-0">Shop fresh produce, compare prices, pay securely</p>
+                            </div>
+                        </a>
+                    </div>
+                    <!-- Supplier Role -->
+                    <div class="col-md-6">
+                        <a href="{% url 'register' %}?role=SUPPLIER" class="text-decoration-none">
+                            <div class="glass-card user-card text-center h-100 p-4">
+                                <div class="icon-wrapper mb-3">
+                                    <i class="bi bi-tools display-4 text-info"></i>
+                                </div>
+                                <h4 class="text-white">Supplier</h4>
+                                <p class="text-white-50 mb-0">Sell tools, seeds, and fertilizers to farmers</p>
+                            </div>
+                        </a>
+                    </div>
+                    <!-- Rider Role -->
+                    <div class="col-md-6">
+                        <a href="{% url 'register' %}?role=RIDER" class="text-decoration-none">
+                            <div class="glass-card user-card text-center h-100 p-4">
+                                <div class="icon-wrapper mb-3">
+                                    <i class="bi bi-bicycle display-4 text-primary"></i>
+                                </div>
+                                <h4 class="text-white">Rider</h4>
+                                <p class="text-white-50 mb-0">Deliver products and earn money</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 justify-content-center">
+                <button type="button" class="btn-glass" data-bs-dismiss="modal">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Home
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- Footer -->
 <footer class="footer-section mt-5">
