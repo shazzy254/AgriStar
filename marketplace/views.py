@@ -5,7 +5,7 @@ from django.http import JsonResponse
 from django.db.models import Sum, Count
 from rest_framework import viewsets, filters, permissions
 from users.models import User
-from .models import Product, Order, CartItem, Favorite, Notification
+from .models import Product, Order, CartItem, Favorite, Notification, StockHistory
 from .serializers import ProductSerializer, OrderSerializer
 from .forms import ProductForm
 from itertools import groupby
@@ -72,9 +72,20 @@ def edit_product(request, pk):
         return redirect('product_detail', pk=pk)
 
     if request.method == 'POST':
+        old_quantity = product.quantity
         form = ProductForm(request.POST, request.FILES, instance=product)
         if form.is_valid():
-            form.save()
+            updated_product = form.save()
+            
+            # Track stock change
+            if updated_product.quantity != old_quantity:
+                StockHistory.objects.create(
+                    product=updated_product,
+                    old_quantity=old_quantity,
+                    new_quantity=updated_product.quantity,
+                    reason="Farmer Updated"
+                )
+            
             messages.success(request, "Product updated successfully!")
             return redirect('product_detail', pk=pk)
     else:
@@ -108,6 +119,12 @@ def add_to_cart(request, product_id):
     if quantity < 1:
         return JsonResponse({'success': False, 'error': 'Invalid quantity'}, status=400)
     
+    if quantity > product.quantity:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+             return JsonResponse({'success': False, 'error': f'Stock insufficient. Only {product.quantity} {product.unit} available.'}, status=400)
+        messages.error(request, f'Stock insufficient. Only {product.quantity} {product.unit} available.')
+        return redirect('product_detail', pk=product_id)
+
     cart_item, created = CartItem.objects.get_or_create(
         buyer=request.user,
         product=product,
@@ -169,6 +186,9 @@ def update_cart_item(request, item_id):
     
     if quantity < 1:
         return JsonResponse({'success': False, 'error': 'Invalid quantity'}, status=400)
+
+    if quantity > cart_item.product.quantity:
+         return JsonResponse({'success': False, 'error': f'Stock insufficient. Only {cart_item.product.quantity} {cart_item.product.unit} available.'}, status=400)
     
     cart_item.quantity = quantity
     cart_item.save()
@@ -212,15 +232,47 @@ def checkout_cart(request):
         messages.warning(request, 'Your cart is empty')
         return redirect('view_cart')
     
+    # Validate stock for all items first
+    for item in cart_items:
+        if item.quantity > item.product.quantity:
+            messages.error(request, f"Stock insufficient for {item.product.name}. Only {item.product.quantity} {item.product.unit} available.")
+            return redirect('view_cart')
+
     # Create orders (one per cart item)
     orders_created = 0
     for item in cart_items:
-        if item.product.available:
+        if item.product.available and item.product.quantity >= item.quantity:
+            # Deduct Stock
+            product = item.product
+            old_qty = product.quantity
+            product.quantity -= item.quantity
+            
+            # Check for Out of Stock
+            if product.quantity == 0:
+                # Notify Farmer about Out of Stock
+                 Notification.objects.create(
+                    user=product.seller,
+                    notification_type='ORDER_PLACED', # Reusing type or could add STOCK_ALERT
+                    message=f"Your product '{product.name}' is now OUT OF STOCK. Update quantity when available."
+                )
+            
+            product.save()
+
+            # Create Order
             order = Order.objects.create(
                 buyer=request.user,
-                product=item.product,
+                product=product,
                 quantity=item.quantity,
-                status='PENDING'
+                status='PENDING',
+                total_price=product.price * item.quantity # Explicitly set total_price as save() does it but good to be sure
+            )
+
+            # Record History
+            StockHistory.objects.create(
+                product=product,
+                old_quantity=old_qty,
+                new_quantity=product.quantity,
+                reason=f"Order #{order.id}"
             )
             
             # Create notification for buyer

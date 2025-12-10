@@ -29,10 +29,27 @@ class Product(models.Model):
         choices=[('PENDING', 'Pending'), ('APPROVED', 'Approved'), ('REJECTED', 'Rejected')],
         default='PENDING'
     )
+    quantity = models.PositiveIntegerField(default=1)
+    freshness_notes = models.TextField(blank=True, null=True)
+    last_updated = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.name
+
+class StockHistory(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='stock_history')
+    old_quantity = models.IntegerField()
+    new_quantity = models.IntegerField()
+    reason = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.product.name} stock update ({self.created_at.strftime('%Y-%m-%d %H:%M')})"
+
 
 class Order(models.Model):
     STATUS_CHOICES = [

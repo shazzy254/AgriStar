@@ -4,295 +4,29 @@
 {% block title %}Marketplace - AgriStar{% endblock %}
 
 {% block extra_css %}
-<style>
-    /* Premium Marketplace Styling with Glassmorphism */
-
-    /* Product Grid Layout */
-    .row-cols-md-3 {
-        --bs-gutter-x: 2rem;
-        --bs-gutter-y: 2rem;
-    }
-
-    /* Glass Card with Premium Effects */
-    .glass-card {
-        background: rgba(255, 255, 255, 0.85) !important;
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.3) !important;
-        border-radius: 24px !important;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1),
-            0 2px 8px rgba(0, 0, 0, 0.05);
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        overflow: hidden;
-    }
-
-    .glass-card:hover {
-        transform: translateY(-12px);
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15),
-            0 8px 20px rgba(0, 0, 0, 0.1);
-        border-color: rgba(46, 125, 50, 0.3) !important;
-    }
-
-    /* Product Image Container */
-    .product-image {
-        height: 280px;
-        object-fit: cover;
-        width: 100%;
-        transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .glass-card:hover .product-image {
-        transform: scale(1.08);
-    }
-
-    /* Product Badge */
-    .product-badge {
-        position: absolute;
-        top: 16px;
-        left: 16px;
-        background: linear-gradient(135deg, #2e7d32, #43a047) !important;
-        border: none !important;
-        padding: 8px 20px;
-        font-weight: 600;
-        font-size: 0.85rem;
-        letter-spacing: 0.5px;
-        border-radius: 50px;
-        box-shadow: 0 4px 12px rgba(46, 125, 50, 0.3);
-        text-transform: uppercase;
-    }
-
-    /* Favorite Button */
-    .favorite-btn {
-        position: absolute;
-        top: 16px;
-        right: 16px;
-        width: 44px;
-        height: 44px;
-        background: rgba(255, 255, 255, 0.95) !important;
-        backdrop-filter: blur(10px);
-        border: none;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #666;
-        font-size: 1.2rem;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        text-decoration: none;
-    }
-
-    .favorite-btn:hover {
-        transform: scale(1.15);
-        color: #e53935;
-        box-shadow: 0 6px 20px rgba(229, 57, 53, 0.3);
-    }
-
-    .favorite-btn.active {
-        color: #e53935;
-        background: rgba(255, 235, 238, 0.95) !important;
-    }
-
-    /* Card Body */
-    .card-body {
-        padding: 1.75rem !important;
-        background: rgba(255, 255, 255, 0.5);
-        backdrop-filter: blur(10px);
-    }
-
-    /* Card Title */
-    .card-title {
-        color: #1a1a1a !important;
-        font-size: 1.35rem !important;
-        font-weight: 700 !important;
-        letter-spacing: -0.3px;
-        line-height: 1.3;
-    }
-
-    /* Price */
-    .text-success {
-        color: #2e7d32 !important;
-        font-weight: 700 !important;
-        font-size: 1.5rem !important;
-        text-shadow: 0 2px 4px rgba(46, 125, 50, 0.1);
-    }
-
-    /* Location and Seller Info */
-    .text-muted {
-        color: #555 !important;
-        font-weight: 500 !important;
-    }
-
-    .text-muted i {
-        color: #777 !important;
-    }
-
-    /* Product Description */
-    .card-text {
-        color: #444 !important;
-        line-height: 1.6;
-        font-size: 0.95rem;
-    }
-
-    /* Buttons */
-    .btn-outline-primary {
-        border: 2px solid #1976d2 !important;
-        color: #1976d2 !important;
-        font-weight: 600;
-        transition: all 0.3s ease;
-    }
-
-    .btn-outline-primary:hover {
-        background: #1976d2 !important;
-        color: white !important;
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(25, 118, 210, 0.3);
-    }
-
-    .btn-success {
-        background: linear-gradient(135deg, #2e7d32, #43a047) !important;
-        border: none !important;
-        font-weight: 600;
-        box-shadow: 0 4px 12px rgba(46, 125, 50, 0.3);
-        transition: all 0.3s ease;
-    }
-
-    .btn-success:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(46, 125, 50, 0.4);
-        background: linear-gradient(135deg, #43a047, #2e7d32) !important;
-    }
-
-    /* Category Badges */
-    .category-badge {
-        display: inline-block;
-        padding: 10px 24px;
-        background: rgba(255, 255, 255, 0.7);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(0, 0, 0, 0.1);
-        border-radius: 50px;
-        color: #333;
-        text-decoration: none;
-        font-weight: 600;
-        font-size: 0.9rem;
-        transition: all 0.3s ease;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    }
-
-    .category-badge:hover {
-        background: rgba(255, 255, 255, 0.95);
-        transform: translateY(-3px);
-        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
-        color: #2e7d32;
-        border-color: rgba(46, 125, 50, 0.3);
-    }
-
-    .category-badge.active {
-        background: linear-gradient(135deg, #2e7d32, #43a047);
-        color: white;
-        border-color: transparent;
-        box-shadow: 0 4px 12px rgba(46, 125, 50, 0.3);
-    }
-
-    /* Filter Section */
-    .filter-section {
-        background: rgba(255, 255, 255, 0.7);
-        backdrop-filter: blur(15px);
-        padding: 1.5rem;
-        border-radius: 20px;
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
-        margin-bottom: 2rem;
-    }
-
-    /* Search Input */
-    .input-group-text {
-        background: rgba(255, 255, 255, 0.9) !important;
-        border-color: rgba(0, 0, 0, 0.1) !important;
-    }
-
-    .form-control {
-        background: rgba(255, 255, 255, 0.9) !important;
-        border-color: rgba(0, 0, 0, 0.1) !important;
-        color: #333 !important;
-    }
-
-    .form-control:focus {
-        background: white !important;
-        border-color: #2e7d32 !important;
-        box-shadow: 0 0 0 0.2rem rgba(46, 125, 50, 0.15) !important;
-    }
-
-    .form-control::placeholder {
-        color: #999 !important;
-    }
-
-    /* Primary Gradient Button */
-    .btn-primary-gradient {
-        background: linear-gradient(135deg, #1976d2, #2196f3) !important;
-        border: none !important;
-        color: white !important;
-        font-weight: 600;
-        box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
-        transition: all 0.3s ease;
-    }
-
-    .btn-primary-gradient:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(25, 118, 210, 0.4);
-    }
-
-    /* Page Header */
-    h2 {
-        color: #1a1a1a !important;
-        font-weight: 700 !important;
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    }
-
-    /* Empty State */
-    .col-12.text-center.py-5 {
-        background: rgba(255, 255, 255, 0.7);
-        backdrop-filter: blur(15px);
-        border-radius: 20px;
-        padding: 4rem 2rem !important;
-        border: 1px solid rgba(0, 0, 0, 0.05);
-    }
-
-    /* Animation */
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .animate__fadeInUp {
-        animation: fadeInUp 0.6s ease-out;
-    }
-</style>
+<link rel="stylesheet" href="{% static 'css/marketplace.css' %}">
 {% endblock %}
 
 {% block content %}
-<div class="row mb-4">
+<div class="marketplace-ambient-bg"></div>
+
+<div class="row mb-5 align-items-end">
     <div class="col-md-8">
-        <h2><i class="bi bi-shop me-2"></i>Marketplace</h2>
-        <p class="text-muted">Discover fresh produce directly from farmers</p>
+        <h1 class="display-5 fw-bold mb-2">Marketplace</h1>
+        <p class="text-muted lead mb-0">Discover fresh produce directly from local farmers</p>
     </div>
-    <div class="col-md-4 text-end">
+    <div class="col-md-4 text-md-end mt-4 mt-md-0">
         {% if user.role == 'FARMER' %}
-        <a href="{% url 'create_product' %}" class="btn btn-success rounded-pill">
-            <i class="bi bi-plus-lg me-1"></i>Add Product
+        <a href="{% url 'create_product' %}" class="btn btn-success rounded-pill px-4 py-3 shadow-sm me-2">
+            <i class="bi bi-plus-lg me-2"></i>Add Product
         </a>
         {% endif %}
-        <a href="{% url 'view_cart' %}" class="btn btn-outline-primary rounded-pill ms-2 position-relative">
-            <i class="bi bi-cart3"></i>
+        <a href="{% url 'view_cart' %}" class="btn btn-outline-primary rounded-circle position-relative"
+            style="width: 54px; height: 54px; display: inline-flex; align-items: center; justify-content: center;">
+            <i class="bi bi-cart3 fs-4"></i>
             {% if user.cart_items.count > 0 %}
-            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+            <span
+                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger shadow-sm border border-2 border-white">
                 {{ user.cart_items.count }}
             </span>
             {% endif %}
@@ -304,84 +38,112 @@
 <div class="filter-section animate__animated animate__fadeIn">
     <form method="GET" action="{% url 'product_list' %}" class="row g-3">
         <div class="col-md-8">
-            <div class="input-group">
-                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
-                <input type="text" name="q" class="form-control border-start-0 ps-0"
-                    placeholder="Search for products, farmers, or locations..." value="{{ request.GET.q }}">
+            <div class="input-group input-group-lg shadow-sm">
+                <span class="input-group-text bg-white border-0 ps-4"><i class="bi bi-search text-muted"></i></span>
+                <input type="text" name="q" class="form-control border-0 ps-3"
+                    placeholder="Search for fresh vegetables, fruits, or farmers..." value="{{ request.GET.q }}">
             </div>
         </div>
         <div class="col-md-4">
-            <button type="submit" class="btn btn-primary-gradient w-100">Search</button>
+            <button type="submit" class="btn btn-primary-gradient w-100 h-100 shadow-sm fs-5">
+                Search Products
+            </button>
         </div>
     </form>
 
-    <div class="mt-3 d-flex flex-wrap gap-2">
-        <a href="{% url 'product_list' %}"
-            class="category-badge {% if not request.GET.category %}active{% endif %}">All</a>
+    <div class="mt-4 d-flex flex-wrap gap-2 justify-content-center justify-content-md-start">
+        <a href="{% url 'product_list' %}" class="category-badge {% if not request.GET.category %}active{% endif %}">
+            <i class="bi bi-grid-fill me-2"></i>All
+        </a>
         <a href="?category=VEGETABLES"
-            class="category-badge {% if request.GET.category == 'VEGETABLES' %}active{% endif %}">Vegetables</a>
-        <a href="?category=FRUITS"
-            class="category-badge {% if request.GET.category == 'FRUITS' %}active{% endif %}">Fruits</a>
-        <a href="?category=GRAINS"
-            class="category-badge {% if request.GET.category == 'GRAINS' %}active{% endif %}">Grains</a>
+            class="category-badge {% if request.GET.category == 'VEGETABLES' %}active{% endif %}">
+            <i class="bi bi-flower1 me-2"></i>Vegetables
+        </a>
+        <a href="?category=FRUITS" class="category-badge {% if request.GET.category == 'FRUITS' %}active{% endif %}">
+            <i class="bi bi-apple me-2"></i>Fruits
+        </a>
+        <a href="?category=GRAINS" class="category-badge {% if request.GET.category == 'GRAINS' %}active{% endif %}">
+            <i class="bi bi-circle-fill me-2"></i>Grains
+        </a>
         <a href="?category=LIVESTOCK"
-            class="category-badge {% if request.GET.category == 'LIVESTOCK' %}active{% endif %}">Livestock</a>
+            class="category-badge {% if request.GET.category == 'LIVESTOCK' %}active{% endif %}">
+            <i class="bi bi-egg-fried me-2"></i>Livestock
+        </a>
     </div>
 </div>
 
 <!-- Product Grid -->
-<div class="row row-cols-1 row-cols-md-3 g-4">
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
     {% for product in products %}
     <div class="col animate__animated animate__fadeInUp"
         style="--delay-index: {{ forloop.counter }}; animation-delay: calc(var(--delay-index) * 100ms);">
-        <div class="card product-card glass-card h-100">
-            <div class="position-relative">
-                {% if product.image %}
-                <img src="{{ product.image.url }}" class="card-img-top product-image" alt="{{ product.name }}">
-                {% else %}
-                <div class="bg-light d-flex align-items-center justify-content-center product-image">
-                    <i class="bi bi-image text-muted fs-1"></i>
-                </div>
-                {% endif %}
+        <div class="card product-card glass-card h-100 border-0">
+            <div class="position-relative overflow-hidden">
+                <a href="{% url 'product_detail' product.id %}" class="d-block">
+                    {% if product.image %}
+                    <img src="{{ product.image.url }}" class="card-img-top product-image" alt="{{ product.name }}">
+                    {% else %}
+                    <div class="bg-light d-flex align-items-center justify-content-center product-image">
+                        <i class="bi bi-image text-muted fs-1 opacity-50"></i>
+                    </div>
+                    {% endif %}
+                </a>
 
-                <span class="badge bg-success product-badge">{{ product.get_category_display }}</span>
+                <span class="badge product-badge">
+                    {{ product.get_category_display }}
+                </span>
 
                 {% if user.is_authenticated and user != product.seller %}
                 <a href="{% url 'toggle_favorite' product.id %}"
-                    class="favorite-btn {% if product in user.favorites.all %}active{% endif %}">
-                    <i class="bi bi-heart{% if product in user.favorites.all %}-fill{% endif %}"></i>
+                    class="btn btn-light rounded-circle shadow-sm position-absolute top-0 end-0 m-3 d-flex align-items-center justify-content-center"
+                    style="width: 40px; height: 40px; backdrop-filter: blur(10px); background: rgba(255,255,255,0.8);">
+                    <i class="bi bi-heart{% if product in user.favorites.all %}-fill text-danger{% endif %}"></i>
                 </a>
                 {% endif %}
             </div>
 
-            <div class="card-body d-flex flex-column">
+            <div class="card-body d-flex flex-column p-4">
                 <div class="d-flex justify-content-between align-items-start mb-2">
-                    <h5 class="card-title fw-bold mb-0">{{ product.name }}</h5>
-                    <h5 class="text-success mb-0">KSh {{ product.price }}</h5>
+                    <h4 class="card-title mb-0 text-truncate" style="max-width: 60%;">
+                        <a href="{% url 'product_detail' product.id %}"
+                            class="text-decoration-none text-dark stretched-link">
+                            {{ product.name }}
+                        </a>
+                    </h4>
+                    <h5 class="text-success mb-0 fw-bold">KSh {{ product.price }}</h5>
                 </div>
 
-                <p class="text-muted small mb-2">
-                    <i class="bi bi-geo-alt me-1"></i>{{ product.location }}
+                <div class="d-flex align-items-center mb-3 text-muted small">
+                    <i class="bi bi-geo-alt-fill text-danger me-1"></i>
+                    <span class="me-3 text-truncate" style="max-width: 100px;">{{ product.location }}</span>
+                    <i class="bi bi-person-circle text-primary me-1"></i>
+                    <span class="text-truncate" style="max-width: 100px;">{{ product.seller.username }}</span>
+                </div>
+
+                <p class="card-text text-muted small mb-4 flex-grow-1 line-clamp-2">
+                    {{ product.description|truncatechars:80 }}
                 </p>
 
-                <div class="d-flex align-items-center mb-3">
-                    <i class="bi bi-person-circle text-muted me-2"></i>
-                    <small class="text-muted">{{ product.seller.username }}</small>
-                </div>
-
-                <p class="card-text text-truncate flex-grow-1">{{ product.description }}</p>
-
-                <div class="d-grid gap-2 mt-3">
-                    <a href="{% url 'product_detail' product.id %}" class="btn btn-outline-primary rounded-pill">View
-                        Details</a>
+                <div class="d-grid gap-2 mt-auto position-relative" style="z-index: 2;">
                     {% if user.is_authenticated and user != product.seller %}
                     <form action="{% url 'add_to_cart' product.id %}" method="POST">
                         {% csrf_token %}
                         <input type="hidden" name="quantity" value="1">
-                        <button type="submit" class="btn btn-success w-100 rounded-pill">
+                        {% if product.quantity > 0 %}
+                        <button type="submit" class="btn btn-success w-100 rounded-pill py-2 shadow-sm">
                             <i class="bi bi-cart-plus me-2"></i>Add to Cart
                         </button>
+                        {% else %}
+                        <button type="button" disabled class="btn btn-secondary w-100 rounded-pill py-2 opacity-75">
+                            <i class="bi bi-x-circle me-2"></i>Out of Stock
+                        </button>
+                        {% endif %}
                     </form>
+                    {% else %}
+                    <a href="{% url 'product_detail' product.id %}"
+                        class="btn btn-outline-primary w-100 rounded-pill py-2">
+                        View Details
+                    </a>
                     {% endif %}
                 </div>
             </div>
@@ -389,9 +151,11 @@
     </div>
     {% empty %}
     <div class="col-12 text-center py-5">
-        <i class="bi bi-search text-muted" style="font-size: 4rem;"></i>
-        <h3 class="text-muted mt-3">No products found</h3>
-        <p class="text-muted">Try adjusting your search or filters</p>
+        <div class="glass-card p-5 d-inline-block">
+            <i class="bi bi-basket3 text-muted opacity-50 mb-3" style="font-size: 4rem;"></i>
+            <h3 class="text-muted mt-3 fw-bold">No products found</h3>
+            <p class="text-muted mb-0">Try adjusting your search or filters to find what you need.</p>
+        </div>
     </div>
     {% endfor %}
 </div>

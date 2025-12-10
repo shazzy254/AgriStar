@@ -1,71 +1,113 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block title %}{{ product.name }} - AgriStar{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/marketplace.css' %}">
+{% endblock %}
+
 {% block content %}
+<div class="marketplace-ambient-bg"></div>
+
 <div class="row g-4">
     <!-- Product Image -->
     <div class="col-md-6">
-        <div class="card glass-card border-0 overflow-hidden h-100">
-            {% if product.image %}
-            <img src="{{ product.image.url }}" class="img-fluid w-100 h-100 object-fit-cover" alt="{{ product.name }}"
-                style="min-height: 400px;">
-            {% else %}
-            <div class="bg-light d-flex align-items-center justify-content-center h-100" style="min-height: 400px;">
-                <div class="text-center text-muted">
-                    <i class="bi bi-image fs-1 mb-2"></i>
-                    <h4>No Image Available</h4>
+        <div class="card glass-card border-0 overflow-hidden h-100 p-2">
+            <div class="rounded-4 overflow-hidden h-100 position-relative">
+                {% if product.image %}
+                <img src="{{ product.image.url }}" class="img-fluid w-100 h-100 object-fit-cover"
+                    alt="{{ product.name }}" style="min-height: 500px;">
+                {% else %}
+                <div class="bg-light d-flex align-items-center justify-content-center h-100" style="min-height: 500px;">
+                    <div class="text-center text-muted">
+                        <i class="bi bi-image fs-1 mb-2"></i>
+                        <h4>No Image Available</h4>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="position-absolute top-0 start-0 m-4">
+                    <span class="badge bg-white text-dark shadow-sm px-3 py-2 rounded-pill">
+                        <i class="bi bi-tag-fill text-success me-1"></i> {{ product.get_category_display }}
+                    </span>
                 </div>
             </div>
-            {% endif %}
         </div>
     </div>
 
     <!-- Product Details -->
     <div class="col-md-6">
         <div class="card glass-card border-0 h-100">
-            <div class="card-body p-4 p-lg-5">
+            <div class="card-body p-4 p-lg-5 d-flex flex-column justify-content-center">
                 <div class="d-flex justify-content-between align-items-start mb-3">
-                    <span class="badge bg-success rounded-pill px-3 py-2">{{ product.get_category_display }}</span>
+                    <div>
+                        <h1 class="display-5 fw-bold mb-2">{{ product.name }}</h1>
+                        <div class="d-flex align-items-center text-muted mb-4">
+                            <i class="bi bi-geo-alt-fill text-danger me-2"></i>
+                            <span class="me-3">{{ product.location }}</span>
+                            <i class="bi bi-person-circle me-2"></i>
+                            <span>{{ product.seller.username }}</span>
+                        </div>
+                    </div>
                     {% if request.user != product.seller %}
-                    <a href="{% url 'toggle_favorite' product.id %}" class="btn btn-outline-danger rounded-circle p-2"
-                        style="width: 40px; height: 40px;">
-                        <i class="bi bi-heart{% if product in user.favorites.all %}-fill{% endif %}"></i>
+                    <a href="{% url 'toggle_favorite' product.id %}" class="btn btn-light rounded-circle shadow-sm"
+                        style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;">
+                        <i
+                            class="bi bi-heart{% if product in user.favorites.all %}-fill text-danger{% endif %} fs-5"></i>
                     </a>
                     {% endif %}
                 </div>
 
-                <h1 class="fw-bold mb-2">{{ product.name }}</h1>
-                <div class="d-flex align-items-center text-muted mb-4">
-                    <i class="bi bi-geo-alt-fill text-danger me-2"></i>
-                    <span>{{ product.location }}</span>
-                    <span class="mx-2">•</span>
-                    <i class="bi bi-person-circle me-2"></i>
-                    <span>{{ product.seller.username }}</span>
+                <div class="mb-5">
+                    <h2 class="text-success fw-bold mb-1 display-6">
+                        KSh {{ product.price }} <span class="fs-5 text-muted fw-normal">/ {{ product.unit }}</span>
+                    </h2>
                 </div>
 
-                <h2 class="text-success fw-bold mb-4">
-                    KSh {{ product.price }} <span class="fs-6 text-muted fw-normal">/ {{ product.unit }}</span>
-                </h2>
+                <div class="p-4 rounded-4 mb-4" style="background: rgba(255,255,255,0.4);">
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        {% if product.quantity == 0 %}
+                        <span class="badge bg-danger rounded-pill px-3 py-2">Out of Stock</span>
+                        {% else %}
+                        <span class="badge bg-success rounded-pill px-3 py-2">{{ product.quantity }} {{ product.unit }}
+                            Remaining</span>
+                        {% endif %}
+
+                        {% if product.freshness_notes %}
+                        <span class="badge bg-info bg-opacity-10 text-info border border-info rounded-pill px-3 py-2">
+                            <i class="bi bi-star-fill me-1"></i> {{ product.freshness_notes }}
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <div class="text-muted small">
+                        <div class="mb-2">
+                            <i class="bi bi-calendar3 me-2"></i>Posted: {{ product.created_at|date:"d M Y H:i" }}
+                        </div>
+                        <div><i class="bi bi-clock-history me-2"></i>Last Updated: {{ product.last_updated|timesince }}
+                            ago</div>
+                    </div>
+                </div>
 
                 <div class="mb-4">
                     <h5 class="fw-bold mb-2">Description</h5>
-                    <p class="text-muted">{{ product.description }}</p>
+                    <p class="text-muted lead" style="font-size: 1.1rem;">{{ product.description }}</p>
                 </div>
 
-                <hr class="my-4">
+                <hr class="my-4" style="opacity: 0.1;">
 
-                <div class="d-grid gap-3">
+                <div class="d-grid gap-3 mt-auto">
                     {% if request.user == product.seller %}
                     <div class="row g-2">
                         <div class="col-6">
                             <a href="{% url 'edit_product' product.id %}"
-                                class="btn btn-warning w-100 rounded-pill py-3 fw-bold">
-                                <i class="bi bi-pencil-square me-2"></i>Edit
+                                class="btn btn-warning w-100 rounded-pill py-3 fw-bold shadow-sm">
+                                <i class="bi bi-pencil-square me-2"></i>Edit Product
                             </a>
                         </div>
                         <div class="col-6">
                             <a href="{% url 'delete_product' product.id %}"
-                                class="btn btn-danger w-100 rounded-pill py-3 fw-bold">
+                                class="btn btn-danger w-100 rounded-pill py-3 fw-bold shadow-sm">
                                 <i class="bi bi-trash me-2"></i>Delete
                             </a>
                         </div>
@@ -73,27 +115,41 @@
                     {% else %}
                     <form action="{% url 'add_to_cart' product.id %}" method="POST" class="d-grid gap-3">
                         {% csrf_token %}
-                        <input type="hidden" name="quantity" value="1">
-
                         <div class="row g-2">
                             {% if product.seller.role == 'FARMER' %}
                             <div class="col-12">
                                 <a href="{% url 'farmer_profile_public' product.seller.id %}"
-                                    class="btn btn-outline-success w-100 rounded-pill py-3 fw-bold">
-                                    <i class="bi bi-person-badge me-2"></i>View Farmer Profile
+                                    class="btn btn-light w-100 rounded-pill py-3 fw-bold border-0 shadow-sm"
+                                    style="background: rgba(255,255,255,0.8);">
+                                    <i class="bi bi-person-badge me-2 text-success"></i>View Farmer Profile
                                 </a>
                             </div>
                             {% endif %}
 
                             <div class="col-12">
+                                {% if product.quantity > 0 %}
+                                <div class="input-group mb-3 shadow-sm rounded-pill overflow-hidden border-0">
+                                    <span class="input-group-text bg-white border-0 fw-bold px-4">Qty</span>
+                                    <input type="number" name="quantity" value="1" min="1" max="{{ product.quantity }}"
+                                        class="form-control text-center border-0 bg-white fw-bold fs-5">
+                                    <span class="input-group-text bg-white border-0 fw-bold px-4">{{ product.unit
+                                        }}</span>
+                                </div>
                                 <button type="submit"
-                                    class="btn btn-primary-gradient w-100 rounded-pill py-3 fw-bold shadow-sm">
+                                    class="btn btn-primary-gradient w-100 rounded-pill py-3 fw-bold shadow-lg fs-5">
                                     <i class="bi bi-cart-plus me-2"></i>Add to Cart
                                 </button>
+                                {% else %}
+                                <button type="button" disabled
+                                    class="btn btn-secondary w-100 rounded-pill py-3 fw-bold opacity-75">
+                                    <i class="bi bi-x-circle me-2"></i>Currently Out of Stock
+                                </button>
+                                {% endif %}
                             </div>
 
                             <div class="col-12">
-                                <button type="button" class="btn btn-outline-success w-100 rounded-pill py-3 fw-bold"
+                                <button type="button"
+                                    class="btn btn-outline-success w-100 rounded-pill py-3 fw-bold border-2"
                                     data-bs-toggle="modal" data-bs-target="#contactSellerModal">
                                     <i class="bi bi-chat-dots me-2"></i>Contact Seller
                                 </button>
@@ -113,34 +169,36 @@
 <div class="modal fade" id="contactSellerModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content glass-card border-0">
-            <div class="modal-header border-0">
+            <div class="modal-header border-0 pb-0">
                 <h5 class="modal-title fw-bold">Contact {{ product.seller.username }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body text-center py-4">
-                <div class="rounded-circle bg-success d-inline-flex align-items-center justify-content-center mb-4"
-                    style="width: 80px; height: 80px;">
+            <div class="modal-body text-center py-5">
+                <div class="rounded-circle bg-success bg-gradient d-inline-flex align-items-center justify-content-center mb-4 shadow-lg"
+                    style="width: 90px; height: 90px;">
                     <i class="bi bi-person-lines-fill text-white fs-1"></i>
                 </div>
-                <p class="mb-4 text-muted">Choose your preferred method to contact the seller:</p>
+                <h4 class="mb-2 fw-bold">{{ product.seller.username }}</h4>
+                <p class="mb-4 text-muted">Select a method to contact the seller</p>
 
                 <div class="d-grid gap-3 col-10 mx-auto">
                     {% if product.seller.profile.phone_number %}
                     <a href="tel:{{ product.seller.profile.phone_number }}"
-                        class="btn btn-outline-primary rounded-pill py-2">
-                        <i class="bi bi-telephone-fill me-2"></i>Call Now
+                        class="btn btn-outline-primary rounded-pill py-3 fw-bold border-2">
+                        <i class="bi bi-telephone-fill me-2"></i>Call {{ product.seller.profile.phone_number }}
                     </a>
                     {% endif %}
 
                     {% if product.seller.profile.whatsapp_number %}
                     <a href="https://wa.me/{{ product.seller.profile.whatsapp_number }}" target="_blank"
-                        class="btn btn-outline-success rounded-pill py-2">
-                        <i class="bi bi-whatsapp me-2"></i>WhatsApp
+                        class="btn btn-success rounded-pill py-3 fw-bold shadow-sm"
+                        style="background: #25D366; border: none;">
+                        <i class="bi bi-whatsapp me-2"></i>Chat on WhatsApp
                     </a>
                     {% endif %}
 
                     {% if not product.seller.profile.phone_number and not product.seller.profile.whatsapp_number %}
-                    <div class="alert alert-warning rounded-3">
+                    <div class="alert alert-warning rounded-4 border-0 shadow-sm">
                         <i class="bi bi-exclamation-triangle me-2"></i>
                         This seller hasn't provided contact details yet.
                     </div>

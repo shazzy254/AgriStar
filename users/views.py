@@ -463,6 +463,8 @@ def submit_review(request, farmer_id):
 @login_required
 def toggle_favorite_farmer(request, farmer_id):
     """Toggle favorite status of a farmer for the current buyer"""
+    from django.shortcuts import get_object_or_404
+    
     if request.user.role != User.Role.BUYER:
         messages.error(request, 'Only buyers can have favorite farmers.')
         return redirect('dashboard')
