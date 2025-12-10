@@ -143,6 +143,17 @@ class BuyerRegistrationProfileForm(forms.ModelForm):
         }
 
 class RiderRegistrationProfileForm(forms.ModelForm):
+    vehicle_type = forms.ChoiceField(
+        choices=RiderProfile.VehicleType.choices,
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        required=True
+    )
+    license_plate = forms.CharField(
+        max_length=20,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'License Plate (e.g. KAA 123A)'}),
+        required=True
+    )
+
     class Meta:
         model = Profile
         fields = ['display_name', 'phone_number', 'location', 'address']

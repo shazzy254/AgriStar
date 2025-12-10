@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Find Rider - AgriStar{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="fw-bold"><i class="bi bi-bicycle me-2"></i>Find a Rider</h2>
+            <p class="text-muted">Assign a rider for Order #{{ order.id }} - {{ order.product.name }}</p>
+        </div>
+    </div>
+
+    <!-- Search Section -->
+    <div class="row mb-5">
+        <div class="col-md-8 mx-auto">
+            <form method="GET" class="d-flex gap-2">
+                <input type="text" name="location" class="form-control form-control-lg"
+                    placeholder="Search by location (e.g. Nairobi, Westlands)..." value="{{ search_query|default:'' }}">
+                <button type="submit" class="btn btn-success btn-lg px-4">
+                    <i class="bi bi-search"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Riders List -->
+    <div class="row g-4">
+        {% for rider in riders %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm glass-card">
+                <div class="card-body text-center p-4">
+                    {% if rider.profile.avatar %}
+                    <img src="{{ rider.profile.avatar.url }}" alt="{{ rider.username }}" class="rounded-circle mb-3"
+                        style="width: 100px; height: 100px; object-fit: cover;">
+                    {% else %}
+                    <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center mb-3"
+                        style="width: 100px; height: 100px;">
+                        <i class="bi bi-person fs-1 text-muted"></i>
+                    </div>
+                    {% endif %}
+
+                    <h5 class="card-title fw-bold mb-1">{{ rider.profile.display_name|default:rider.username }}</h5>
+
+                    <div class="mb-3">
+                        <span class="badge bg-primary rounded-pill">
+                            <i class="bi bi-geo-alt-fill me-1"></i>{{ rider.profile.location|default:"Unknown Location"
+                            }}
+                        </span>
+                    </div>
+
+                    <div class="text-start mb-4 small text-muted">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="bi bi-telephone me-2"></i> {{ rider.profile.phone_number|default:"N/A" }}
+                        </div>
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="bi bi-truck me-2"></i> {{ rider.rider_profile.vehicle_type|title }}
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i> {{
+                            rider.rider_profile.completed_deliveries }} Deliveries
+                        </div>
+                    </div>
+
+                    <form action="{% url 'assign_rider' order.id rider.id %}" method="POST">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-success w-100 rounded-pill">
+                            Assign Rider <i class="bi bi-arrow-right ms-2"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <div class="empty-state">
+                <i class="bi bi-bicycle display-1 text-muted mb-3"></i>
+                <h4 class="text-muted">No available riders found</h4>
+                <p class="text-secondary">Try searching for a different location or check back later.</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

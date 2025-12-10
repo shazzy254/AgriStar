@@ -5,7 +5,7 @@ from . import views
 urlpatterns = [
     path('select-role/', views.select_role, name='select_role'),
     path('register/', views.register, name='register'),
-    path('login/', auth_views.LoginView.as_view(template_name='users/login.html'), name='login'),
+    path('login/', auth_views.LoginView.as_view(template_name='users/login.html', next_page='dashboard'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(template_name='users/logout.html'), name='logout'),
     path('profile/', views.profile, name='profile'),
     path('profile/edit/', views.edit_profile, name='edit_profile'),
@@ -15,6 +15,9 @@ urlpatterns = [
     path('profile/set-default-address/<int:address_id>/', views.set_default_address, name='set_default_address'),
     path('profile/delete-address/<int:address_id>/', views.delete_address, name='delete_address'),
     path('dashboard/', views.dashboard, name='dashboard'),
+    path('dashboard/toggle-availability/', views.toggle_rider_availability, name='toggle_rider_availability'),
+    path('dashboard/withdraw/', views.rider_withdraw, name='rider_withdraw'),
+    path('dashboard/update-location/', views.update_rider_location, name='update_rider_location'),
     
     # Farmer Public Profile & Reviews
     path('farmer/<int:farmer_id>/', views.farmer_profile_public, name='farmer_profile_public'),

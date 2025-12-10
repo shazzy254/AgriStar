@@ -233,16 +233,16 @@
 {% block content %}
 <div class="register-container">
     <div class="register-card">
-        {% if form.initial.role %}
+        {% if role %}
         <!-- Role Badge -->
         <div class="role-badge">
-            {% if form.initial.role == 'FARMER' %}
+            {% if role == 'FARMER' %}
             <i class="bi bi-flower1"></i> Farmer Registration
-            {% elif form.initial.role == 'BUYER' %}
+            {% elif role == 'BUYER' %}
             <i class="bi bi-cart3"></i> Buyer Registration
-            {% elif form.initial.role == 'SUPPLIER' %}
+            {% elif role == 'SUPPLIER' %}
             <i class="bi bi-tools"></i> Supplier Registration
-            {% elif form.initial.role == 'RIDER' %}
+            {% elif role == 'RIDER' %}
             <i class="bi bi-bicycle"></i> Rider Registration
             {% endif %}
         </div>
@@ -263,7 +263,7 @@
             {% if field.name != 'role' %}
             <div class="glass-input-group">
                 <label>{{ field.label }}</label>
-                <div class="glass-input-wrapper">
+                <div class="glass-input-wrapper position-relative">
                     <i class="glass-input-icon 
                             {% if 'username' in field.name %}bi bi-person
                             {% elif 'email' in field.name %}bi bi-envelope
@@ -271,6 +271,10 @@
                             {% else %}bi bi-pencil{% endif %}">
                     </i>
                     {{ field }}
+                    {% if 'password' in field.name %}
+                    <i class="bi bi-eye password-toggle" onclick="toggleRegisterPassword(this)"
+                        style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: rgba(255,255,255,0.7); z-index: 10;"></i>
+                    {% endif %}
                 </div>
                 {% if field.errors %}
                 <div class="error-message">{{ field.errors|striptags }}</div>
@@ -280,18 +284,18 @@
             {% endfor %}
 
             <!-- Hidden role field -->
-            {% if form.initial.role %}
-            <input type="hidden" name="role" value="{{ form.initial.role }}">
+            {% if role %}
+            <input type="hidden" name="role" value="{{ role }}">
             {% endif %}
 
             <!-- Profile Details Section -->
             {% if profile_form %}
             <div class="form-section-title">
                 <i class="bi bi-card-text me-2"></i>
-                {% if form.initial.role == 'FARMER' %}Farm Information
-                {% elif form.initial.role == 'RIDER' %}Personal Information
-                {% elif form.initial.role == 'SUPPLIER' %}Business Information
-                {% elif form.initial.role == 'BUYER' %}Delivery Information
+                {% if role == 'FARMER' %}Farm Information
+                {% elif role == 'RIDER' %}Personal Information
+                {% elif role == 'SUPPLIER' %}Business Information
+                {% elif role == 'BUYER' %}Delivery Information
                 {% else %}Additional Information{% endif %}
             </div>
 
@@ -305,6 +309,8 @@
                         {% elif 'address' in field.name %}bi bi-house
                         {% elif 'farm' in field.name or 'crop' in field.name %}bi bi-flower1
                         {% elif 'company' in field.name %}bi bi-building
+                        {% elif 'vehicle' in field.name %}bi bi-truck
+                        {% elif 'license' in field.name %}bi bi-card-heading
                         {% else %}bi bi-card-text{% endif %}">
                     </i>
                     {{ field }}
@@ -320,7 +326,7 @@
                 Create Account <i class="bi bi-arrow-right ms-2"></i>
             </button>
 
-            {% if form.initial.role %}
+            {% if role %}
             <div class="text-center">
                 <a href="{% url 'select_role' %}" class="change-role-link">
                     <i class="bi bi-arrow-left"></i> Change Role
@@ -337,10 +343,24 @@
 
 <script>
     // Add glass-input class to all form inputs
-    document.querySelectorAll('input[type="text"], input[type="emailt[type="password"], select, textarea').forEach(element => {
+    document.querySelectorAll('input[type="text"], input[type="email"], input[type="password"], select, textarea').forEach(element => {
         if (!element.classList.contains('glass-input')) {
             element.classList.add('glass-input');
         }
     });
+
+    function toggleRegisterPassword(icon) {
+        const wrapper = icon.parentElement;
+        const input = wrapper.querySelector('input');
+        if (input.type === "password") {
+            input.type = "text";
+            icon.classList.remove("bi-eye");
+            icon.classList.add("bi-eye-slash");
+        } else {
+            input.type = "password";
+            icon.classList.remove("bi-eye-slash");
+            icon.classList.add("bi-eye");
+        }
+    }
 </script>
 {% endblock %}

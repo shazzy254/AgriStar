@@ -332,7 +332,8 @@
 <!-- Product Grid -->
 <div class="row row-cols-1 row-cols-md-3 g-4">
     {% for product in products %}
-    <div class="col animate__animated animate__fadeInUp" style="animation-delay: {{ forloop.counter0|add:'1' }}00ms;">
+    <div class="col animate__animated animate__fadeInUp"
+        style="--delay-index: {{ forloop.counter }}; animation-delay: calc(var(--delay-index) * 100ms);">
         <div class="card product-card glass-card h-100">
             <div class="position-relative">
                 {% if product.image %}

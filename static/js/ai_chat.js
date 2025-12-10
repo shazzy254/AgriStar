@@ -62,8 +62,85 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    // --- Helper Functions ---
+    function addMessageToUI(content, sender) {
+        const div = document.createElement('div');
+        div.classList.add('message-row', sender);
+
+        const avatarClass = sender === 'bot' ? 'avatar-bot' : 'avatar-user';
+        const icon = sender === 'bot' ? '<i class="bi bi-robot"></i>' : '<i class="bi bi-person"></i>';
+
+        div.innerHTML = `
+            <div class="message-content-wrapper">
+                <div class="avatar-icon ${avatarClass}">${icon}</div>
+                <div class="message-bubble">${content}</div>
+            </div>
+        `;
+
+        chatMessages.appendChild(div);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function showLoading() {
+        const div = document.createElement('div');
+        div.id = 'loading-indicator';
+        div.classList.add('message-row', 'bot');
+        div.innerHTML = `
+            <div class="message-content-wrapper">
+                <div class="avatar-icon avatar-bot"><i class="bi bi-robot"></i></div>
+                <div class="message-bubble">
+                    <div class="typing-indicator">
+                        <span></span><span></span><span></span>
+                    </div>
+                </div>
+            </div>
+        `;
+        chatMessages.appendChild(div);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function hideLoading() {
+        const loader = document.getElementById('loading-indicator');
+        if (loader) loader.remove();
+    }
+
+    function renderMessages(messages) {
+        chatMessages.innerHTML = '';
+        messages.forEach(msg => {
+            let content = msg.text;
+            if (msg.audio_url) {
+                content = `<audio controls src="${msg.audio_url}" class="w-100"></audio><br><em>(Transcript): ${msg.text}</em>`;
+            }
+            if (msg.image_url) {
+                content = `<img src="${msg.image_url}" style="max-width:300px;border-radius:5px;"><br>${msg.text}`;
+            }
+            addMessageToUI(content, msg.sender);
+        });
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function updateSessionState(sid, title) {
+        if (currentSessionId !== sid) {
+            currentSessionId = sid;
+            const exists = document.querySelector(`.history-item[data-session-id="${sid}"]`);
+            if (!exists) {
+                const div = document.createElement('div');
+                div.className = 'history-item active';
+                div.dataset.sessionId = sid;
+                div.innerHTML = `<i class="bi bi-chat-left-text me-2"></i> ${title || 'New Chat'}`;
+                historyList.prepend(div);
+
+                document.querySelectorAll('.history-item').forEach(i => {
+                    if (i !== div) i.classList.remove('active');
+                });
+            }
+            const chatTitle = document.getElementById('chat-title');
+            if (chatTitle) chatTitle.textContent = title || 'New Chat';
+        }
+    }
+
     // --- Sidebar / History Logic ---
-    newChatBtn.addEventListener('click', startNewChat);
+    if (newChatBtn) newChatBtn.addEventListener('click', startNewChat);
 
     function startNewChat() {
         currentSessionId = null;
@@ -75,19 +152,22 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>
         `;
         document.querySelectorAll('.history-item').forEach(i => i.classList.remove('active'));
-        document.getElementById('chat-title').textContent = "New Conversation";
+        const chatTitle = document.getElementById('chat-title');
+        if (chatTitle) chatTitle.textContent = "New Conversation";
     }
 
     // Delegate click for history items
-    historyList.addEventListener('click', (e) => {
-        const item = e.target.closest('.history-item');
-        if (item) {
-            const sid = item.dataset.sessionId;
-            loadSession(sid);
-            document.querySelectorAll('.history-item').forEach(i => i.classList.remove('active'));
-            item.classList.add('active');
-        }
-    });
+    if (historyList) {
+        historyList.addEventListener('click', (e) => {
+            const item = e.target.closest('.history-item');
+            if (item) {
+                const sid = item.dataset.sessionId;
+                loadSession(sid);
+                document.querySelectorAll('.history-item').forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+            }
+        });
+    }
 
     async function loadSession(sessionId) {
         // Show loading
@@ -113,28 +193,11 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    function renderMessages(messages) {
-        chatMessages.innerHTML = '';
-        messages.forEach(msg => {
-            let content = msg.text;
-
-            if (msg.audio_url) {
-                content = `<audio controls src="${msg.audio_url}" class="w-100"></audio><br><em>(Transcript): ${msg.text}</em>`;
-            }
-            if (msg.image_url) {
-                content = `<img src="${msg.image_url}" style="max-width:200px;border-radius:10px;"><br>${msg.text}`;
-            }
-
-            addMessageToUI(content, msg.sender);
-        });
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
-
     // --- Audio Recording Logic ---
-    micBtn.addEventListener('click', startRecording);
-    stopRecordBtn.addEventListener('click', stopRecording);
-    discardAudioBtn.addEventListener('click', discardAudio);
-    sendAudioBtn.addEventListener('click', sendAudioMessage);
+    if (micBtn) micBtn.addEventListener('click', startRecording);
+    if (stopRecordBtn) stopRecordBtn.addEventListener('click', stopRecording);
+    if (discardAudioBtn) discardAudioBtn.addEventListener('click', discardAudio);
+    if (sendAudioBtn) sendAudioBtn.addEventListener('click', sendAudioMessage);
 
     async function startRecording() {
         try {
@@ -261,59 +324,57 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Handle image selection from gallery
-    imageInput.addEventListener('change', (e) => {
-        if (e.target.files && e.target.files[0]) {
-            selectedImage = e.target.files[0];
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                filePreviewArea.classList.remove('d-none');
-                filePreviewArea.innerHTML = `
-                    <div class="position-relative d-inline-block">
-                        <img src="${e.target.result}" style="max-height:100px; border-radius:10px;">
-                        <button class="btn btn-sm btn-danger position-absolute top-0 end-0 rounded-circle" 
-                                onclick="clearImage()" style="padding:0 5px;">×</button>
-                    </div>`;
-            };
-            reader.readAsDataURL(selectedImage);
-        }
-    });
+    if (imageInput) {
+        imageInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files[0]) {
+                processSelectedImage(e.target.files[0]);
+            }
+        });
+    }
 
     // Handle image capture from camera
     if (cameraInput) {
         cameraInput.addEventListener('change', (e) => {
             if (e.target.files && e.target.files[0]) {
-                selectedImage = e.target.files[0];
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    filePreviewArea.classList.remove('d-none');
-                    filePreviewArea.innerHTML = `
-                        <div class="position-relative d-inline-block">
-                            <img src="${e.target.result}" style="max-height:100px; border-radius:10px;">
-                            <button class="btn btn-sm btn-danger position-absolute top-0 end-0 rounded-circle" 
-                                    onclick="clearImage()" style="padding:0 5px;">×</button>
-                        </div>`;
-                };
-                reader.readAsDataURL(selectedImage);
+                processSelectedImage(e.target.files[0]);
             }
         });
     }
 
+    function processSelectedImage(file) {
+        selectedImage = file;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            filePreviewArea.classList.remove('d-none');
+            filePreviewArea.innerHTML = `
+                <div class="position-relative d-inline-block">
+                    <img src="${e.target.result}" style="max-height:100px; border-radius:10px;">
+                    <button class="btn btn-sm btn-danger position-absolute top-0 end-0 rounded-circle" 
+                            onclick="clearImage()" style="padding:0 5px;">×</button>
+                </div>`;
+        };
+        reader.readAsDataURL(selectedImage);
+    }
+
     window.clearImage = function () {
         selectedImage = null;
-        imageInput.value = '';
+        if (imageInput) imageInput.value = '';
+        if (cameraInput) cameraInput.value = '';
         filePreviewArea.innerHTML = '';
         filePreviewArea.classList.add('d-none');
     }
 
     // --- Text Chat Logic ---
-    sendBtn.addEventListener('click', sendTextMessage);
-    chatInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            console.log('Enter pressed, sending message...');
-            sendTextMessage();
-        }
-    });
+    if (sendBtn) sendBtn.addEventListener('click', sendTextMessage);
+    if (chatInput) {
+        chatInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                console.log('Enter pressed, sending message...');
+                sendTextMessage();
+            }
+        });
+    }
 
     async function sendTextMessage() {
         const text = chatInput.value.trim();
@@ -376,243 +437,14 @@ document.addEventListener('DOMContentLoaded', function () {
             hideLoading();
             addMessageToUI("Network error.", 'bot');
         }
+    }
 
-        // --- Helpers ---
-        function addMessageToUI(content, sender) {
-            const div = document.createElement('div');
-            div.classList.add('message-row', sender);
+    // --- Context Menu for Chat History ---
+    const contextMenu = document.getElementById('context-menu');
+    let contextMenuTarget = null;
+    let longPressTimer = null;
 
-            const avatarClass = sender === 'bot' ? 'avatar-bot' : 'avatar-user';
-            const icon = sender === 'bot' ? '<i class="bi bi-robot"></i>' : '<i class="bi bi-person"></i>';
-
-            div.innerHTML = `
-            <div class="message-content-wrapper">
-                <div class="avatar-icon ${avatarClass}">${icon}</div>
-                <div class="message-bubble">${content}</div>
-            </div>
-        `;
-
-            chatMessages.appendChild(div);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-
-        function showLoading() {
-            const div = document.createElement('div');
-            div.id = 'loading-indicator';
-            div.classList.add('message-row', 'bot');
-            div.innerHTML = `
-            <div class="message-content-wrapper">
-                <div class="avatar-icon avatar-bot"><i class="bi bi-robot"></i></div>
-                <div class="message-bubble">
-                    <div class="typing-indicator">
-                        <span></span><span></span><span></span>
-                    </div>
-                </div>
-            </div>
-        `;
-            chatMessages.appendChild(div);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-
-        function hideLoading() {
-            const loader = document.getElementById('loading-indicator');
-            if (loader) loader.remove();
-        }
-
-        function renderMessages(messages) {
-            chatMessages.innerHTML = '';
-            messages.forEach(msg => {
-                let content = msg.text;
-                if (msg.audio_url) {
-                    content = `<audio controls src="${msg.audio_url}" class="w-100"></audio><br><em>(Transcript): ${msg.text}</em>`;
-                }
-                if (msg.image_url) {
-                    content = `<img src="${msg.image_url}" style="max-width:300px;border-radius:5px;"><br>${msg.text}`;
-                }
-                addMessageToUI(content, msg.sender);
-            });
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-
-        function updateSessionState(sid, title) {
-            if (currentSessionId !== sid) {
-                currentSessionId = sid;
-                const exists = document.querySelector(`.history-item[data-session-id="${sid}"]`);
-                if (!exists) {
-                    const div = document.createElement('div');
-                    div.className = 'history-item active';
-                    div.dataset.sessionId = sid;
-                    div.innerHTML = `<i class="bi bi-chat-left-text me-2"></i> ${title || 'New Chat'}`;
-                    historyList.prepend(div);
-
-                    document.querySelectorAll('.history-item').forEach(i => {
-                        if (i !== div) i.classList.remove('active');
-                    });
-                }
-                document.getElementById('chat-title').textContent = title || 'New Chat';
-            }
-        }
-
-        window.clearImage = function () {
-            selectedImage = null;
-            imageInput.value = '';
-            filePreviewArea.innerHTML = '';
-            filePreviewArea.classList.add('d-none');
-        }
-
-        // --- Text Chat Logic ---
-        sendBtn.addEventListener('click', sendTextMessage);
-        chatInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                console.log('Enter pressed, sending message...');
-                sendTextMessage();
-            }
-        });
-
-        async function sendTextMessage() {
-            const text = chatInput.value.trim();
-            if (!text && !selectedImage) return;
-
-            // UI Updates
-            if (text) addMessageToUI(text, 'user');
-            if (selectedImage) {
-                const url = URL.createObjectURL(selectedImage);
-                addMessageToUI(`<img src="${url}" style="max-width:200px;border-radius:10px;">`, 'user');
-            }
-
-            chatInput.value = '';
-            showLoading();
-
-            try {
-                let res, data;
-
-                if (selectedImage) {
-                    const formData = new FormData();
-                    formData.append('image', selectedImage);
-                    formData.append('message', text || "Describe this image");
-                    formData.append('language', currentLang);
-                    if (currentSessionId) formData.append('session_id', currentSessionId);
-
-                    res = await fetch('/ai/vision/', {
-                        method: 'POST',
-                        headers: { 'X-CSRFToken': csrftoken },
-                        body: formData
-                    });
-                    clearImage();
-                } else {
-                    const payload = {
-                        message: text,
-                        language: currentLang,
-                        session_id: currentSessionId
-                    };
-
-                    res = await fetch('/ai/chat/', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': csrftoken
-                        },
-                        body: JSON.stringify(payload)
-                    });
-                }
-
-                data = await res.json();
-                hideLoading();
-
-                if (res.ok) {
-                    addMessageToUI(data.response, 'bot');
-                    if (data.session_id) updateSessionState(data.session_id, data.session_title);
-                } else {
-                    addMessageToUI("Error: " + (data.error || "Unknown"), 'bot');
-                }
-
-            } catch (e) {
-                hideLoading();
-                addMessageToUI("Network error.", 'bot');
-            }
-
-            // --- Helpers ---
-            function addMessageToUI(content, sender) {
-                const div = document.createElement('div');
-                div.classList.add('message-row', sender);
-
-                const avatarClass = sender === 'bot' ? 'avatar-bot' : 'avatar-user';
-                const icon = sender === 'bot' ? '<i class="bi bi-robot"></i>' : '<i class="bi bi-person"></i>';
-
-                div.innerHTML = `
-            <div class="message-content-wrapper">
-                <div class="avatar-icon ${avatarClass}">${icon}</div>
-                <div class="message-bubble">${content}</div>
-            </div>
-        `;
-
-                chatMessages.appendChild(div);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }
-
-            function showLoading() {
-                const div = document.createElement('div');
-                div.id = 'loading-indicator';
-                div.classList.add('message-row', 'bot');
-                div.innerHTML = `
-            <div class="message-content-wrapper">
-                <div class="avatar-icon avatar-bot"><i class="bi bi-robot"></i></div>
-                <div class="message-bubble">
-                    <div class="typing-indicator">
-                        <span></span><span></span><span></span>
-                    </div>
-                </div>
-            </div>
-        `;
-                chatMessages.appendChild(div);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }
-
-            function hideLoading() {
-                const loader = document.getElementById('loading-indicator');
-                if (loader) loader.remove();
-            }
-
-            function renderMessages(messages) {
-                chatMessages.innerHTML = '';
-                messages.forEach(msg => {
-                    let content = msg.text;
-                    if (msg.audio_url) {
-                        content = `<audio controls src="${msg.audio_url}" class="w-100"></audio><br><em>(Transcript): ${msg.text}</em>`;
-                    }
-                    if (msg.image_url) {
-                        content = `<img src="${msg.image_url}" style="max-width:300px;border-radius:5px;"><br>${msg.text}`;
-                    }
-                    addMessageToUI(content, msg.sender);
-                });
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }
-
-            function updateSessionState(sid, title) {
-                if (currentSessionId !== sid) {
-                    currentSessionId = sid;
-                    const exists = document.querySelector(`.history-item[data-session-id="${sid}"]`);
-                    if (!exists) {
-                        const div = document.createElement('div');
-                        div.className = 'history-item active';
-                        div.dataset.sessionId = sid;
-                        div.innerHTML = `<i class="bi bi-chat-left-text me-2"></i> ${title || 'New Chat'}`;
-                        historyList.prepend(div);
-
-                        document.querySelectorAll('.history-item').forEach(i => {
-                            if (i !== div) i.classList.remove('active');
-                        });
-                    }
-                }
-            }
-        }
-
-        // --- Context Menu for Chat History ---
-        const contextMenu = document.getElementById('context-menu');
-        let contextMenuTarget = null;
-        let longPressTimer = null;
-
+    if (historyList && contextMenu) {
         // Right-click (desktop)
         historyList.addEventListener('contextmenu', (e) => {
             const item = e.target.closest('.history-item');
@@ -640,21 +472,25 @@ document.addEventListener('DOMContentLoaded', function () {
         historyList.addEventListener('touchmove', () => {
             if (longPressTimer) clearTimeout(longPressTimer);
         });
+    }
 
-        function showContextMenu(x, y, item) {
-            contextMenuTarget = item;
-            contextMenu.style.left = x + 'px';
-            contextMenu.style.top = y + 'px';
-            contextMenu.classList.add('show');
-        }
+    function showContextMenu(x, y, item) {
+        if (!contextMenu) return;
+        contextMenuTarget = item;
+        contextMenu.style.left = x + 'px';
+        contextMenu.style.top = y + 'px';
+        contextMenu.classList.add('show');
+    }
 
-        // Hide context menu on click outside
-        document.addEventListener('click', () => {
-            contextMenu.classList.remove('show');
-        });
+    // Hide context menu on click outside
+    document.addEventListener('click', () => {
+        if (contextMenu) contextMenu.classList.remove('show');
+    });
 
-        // Rename chat
-        document.getElementById('rename-chat').addEventListener('click', async () => {
+    // Rename chat
+    const renameChatBtn = document.getElementById('rename-chat');
+    if (renameChatBtn) {
+        renameChatBtn.addEventListener('click', async () => {
             if (!contextMenuTarget) return;
             const sessionId = contextMenuTarget.dataset.sessionId;
             const currentTitle = contextMenuTarget.textContent.trim();
@@ -680,9 +516,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
         });
+    }
 
-        // Delete chat
-        document.getElementById('delete-chat').addEventListener('click', async () => {
+    // Delete chat
+    const deleteChatBtn = document.getElementById('delete-chat');
+    if (deleteChatBtn) {
+        deleteChatBtn.addEventListener('click', async () => {
             if (!contextMenuTarget) return;
             const sessionId = contextMenuTarget.dataset.sessionId;
 
@@ -706,4 +545,5 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
         });
-    });
+    }
+});

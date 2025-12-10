@@ -49,7 +49,7 @@ class AIService:
                 base_url="https://api.groq.com/openai/v1"
             )
 
-            system_content = "You are AgriStar, an expert agricultural assistant in Kenya. Help farmers with crops, pests, market prices, and farming advice. "
+            system_content = "You are AgriStar, an expert agricultural assistant in Kenya. Help farmers with crops, pests, market prices, and farming advice. Structure your responses clearly. For steps or lists, use bullet points (each on a new line). Keep your tone warm and friendly. "
             if language == 'sw':
                 system_content += "Respond in Kiswahili."
             else:
@@ -112,7 +112,7 @@ class AIService:
             image_content = image_file.read()
             base64_image = base64.b64encode(image_content).decode('utf-8')
             
-            system_instruction = "You are an agricultural expert. Analyze the provided image focusing on crops, pests, diseases, or soil conditions."
+            system_instruction = "You are an agricultural expert. Analyze the provided image focusing on crops, pests, diseases, or soil conditions. Structure your findings in a clear list using bullet points. Keep your tone warm and friendly."
             if language == 'sw':
                 system_instruction += " Respond in Kiswahili."
 

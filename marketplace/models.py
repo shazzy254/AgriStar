@@ -54,7 +54,9 @@ class Order(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
     mpesa_receipt_number = models.CharField(max_length=50, blank=True, null=True)
     checkout_request_id = models.CharField(max_length=100, blank=True, null=True)
+    assigned_rider = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_orders')
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def save(self, *args, **kwargs):
         self.total_price = self.product.price * self.quantity
@@ -100,6 +102,7 @@ class Notification(models.Model):
         ('ORDER_PLACED', 'Order Placed'),
         ('ORDER_ACCEPTED', 'Order Accepted'),
         ('ORDER_REJECTED', 'Order Rejected'),
+        ('ORDER_ASSIGNED', 'Order Assigned'),
     ]
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notifications')

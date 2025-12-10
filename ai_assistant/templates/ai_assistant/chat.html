@@ -38,6 +38,27 @@
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3),
             inset 0 1px 0 rgba(255, 255, 255, 0.1);
         overflow: hidden;
+        height: calc(100vh - 100px);
+        /* Flexible height */
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Mobile Sidebar Overlay */
+    .mobile-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1040;
+        display: none;
+        backdrop-filter: blur(5px);
+    }
+
+    .mobile-overlay.show {
+        display: block;
     }
 
     /* Sidebar Styling */
@@ -45,14 +66,17 @@
         background: rgba(255, 255, 255, 0.08);
         backdrop-filter: blur(15px);
         border-right: 1px solid rgba(255, 255, 255, 0.1);
-        height: 700px;
+        height: 100%;
         overflow-y: auto;
+        display: flex;
+        flex-direction: column;
     }
 
     .sidebar-header {
         background: linear-gradient(135deg, rgba(46, 125, 50, 0.9), rgba(67, 160, 71, 0.9));
         padding: 1.5rem;
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        flex-shrink: 0;
     }
 
     .conversation-item {
@@ -71,9 +95,10 @@
     /* Chat Header */
     .chat-header {
         background: linear-gradient(135deg, #2e7d32 0%, #43a047 50%, #66bb6a 100%);
-        padding: 1.5rem 2rem;
+        padding: 1rem 1.5rem;
         border-bottom: 1px solid rgba(255, 255, 255, 0.2);
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        flex-shrink: 0;
     }
 
     .chat-header h4 {
@@ -81,6 +106,7 @@
         text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
         font-weight: 700;
         margin: 0;
+        font-size: 1.25rem;
     }
 
     .chat-header small {
@@ -100,10 +126,11 @@
 
     .lang-toggle .btn {
         border-radius: 50px;
-        padding: 0.4rem 1rem;
+        padding: 0.3rem 0.8rem;
         font-weight: 600;
         border: none;
         transition: all 0.3s ease;
+        font-size: 0.85rem;
     }
 
     .lang-toggle .btn.active {
@@ -119,9 +146,9 @@
 
     /* Chat Messages Area */
     .chat-messages {
-        height: 500px;
+        flex-grow: 1;
         overflow-y: auto;
-        padding: 2rem;
+        padding: 1.5rem;
         background: linear-gradient(180deg,
                 rgba(255, 255, 255, 0.03) 0%,
                 rgba(255, 255, 255, 0.01) 100%);
@@ -153,28 +180,17 @@
     /* Welcome Message */
     .welcome-message {
         text-align: center;
-        padding: 4rem 2rem;
+        padding: 3rem 1rem;
         color: rgba(255, 255, 255, 0.9);
     }
 
     .welcome-message i {
-        font-size: 5rem;
+        font-size: 4rem;
         background: linear-gradient(135deg, #66bb6a, #43a047);
+        background-clip: text;
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         filter: drop-shadow(0 4px 8px rgba(67, 160, 71, 0.3));
-    }
-
-    .welcome-message h5 {
-        color: white;
-        font-weight: 700;
-        margin-top: 1.5rem;
-        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-    }
-
-    .welcome-message p {
-        color: rgba(255, 255, 255, 0.8);
-        font-size: 1.1rem;
     }
 
     /* Message Bubbles */
@@ -205,11 +221,21 @@
 
     .message-bubble {
         display: inline-block;
-        padding: 1rem 1.5rem;
+        padding: 1rem 1.25rem;
         border-radius: 20px;
-        max-width: 75%;
+        max-width: 85%;
+        /* Optimized for mobile */
         word-wrap: break-word;
+        white-space: pre-wrap;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        text-align: left;
+    }
+
+    @media (min-width: 768px) {
+        .message-bubble {
+            max-width: 75%;
+            padding: 1rem 1.5rem;
+        }
     }
 
     .message.user .message-bubble {
@@ -227,71 +253,28 @@
         border-bottom-left-radius: 5px;
     }
 
-    /* Typing Indicator */
-    .typing-indicator {
-        display: inline-block;
-        padding: 1rem 1.5rem;
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(15px);
-        border-radius: 20px;
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    }
-
-    .typing-indicator span {
-        display: inline-block;
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #2e7d32, #43a047);
-        margin: 0 3px;
-        animation: typing 1.4s infinite;
-    }
-
-    .typing-indicator span:nth-child(2) {
-        animation-delay: 0.2s;
-    }
-
-    .typing-indicator span:nth-child(3) {
-        animation-delay: 0.4s;
-    }
-
-    @keyframes typing {
-
-        0%,
-        60%,
-        100% {
-            transform: translateY(0);
-            opacity: 0.7;
-        }
-
-        30% {
-            transform: translateY(-12px);
-            opacity: 1;
-        }
-    }
-
     /* Input Area */
     .chat-footer {
         background: rgba(255, 255, 255, 0.08);
         backdrop-filter: blur(20px);
-        padding: 1.5rem 2rem;
+        padding: 1rem;
         border-top: 1px solid rgba(255, 255, 255, 0.1);
+        flex-shrink: 0;
     }
 
     .input-group {
         background: rgba(255, 255, 255, 0.1);
         backdrop-filter: blur(10px);
         border-radius: 50px;
-        padding: 0.5rem;
+        padding: 0.25rem;
         border: 1px solid rgba(255, 255, 255, 0.2);
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
     }
 
     .input-group .btn {
         border-radius: 50%;
-        width: 45px;
-        height: 45px;
+        width: 40px;
+        height: 40px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -301,17 +284,12 @@
         transition: all 0.3s ease;
     }
 
-    .input-group .btn:hover {
-        background: rgba(255, 255, 255, 0.25);
-        transform: scale(1.1);
-    }
-
     .input-group #user-input {
         background: transparent;
         border: none;
         color: white;
-        padding: 0.75rem 1.5rem;
-        font-size: 1rem;
+        padding: 0.5rem 1rem;
+        font-size: 0.95rem;
     }
 
     .input-group #user-input::placeholder {
@@ -325,66 +303,28 @@
 
     .input-group #send-btn {
         background: linear-gradient(135deg, #2e7d32, #43a047);
-        box-shadow: 0 4px 15px rgba(46, 125, 50, 0.4);
-    }
-
-    .input-group #send-btn:hover {
-        box-shadow: 0 6px 20px rgba(46, 125, 50, 0.6);
-    }
-
-    /* Image Preview */
-    #image-preview-area {
-        margin-bottom: 1rem;
-    }
-
-    #image-preview {
-        max-width: 150px;
-        max-height: 100px;
-        border-radius: 15px;
-        border: 2px solid rgba(46, 125, 50, 0.5);
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    }
-
-    #remove-image {
-        border-radius: 50%;
-        width: 30px;
-        height: 30px;
-        padding: 0;
-        background: linear-gradient(135deg, #dc3545, #c82333);
-        border: 2px solid white;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-    }
-
-    /* Dropdown Menu */
-    .btn-group .dropdown-menu {
-        background: rgba(30, 30, 30, 0.95);
-        backdrop-filter: blur(15px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 15px;
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
-        padding: 0.5rem;
-    }
-
-    .btn-group .dropdown-item {
-        color: rgba(255, 255, 255, 0.9);
-        border-radius: 10px;
-        padding: 0.75rem 1rem;
-        transition: all 0.3s ease;
-    }
-
-    .btn-group .dropdown-item:hover {
-        background: rgba(46, 125, 50, 0.3);
-        color: white;
-        transform: translateX(5px);
-    }
-
-    .btn-group .dropdown-item i {
-        color: #66bb6a;
     }
 
     /* Quick Actions */
     .quick-actions {
-        margin-top: 1.5rem;
+        margin-top: 1rem;
+    }
+
+    /* Horizontal styling for quick actions on mobile */
+    .quick-actions .row {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding-bottom: 0.5rem;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .quick-actions .row::-webkit-scrollbar {
+        height: 4px;
+    }
+
+    .quick-actions .row::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
     }
 
     .quick-tip {
@@ -393,97 +333,64 @@
         border: 1px solid rgba(255, 255, 255, 0.2);
         color: white;
         border-radius: 50px;
-        padding: 0.75rem 1.5rem;
+        padding: 0.6rem 1rem;
         transition: all 0.3s ease;
         font-weight: 500;
-    }
-
-    .quick-tip:hover {
-        background: rgba(255, 255, 255, 0.2);
-        transform: translateY(-3px);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-        border-color: rgba(67, 160, 71, 0.5);
-    }
-
-    /* Status Text */
-    #status-text {
-        color: rgba(255, 255, 255, 0.7);
+        white-space: nowrap;
         font-size: 0.9rem;
-        font-weight: 500;
     }
 
-    /* Voice Recording */
-    #voice-btn.recording {
-        background: linear-gradient(135deg, #dc3545, #c82333) !important;
-        animation: pulse 1.5s infinite;
-    }
-
-    @keyframes pulse {
-
-        0%,
-        100% {
-            box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+    /* Mobile Sidebar Styling */
+    @media (max-width: 767.98px) {
+        .conversation-sidebar-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 280px;
+            z-index: 1050;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-in-out;
         }
 
-        50% {
-            box-shadow: 0 0 0 15px rgba(220, 53, 69, 0);
+        .conversation-sidebar-wrapper.show {
+            transform: translateX(0);
         }
-    }
 
-    /* Message Image */
-    .message-image {
-        max-width: 250px;
-        border-radius: 15px;
-        margin-bottom: 0.75rem;
-        cursor: pointer;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        transition: transform 0.3s ease;
-    }
+        .conversation-sidebar {
+            height: 100%;
+            border-right: none;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        }
 
-    .message-image:hover {
-        transform: scale(1.05);
-    }
+        .ai-container {
+            height: calc(100vh - 80px);
+            /* Adjust for mobile navbar/margins */
+        }
 
-    /* Analysis Card */
-    .analysis-card {
-        background: linear-gradient(135deg, rgba(46, 125, 50, 0.1), rgba(67, 160, 71, 0.1));
-        border-left: 4px solid #43a047;
-        padding: 1.25rem;
-        margin-top: 0.75rem;
-        border-radius: 10px;
-        backdrop-filter: blur(10px);
-    }
+        .chat-header {
+            padding: 0.75rem 1rem;
+        }
 
-    .severity-low {
-        color: #66bb6a;
-        font-weight: 600;
-    }
-
-    .severity-medium {
-        color: #ffa726;
-        font-weight: 600;
-    }
-
-    .severity-high {
-        color: #ff7043;
-        font-weight: 600;
-    }
-
-    .severity-critical {
-        color: #ef5350;
-        font-weight: 600;
+        .chat-footer {
+            padding: 0.75rem;
+        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid mt-4 mb-4">
-    <div class="row">
-        <!-- Conversation Sidebar -->
-        <div class="col-md-3 d-none d-md-block">
+<div class="container-fluid mt-3 mb-3">
+    <div class="mobile-overlay" id="mobile-overlay"></div>
+    <div class="row g-0">
+        <!-- Conversation Sidebar (Mobile responsive wrapper) -->
+        <div class="conversation-sidebar-wrapper col-md-3 d-md-block" id="sidebar-wrapper">
             <div class="ai-container conversation-sidebar">
-                <div class="sidebar-header">
-                    <h6 class="mb-0 text-white"><i class="bi bi-clock-history me-2"></i>Conversation History</h6>
+                <div class="sidebar-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 text-white"><i class="bi bi-clock-history me-2"></i>History</h6>
+                    <button class="btn btn-sm btn-link text-white d-md-none" id="close-sidebar">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
                 </div>
                 <div id="conversation-list" class="p-3">
                     <div class="text-center text-white-50 py-5">
@@ -495,13 +402,20 @@
         </div>
 
         <!-- Main Chat Area -->
-        <div class="col-md-9">
+        <div class="col-md-9 w-100">
             <div class="ai-container">
                 <!-- Header -->
                 <div class="chat-header d-flex justify-content-between align-items-center">
-                    <div>
-                        <h4><i class="bi bi-robot me-2"></i>AgriStar AI Assistant</h4>
-                        <small>Your intelligent farming expert • English & Kiswahili</small>
+                    <div class="d-flex align-items-center gap-2">
+                        <button class="btn btn-link text-white p-0 d-md-none me-2" id="toggle-sidebar">
+                            <i class="bi bi-list fs-4"></i>
+                        </button>
+                        <div>
+                            <h4 class="d-none d-sm-block"><i class="bi bi-robot me-2"></i>AgriStar AI Assistant</h4>
+                            <h4 class="d-sm-none"><i class="bi bi-robot me-2"></i>AgriStar AI</h4>
+                            <small class="d-none d-sm-block">Your intelligent farming expert • English &
+                                Kiswahili</small>
+                        </div>
                     </div>
                     <div class="lang-toggle">
                         <button type="button" class="btn btn-sm active" id="lang-en">EN</button>
@@ -560,15 +474,14 @@
                         </button>
 
                         <!-- Text Input -->
-                        <input type="text" id="user-input" class="form-control"
-                            placeholder="Type your farming question...">
+                        <input type="text" id="user-input" class="form-control" placeholder="Type a message...">
 
                         <!-- Send Button -->
                         <button id="send-btn" class="btn">
                             <i class="bi bi-send-fill"></i>
                         </button>
                     </div>
-                    <div class="mt-2 text-center">
+                    <div class="mt-2 text-center d-none d-sm-block">
                         <small id="status-text">Ready to help</small>
                     </div>
                 </div>
@@ -576,18 +489,18 @@
 
             <!-- Quick Actions -->
             <div class="quick-actions">
-                <div class="row g-3">
-                    <div class="col-md-4">
+                <div class="row g-2">
+                    <div class="col-8 col-md-4">
                         <button class="btn w-100 quick-tip" data-q="How do I plant maize?">
                             <i class="bi bi-lightbulb me-2"></i>Plant Maize
                         </button>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-8 col-md-4">
                         <button class="btn w-100 quick-tip" data-q="Nimeona madoda kwenye mahindi">
                             <i class="bi bi-bug me-2"></i>Pest Help (SW)
                         </button>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-8 col-md-4">
                         <button class="btn w-100 quick-tip" data-q="When should I harvest tomatoes?">
                             <i class="bi bi-calendar-check me-2"></i>Harvest Time
                         </button>
@@ -597,6 +510,37 @@
         </div>
     </div>
 </div>
+
+<script>
+    // Mobile Sidebar Logic
+    document.addEventListener('DOMContentLoaded', () => {
+        const toggleBtn = document.getElementById('toggle-sidebar');
+        const closeBtn = document.getElementById('close-sidebar');
+        const sidebar = document.getElementById('sidebar-wrapper');
+        const overlay = document.getElementById('mobile-overlay');
+
+        function openSidebar() {
+            sidebar.classList.add('show');
+            overlay.classList.add('show');
+        }
+
+        function closeSidebar() {
+            sidebar.classList.remove('show');
+            overlay.classList.remove('show');
+        }
+
+        if (toggleBtn) toggleBtn.addEventListener('click', openSidebar);
+        if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+        if (overlay) overlay.addEventListener('click', closeSidebar);
+
+        // Close sidebar when clicking a history item on mobile
+        document.getElementById('conversation-list').addEventListener('click', (e) => {
+            if (window.innerWidth < 768 && e.target.closest('.conversation-item')) {
+                closeSidebar();
+            }
+        });
+    });
+</script>
 
 <script src="{% static 'ai_assistant/chat.js' %}"></script>
 {% endblock %}

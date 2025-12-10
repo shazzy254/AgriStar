@@ -45,13 +45,39 @@ def register(request):
                 # The signal creates a profile, so we need to update it
                 profile = user.profile
                 # Loop through cleaned fields and update profile
+                # Loop through cleaned fields and update profile
                 for field, value in profile_form.cleaned_data.items():
-                    setattr(profile, field, value)
+                    if hasattr(profile, field):
+                        setattr(profile, field, value)
                 profile.save()
+                
+                # Handle Rider Specifics
+                if role == User.Role.RIDER:
+                    try:
+                        rider_profile = user.rider_profile
+                        if 'vehicle_type' in profile_form.cleaned_data:
+                            rider_profile.vehicle_type = profile_form.cleaned_data['vehicle_type']
+                        if 'license_plate' in profile_form.cleaned_data:
+                            rider_profile.license_plate = profile_form.cleaned_data['license_plate']
+                            # Note: rider_profile model field is 'vehicle_plate_number', form is 'license_plate'. Mapping needed.
+                            rider_profile.vehicle_plate_number = profile_form.cleaned_data['license_plate']
+                        rider_profile.save()
+                    except Exception as e:
+                        # Log error but don't fail registration completely if profile exists
+                        pass
 
             login(request, user)
             messages.success(request, f'Account created for {user.username}!')
             return redirect('dashboard')
+        else:
+            # DEBUG: Print errors
+            print("Register Form Errors:", form.errors)
+            if profile_form:
+                print("Profile Form Errors:", profile_form.errors)
+                # Add generic error message
+                messages.error(request, f"Please correct the errors below. {form.errors if form.errors else ''} {profile_form.errors if profile_form.errors else ''}")
+            else:
+                 messages.error(request, f"Please correct the errors below. {form.errors}")
     else:
         # GET request
         initial_data = {}
@@ -72,7 +98,8 @@ def register(request):
 
     return render(request, 'users/register.html', {
         'form': form,
-        'profile_form': profile_form
+        'profile_form': profile_form,
+        'role': role
     })
 
 @login_required
@@ -83,9 +110,11 @@ def dashboard(request):
         from marketplace.models import Order
         orders_count = Order.objects.filter(product__seller=user).count()
         pending_orders = Order.objects.filter(product__seller=user, status='PENDING').order_by('-created_at')
+        accepted_orders = Order.objects.filter(product__seller=user, status__in=['ACCEPTED', 'ESCROW']).order_by('-created_at')
         context = {
             'orders_count': orders_count,
             'pending_orders': pending_orders,
+            'accepted_orders': accepted_orders,
         }
         return render(request, 'users/dashboard_farmer.html', context)
     elif user.role == User.Role.BUYER:
@@ -107,6 +136,21 @@ def dashboard(request):
         return render(request, 'users/dashboard_buyer.html', context)
     elif user.role == User.Role.SUPPLIER:
         return render(request, 'users/dashboard_supplier.html')
+    elif user.role == User.Role.RIDER:
+        from marketplace.models import Order
+        
+        # Get rider profile and stats
+        rider_profile = user.rider_profile
+        assigned_orders = Order.objects.filter(assigned_rider=user)
+        
+        active_deliveries = assigned_orders.filter(status__in=['ACCEPTED', 'IN_DELIVERY', 'PICKED_UP'])
+        
+        context = {
+            'rider_profile': rider_profile,
+            'assigned_orders': assigned_orders.order_by('-updated_at'),
+            'active_deliveries': active_deliveries,
+        }
+        return render(request, 'users/dashboard_rider.html', context)
     else:
         return render(request, 'users/dashboard_base.html') # Fallback
 
@@ -455,3 +499,68 @@ def favorite_farmers_list(request):
         'favorite_farmers': favorite_farmers
     }
     return render(request, 'users/favorite_farmers.html', context)
+
+@login_required
+def toggle_rider_availability(request):
+    """Toggle rider availability status"""
+    if request.method == 'POST' and request.user.role == User.Role.RIDER:
+        try:
+            rider_profile = request.user.rider_profile
+            rider_profile.is_available = not rider_profile.is_available
+            rider_profile.save()
+            status = "Available" if rider_profile.is_available else "Offline"
+            messages.success(request, f"You are now {status}")
+        except Exception as e:
+            messages.error(request, "Error updating status")
+            
+    return redirect('dashboard')
+
+@login_required
+def rider_withdraw(request):
+    """Handle rider withdrawal requests"""
+    if request.method == 'POST' and request.user.role == User.Role.RIDER:
+        try:
+            amount = float(request.POST.get('amount', 0))
+            rider_profile = request.user.rider_profile
+            
+            if amount <= 0:
+                 messages.error(request, "Invalid amount")
+            elif amount > rider_profile.wallet_balance:
+                 messages.error(request, "Insufficient funds")
+            else:
+                 # TODO: Integrate M-Pesa B2C
+                 rider_profile.wallet_balance -= amount
+                 rider_profile.save()
+                 messages.success(request, f"Withdrawal request of KES {amount} received. Processing...")
+                 
+        except ValueError:
+             messages.error(request, "Invalid amount format")
+        except Exception as e:
+             messages.error(request, f"Error processing withdrawal: {str(e)}")
+             
+    return redirect('dashboard')
+
+@login_required
+def update_rider_location(request):
+    """Update rider's real-time GPS location"""
+    if request.method == 'POST' and request.headers.get('content-type') == 'application/json':
+        try:
+            import json
+            data = json.loads(request.body)
+            latitude = data.get('latitude')
+            longitude = data.get('longitude')
+            
+            if latitude and longitude and request.user.role == User.Role.RIDER:
+                rider_profile = request.user.rider_profile
+                rider_profile.current_latitude = latitude
+                rider_profile.current_longitude = longitude
+                rider_profile.save()
+                
+                from django.http import JsonResponse
+                return JsonResponse({'status': 'success'})
+                
+        except Exception as e:
+            pass # Silent fail for background updates
+            
+    from django.http import JsonResponse
+    return JsonResponse({'status': 'error'}, status=400)

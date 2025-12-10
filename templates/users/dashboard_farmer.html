@@ -128,6 +128,8 @@
                                     <div class="d-flex gap-2">
                                         <a href="{% url 'accept_order' order.id %}"
                                             class="btn btn-sm btn-success rounded-pill px-3">Accept</a>
+                                        <a href="{% url 'find_rider' order.id %}"
+                                            class="btn btn-sm btn-info text-white rounded-pill px-3">Assign Rider</a>
                                         <a href="{% url 'reject_order' order.id %}"
                                             class="btn btn-sm btn-outline-danger rounded-pill px-3">Reject</a>
                                     </div>
@@ -142,6 +144,58 @@
                     <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
                     <p class="text-muted mt-3">No pending orders at the moment.</p>
                 </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Accepted/Processing Orders -->
+        <div class="card glass-card border-0 mt-4">
+            <div class="card-header bg-transparent border-0 pt-4 px-4">
+                <h4 class="mb-0 fw-bold">Active Orders</h4>
+            </div>
+            <div class="card-body px-4">
+                {% if accepted_orders %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Product</th>
+                                <th>Buyer</th>
+                                <th>Rider</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in accepted_orders %}
+                            <tr>
+                                <td class="fw-bold text-primary">#{{ order.id }}</td>
+                                <td>{{ order.product.name }}</td>
+                                <td>{{ order.buyer.username }}</td>
+                                <td>
+                                    {% if order.assigned_rider %}
+                                    <span class="badge bg-info text-dark">
+                                        <i class="bi bi-bicycle me-1"></i>{{ order.assigned_rider.username }}
+                                    </span>
+                                    {% else %}
+                                    <span class="text-muted small">Not Assigned</span>
+                                    {% endif %}
+                                </td>
+                                <td><span class="badge bg-success rounded-pill">{{ order.status }}</span></td>
+                                <td>
+                                    <a href="{% url 'find_rider' order.id %}"
+                                        class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                        {% if order.assigned_rider %}Change Rider{% else %}Assign Rider{% endif %}
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-3">No active orders.</p>
                 {% endif %}
             </div>
         </div>

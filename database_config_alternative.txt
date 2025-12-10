@@ -1,9 +1,0 @@
-# Add this to your settings.py to use a different drive for the database
-# For example, if you have more space on D: drive
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'D:/agristar_db.sqlite3',  # Change to a drive with more space
-    }
-}

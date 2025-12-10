@@ -36,5 +36,7 @@ urlpatterns = [
     path('confirm-delivery/<int:order_id>/', views.confirm_delivery, name='confirm_delivery'),
     path('order/<int:order_id>/accept/', views.accept_order, name='accept_order'),
     path('order/<int:order_id>/reject/', views.reject_order, name='reject_order'),
+    path('order/<int:order_id>/find-rider/', views.find_rider, name='find_rider'),
+    path('order/<int:order_id>/assign-rider/<int:rider_id>/', views.assign_rider, name='assign_rider'),
     path('', include(router.urls)),
 ]

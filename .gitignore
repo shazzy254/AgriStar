@@ -47,3 +47,6 @@ venv.bak/
 # OS
 .DS_Store
 Thumbs.db
+
+# Custom
+dev_scripts/

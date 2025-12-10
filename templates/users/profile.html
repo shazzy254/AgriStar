@@ -278,7 +278,8 @@
                                             class="btn btn-sm btn-outline-warning flex-fill">
                                             <i class="bi bi-pencil"></i>
                                         </a>
-                                        <button onclick="deleteProduct({{ product.id }}, '{{ product.name }}')"
+                                        <button
+                                            onclick="deleteProduct('{{ product.id }}', '{{ product.name|escapejs }}')"
                                             class="btn btn-sm btn-outline-danger flex-fill">
                                             <i class="bi bi-trash"></i>
                                         </button>

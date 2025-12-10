@@ -8,6 +8,7 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.db.models import Sum, Count
 from rest_framework import viewsets, filters, permissions
+from users.models import User
 from .models import Product, Order, CartItem, Favorite, Notification
 from .serializers import ProductSerializer, OrderSerializer
 from .forms import ProductForm # We need to create this
@@ -444,4 +445,55 @@ def reject_order(request, order_id):
             message=f"Your order for {order.product.name} has been rejected."
         )
         messages.warning(request, f"Order #{order.id} rejected.")
+    return redirect('dashboard')
+
+@login_required
+def find_rider(request, order_id):
+    """View to search for available riders for a specific order"""
+    order = get_object_or_404(Order, id=order_id)
+    # Ensure current user is the seller
+    if order.product.seller != request.user:
+        messages.error(request, "Permission denied")
+        return redirect('dashboard')
+        
+    riders = User.objects.filter(role=User.Role.RIDER, rider_profile__is_available=True)
+    
+    location_query = request.GET.get('location')
+    if location_query:
+        # Search by profile location (simple text match)
+        riders = riders.filter(profile__location__icontains=location_query)
+        
+    context = {
+        'order': order,
+        'riders': riders,
+        'search_query': location_query
+    }
+    return render(request, 'marketplace/find_rider.html', context)
+
+@login_required
+def assign_rider(request, order_id, rider_id):
+    """Assign a rider to an order"""
+    order = get_object_or_404(Order, id=order_id)
+    if order.product.seller != request.user:
+        messages.error(request, "Permission denied")
+        return redirect('dashboard')
+        
+    rider = get_object_or_404(User, id=rider_id, role=User.Role.RIDER)
+    
+    order.assigned_rider = rider
+    # Update status to ACCEPTED if it was PENDING -> This signifies the farmer has 'processed' it
+    if order.status == 'PENDING':
+        order.status = 'ACCEPTED'
+        
+    order.save()
+    
+    # Notify Rider
+    Notification.objects.create(
+        user=rider,
+        notification_type='ORDER_ASSIGNED',
+        order=order,
+        message=f"New delivery assigned! Order #{order.id} - {order.product.name} from {order.product.seller.username}"
+    )
+    
+    messages.success(request, f"Rider {rider.username} assigned to Order #{order.id}")
     return redirect('dashboard')

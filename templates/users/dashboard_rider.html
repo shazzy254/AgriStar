@@ -490,12 +490,13 @@
                     <div class="card-body">
                         <div class="row g-3">
                             <div class="col-6">
-                                <div class="quick-action-card" onclick="window.location.href='{% url 'profile' %}'">
+                                <a href="{% url 'profile' %}"
+                                    class="quick-action-card d-block text-decoration-none text-dark">
                                     <div class="quick-action-icon text-primary">
                                         <i class="bi bi-person-gear"></i>
                                     </div>
                                     <p class="small fw-bold mb-0">Edit Profile</p>
-                                </div>
+                                </a>
                             </div>
                             <div class="col-6">
                                 <div class="quick-action-card" data-bs-toggle="modal" data-bs-target="#withdrawModal">
@@ -595,8 +596,8 @@
 
 <script>
     // GPS Location Update (when available)
-    {% if rider_profile.is_available %}
-    if ("geolocation" in navigator) {
+    const isRiderAvailable = "{{ rider_profile.is_available|yesno:'true,false' }}" === "true";
+    if (isRiderAvailable && "geolocation" in navigator) {
         setInterval(() => {
             navigator.geolocation.getCurrentPosition(position => {
                 fetch("{% url 'update_rider_location' %}", {
@@ -613,6 +614,5 @@
             });
         }, 60000); // Update every minute
     }
-    {% endif %}
 </script>
 {% endblock %}

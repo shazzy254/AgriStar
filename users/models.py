@@ -99,6 +99,9 @@ class RiderProfile(models.Model):
     completed_deliveries = models.IntegerField(default=0)
     cancelled_deliveries = models.IntegerField(default=0)
     failed_deliveries = models.IntegerField(default=0)
+    wallet_balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    current_latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    current_longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     
     # Vehicle Info
     vehicle_type = models.CharField(max_length=20, choices=VehicleType.choices, default=VehicleType.MOTORBIKE)
@@ -169,7 +172,7 @@ def create_user_profile(sender, instance, created, **kwargs):
         # Create FarmerBadge for farmers
         if instance.role == User.Role.FARMER:
             from users.review_models import FarmerBadge
-            FarmerBadge.objects.create(user=instance)
+            FarmerBadge.objects.create(farmer=instance)
 
 @receiver(post_save, sender=User)
 def save_user_profile(sender, instance, **kwargs):
