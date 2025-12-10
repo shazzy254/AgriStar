@@ -108,13 +108,19 @@ def dashboard(request):
     if user.role == User.Role.FARMER:
         # Get orders for products owned by this farmer
         from marketplace.models import Order
+        from django.db.models import Sum
         orders_count = Order.objects.filter(product__seller=user).count()
         pending_orders = Order.objects.filter(product__seller=user, status='PENDING').order_by('-created_at')
-        accepted_orders = Order.objects.filter(product__seller=user, status__in=['ACCEPTED', 'ESCROW']).order_by('-created_at')
+        accepted_orders = Order.objects.filter(product__seller=user, status__in=['ACCEPTED', 'ESCROW', 'PAID_OUT', 'COMPLETED']).order_by('-created_at')
+        
+        # Calculate earnings
+        total_earnings = Order.objects.filter(product__seller=user, status='PAID_OUT').aggregate(Sum('total_price'))['total_price__sum'] or 0
+        
         context = {
             'orders_count': orders_count,
             'pending_orders': pending_orders,
             'accepted_orders': accepted_orders,
+            'total_earnings': total_earnings,
         }
         return render(request, 'users/dashboard_farmer.html', context)
     elif user.role == User.Role.BUYER:
@@ -143,7 +149,7 @@ def dashboard(request):
         rider_profile = user.rider_profile
         assigned_orders = Order.objects.filter(assigned_rider=user)
         
-        active_deliveries = assigned_orders.filter(status__in=['ACCEPTED', 'IN_DELIVERY', 'PICKED_UP'])
+        active_deliveries = assigned_orders.filter(status__in=['ACCEPTED', 'ESCROW', 'IN_DELIVERY'])
         
         context = {
             'rider_profile': rider_profile,

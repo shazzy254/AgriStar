@@ -397,7 +397,7 @@
                                 </div>
                                 <div class="col-md-3">
                                     <span
-                                        class="badge bg-{% if order.status == 'ACCEPTED' %}warning{% elif order.status == 'IN_DELIVERY' %}primary{% endif %} rounded-pill">
+                                        class="badge bg-{% if order.status == 'ACCEPTED' %}warning{% elif order.status == 'ESCROW' %}info text-dark{% elif order.status == 'IN_DELIVERY' %}primary{% endif %} rounded-pill">
                                         {{ order.get_status_display }}
                                     </span>
                                     <p class="small text-muted mb-0 mt-1">{{ order.created_at|timesince }} ago</p>
@@ -405,7 +405,7 @@
                                 <div class="col-md-3">
                                     <form method="post" action="{% url 'update_order_status' order.id %}">
                                         {% csrf_token %}
-                                        {% if order.status == 'ACCEPTED' %}
+                                        {% if order.status == 'ACCEPTED' or order.status == 'ESCROW' %}
                                         <button type="submit" name="status" value="IN_DELIVERY"
                                             class="action-btn btn btn-primary w-100">
                                             <i class="bi bi-truck me-1"></i>Start Delivery

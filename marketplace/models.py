@@ -39,6 +39,7 @@ class Order(models.Model):
         ('PENDING', 'Pending'),
         ('ACCEPTED', 'Accepted'),
         ('ESCROW', 'Escrow (Paid)'),
+        ('IN_DELIVERY', 'In Delivery'),
         ('DELIVERED', 'Delivered'),
         ('PAID_OUT', 'Paid Out to Farmer'),
         ('COMPLETED', 'Completed'),

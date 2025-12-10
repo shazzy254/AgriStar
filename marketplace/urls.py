@@ -1,3 +1,4 @@
+
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
@@ -38,5 +39,6 @@ urlpatterns = [
     path('order/<int:order_id>/reject/', views.reject_order, name='reject_order'),
     path('order/<int:order_id>/find-rider/', views.find_rider, name='find_rider'),
     path('order/<int:order_id>/assign-rider/<int:rider_id>/', views.assign_rider, name='assign_rider'),
+    path('order/<int:order_id>/update-status/', views.update_order_status, name='update_order_status'),
     path('', include(router.urls)),
 ]

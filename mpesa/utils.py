@@ -1,3 +1,4 @@
+
 import requests
 from django.conf import settings
 from requests.auth import HTTPBasicAuth
@@ -11,6 +12,11 @@ def get_access_token():
         settings.MPESA_CONSUMER_SECRET
     ))
     return r.json().get("access_token")
+
+# IMPORTANT: UPDATE THIS URL TO YOUR CURRENT RUNNING NGROK URL
+# Example: "https://your-id.ngrok-free.app"
+# Make sure to include "https://" and NO trailing slash
+NGROK_URL = "https://britt-unlacerated-alpinely.ngrok-free.dev"
 
 def stk_push(phone, amount, account_reference="AgriStar Order"):
     access_token = get_access_token()
@@ -31,7 +37,7 @@ def stk_push(phone, amount, account_reference="AgriStar Order"):
         "PartyA": phone,
         "PartyB": settings.MPESA_SHORTCODE,
         "PhoneNumber": phone,
-        "CallBackURL": "https://britt-unlacerated-alpinely.ngrok-free.dev/mpesa/callback/",
+        "CallBackURL": f"{NGROK_URL}/mpesa/callback/",
         "AccountReference": account_reference,
         "TransactionDesc": "Payment for AgriStar order",
     }
@@ -58,8 +64,8 @@ def release_escrow_to_farmer(farmer_phone, amount):
         "PartyA": settings.MPESA_SHORTCODE,  # Your business shortcode
         "PartyB": farmer_phone,              # Farmer's phone number
         "Remarks": "AgriStar Escrow Release",
-        "QueueTimeOutURL": "https://britt-unlacerated-alpinely.ngrok-free.dev/mpesa/b2c/timeout/",
-        "ResultURL": "https://britt-unlacerated-alpinely.ngrok-free.dev/mpesa/b2c/result/"
+        "QueueTimeOutURL": f"{NGROK_URL}/mpesa/b2c/timeout/",
+        "ResultURL": f"{NGROK_URL}/mpesa/b2c/result/"
     }
 
     # SIMULATION FOR DEMO:

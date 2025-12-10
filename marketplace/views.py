@@ -2,16 +2,12 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
-from django.contrib import messages
-from django.http import JsonResponse
 from django.db.models import Sum, Count
 from rest_framework import viewsets, filters, permissions
 from users.models import User
 from .models import Product, Order, CartItem, Favorite, Notification
 from .serializers import ProductSerializer, OrderSerializer
-from .forms import ProductForm # We need to create this
+from .forms import ProductForm
 from itertools import groupby
 from operator import attrgetter
 from mpesa.utils import release_escrow_to_farmer, stk_push
@@ -248,21 +244,8 @@ def checkout_cart(request):
     # Clear cart
     cart_items.delete()
     
-    # For this flow, we'll redirect to the payment page for the first order created
-    # In a real multi-order scenario, we might want a 'My Orders' page to pay for them individually or a batch payment.
-    # For simplicity, let's assume we redirect to the dashboard where they can see orders and pay, 
-    # OR if we want to force payment immediately, we pick the last created order.
-    
-    # Let's redirect to dashboard with a success message, and they can click 'Pay' on the order.
-    # OR, to follow the user's flow "Shows a Proceed to Payment page", we can redirect to a payment page for the batch?
-    # The user said "Buyer clicks Order Now -> Creates Order Object -> Shows Proceed to Payment page".
-    # Since we might have multiple orders from a cart, let's redirect to the dashboard for now, 
-    # but maybe we should grab the last order and redirect to its payment page if it was a single item checkout.
-    
     if orders_created == 1:
-        # If single order, go straight to payment
-        # order = Order.objects.filter(buyer=request.user).order_by('-created_at').first()
-        # return redirect('payment_page', order_id=order.id)
+        # If single order, check logic here if needed
         pass
 
     messages.success(request, f'{orders_created} order(s) placed successfully! Waiting for farmer approval.')
@@ -281,8 +264,7 @@ def initiate_payment(request, order_id):
     order = get_object_or_404(Order, id=order_id, buyer=request.user)
     # Phone number is in Profile model
     phone_number = request.user.profile.phone_number if hasattr(request.user, 'profile') else ''
-    # If user doesn't have phone number in profile, we might need to ask for it.
-    # For now, let's assume we get it from POST or user profile.
+    
     phone = request.POST.get('phone', phone_number)
     
     if not phone:
@@ -316,16 +298,13 @@ def confirm_delivery(request, order_id):
     """Confirm delivery of an order"""
     order = get_object_or_404(Order, id=order_id, buyer=request.user)
     
-    if order.status != 'ESCROW':
-        messages.error(request, 'Order is not in Escrow state.')
+    allowed_statuses = ['ESCROW', 'IN_DELIVERY', 'DELIVERED']
+    if order.status not in allowed_statuses:
+        messages.error(request, 'Order is not in a valid state for delivery confirmation (Escrow/Delivery).')
         return redirect('dashboard')
 
-    # Update status to Delivered (or directly to PAID_OUT as per user flow step 6)
-    # User said: Buyer clicks "Confirm Delivery" -> System Calls B2C -> Updates order.status = "PAID_OUT"
-    
     try:
         # Release funds to farmer
-        # We need farmer's phone number. Assuming it's in the profile.
         farmer_phone = order.product.seller.profile.phone_number if hasattr(order.product.seller, 'profile') else ''
         if not farmer_phone:
              return JsonResponse({'success': False, 'message': 'Farmer phone number not found.'}, status=400)
@@ -335,8 +314,6 @@ def confirm_delivery(request, order_id):
             farmer_phone = '254' + farmer_phone[1:]
 
         # Call B2C
-        # In a real app, you might want to do this asynchronously (Celery) or verify the B2C response carefully.
-        # For this demo, we call it directly.
         response = release_escrow_to_farmer(farmer_phone, int(order.total_price))
         
         # Check if B2C request was accepted (ConversationID/OriginatorConversationID present)
@@ -347,12 +324,12 @@ def confirm_delivery(request, order_id):
             # Notify Farmer
             Notification.objects.create(
                 user=order.product.seller,
-                notification_type='ORDER_COMPLETED', # Add this type to choices if needed
+                notification_type='ORDER_COMPLETED', 
                 order=order,
                 message=f'Order #{order.id} delivered and funds released to your M-Pesa.'
             )
             
-            messages.success(request, 'Delivery confirmed and funds released to farmer.')
+            messages.success(request, 'Delivery confirmed! Funds successfully released to farmer.')
             return redirect('dashboard')
         else:
              messages.error(request, 'Failed to release funds. Please contact support.')
@@ -496,4 +473,52 @@ def assign_rider(request, order_id, rider_id):
     )
     
     messages.success(request, f"Rider {rider.username} assigned to Order #{order.id}")
+    return redirect('dashboard')
+@login_required
+def update_order_status(request, order_id):
+    """Rider updates order status (e.g. In Delivery, Delivered)"""
+    if request.method != 'POST':
+        return redirect('dashboard')
+        
+    order = get_object_or_404(Order, id=order_id)
+    
+    # Ensure current user is the assigned rider
+    if order.assigned_rider != request.user:
+        messages.error(request, "Permission denied. You are not the assigned rider.")
+        return redirect('dashboard')
+        
+    new_status = request.POST.get('status')
+    
+    if new_status == 'IN_DELIVERY':
+        if order.status in ['ACCEPTED', 'ESCROW']:
+            # Prioritize ESCROW if it was already paid, but IN_DELIVERY is a tracking state
+            # If we overwrite ESCROW, we might lose the 'paid' state visibility in some logic if not careful.
+            # However, our models allow IN_DELIVERY. 
+            # Ideally, IN_DELIVERY implies it's moving.
+            order.status = 'IN_DELIVERY'
+            order.save()
+            
+            # Notify Buyer
+            Notification.objects.create(
+                user=order.buyer,
+                notification_type='ORDER_UPDATE',
+                order=order,
+                message=f"Rider is on the way! Your order #{order.id} is now in delivery."
+            )
+            messages.success(request, "Order marked as In Delivery.")
+            
+    elif new_status == 'DELIVERED':
+        if order.status == 'IN_DELIVERY' or order.status == 'ESCROW':
+            order.status = 'DELIVERED'
+            order.save()
+            
+            # Notify Buyer to confirm
+            Notification.objects.create(
+                user=order.buyer,
+                notification_type='ORDER_DELIVERED',
+                order=order,
+                message=f"Rider arriving! Please confirm delivery on your dashboard to release funds."
+            )
+            messages.success(request, "Order marked as Delivered.")
+            
     return redirect('dashboard')

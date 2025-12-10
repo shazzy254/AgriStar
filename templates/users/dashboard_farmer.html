@@ -65,7 +65,7 @@
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
                                 <h6 class="card-title opacity-75">Total Earnings</h6>
-                                <h2 class="fw-bold mb-0">KSh 0</h2>
+                                <h2 class="fw-bold mb-0">KSh {{ total_earnings }}</h2>
                             </div>
                             <i class="bi bi-wallet2 fs-1 opacity-50"></i>
                         </div>
@@ -182,12 +182,27 @@
                                     <span class="text-muted small">Not Assigned</span>
                                     {% endif %}
                                 </td>
-                                <td><span class="badge bg-success rounded-pill">{{ order.status }}</span></td>
                                 <td>
+                                    {% if order.status == 'ESCROW' %}
+                                    <span class="badge bg-info text-dark rounded-pill">Escrow (Funds Held)</span>
+                                    {% elif order.status == 'PAID_OUT' %}
+                                    <span class="badge bg-success rounded-pill"><i
+                                            class="bi bi-check-circle-fill me-1"></i> Paid (Funds Released)</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary rounded-pill">{{ order.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if order.status == 'PAID_OUT' or order.status == 'COMPLETED' %}
+                                    <button class="btn btn-sm btn-outline-success rounded-pill px-3" disabled>
+                                        <i class="bi bi-file-earmark-check me-1"></i> Transaction Complete
+                                    </button>
+                                    {% else %}
                                     <a href="{% url 'find_rider' order.id %}"
                                         class="btn btn-sm btn-outline-primary rounded-pill px-3">
                                         {% if order.assigned_rider %}Change Rider{% else %}Assign Rider{% endif %}
                                     </a>
+                                    {% endif %}
                                 </td>
                             </tr>
                             {% endfor %}

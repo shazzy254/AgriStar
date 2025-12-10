@@ -186,20 +186,47 @@
                                 <td>{{ order.product.seller.username }}</td>
                                 <td>{{ order.created_at|date:"M d, Y" }}</td>
                                 <td>
+                                    <!-- Always show the badge -->
                                     {% if order.status == 'PENDING' %}
                                     <span class="badge bg-warning text-dark rounded-pill">Pending</span>
                                     {% elif order.status == 'ACCEPTED' %}
-                                    <a href="{% url 'payment_page' order.id %}"
-                                        class="btn btn-sm btn-success rounded-pill px-3">
-                                        <i class="bi bi-credit-card me-1"></i> Pay Now
-                                    </a>
+                                    <span class="badge bg-warning text-dark rounded-pill">Accepted</span>
+                                    <div class="mt-2">
+                                        <a href="{% url 'payment_page' order.id %}"
+                                            class="btn btn-sm btn-success rounded-pill px-3">
+                                            <i class="bi bi-credit-card me-1"></i> Pay Now
+                                        </a>
+                                    </div>
                                     {% elif order.status == 'ESCROW' %}
-                                    <a href="{% url 'confirm_delivery' order.id %}"
-                                        class="btn btn-sm btn-primary rounded-pill px-3">
-                                        <i class="bi bi-check-circle me-1"></i> Confirm Delivery
-                                    </a>
+                                    <span class="badge bg-info text-dark rounded-pill">Escrow (Paid)</span>
+                                    <div class="mt-2">
+                                        <a href="{% url 'confirm_delivery' order.id %}"
+                                            class="btn btn-sm btn-primary rounded-pill px-3">
+                                            <i class="bi bi-check-circle me-1"></i> Confirm & Release Funds
+                                        </a>
+                                    </div>
+                                    {% elif order.status == 'IN_DELIVERY' %}
+                                    <span class="badge bg-primary rounded-pill">In Delivery</span>
+                                    <div class="small text-info mt-1 mb-1"><i class="bi bi-bicycle"></i> Rider is on the
+                                        way</div>
+                                    <div>
+                                        <a href="{% url 'confirm_delivery' order.id %}"
+                                            class="btn btn-sm btn-primary rounded-pill px-3">
+                                            <i class="bi bi-check-circle me-1"></i> Confirm & Release Funds
+                                        </a>
+                                    </div>
+                                    {% elif order.status == 'DELIVERED' %}
+                                    <span class="badge bg-primary rounded-pill">Delivered</span>
+                                    <div class="mt-2">
+                                        <a href="{% url 'confirm_delivery' order.id %}"
+                                            class="btn btn-sm btn-primary rounded-pill px-3">
+                                            <i class="bi bi-check-circle me-1"></i> Confirm & Release Funds
+                                        </a>
+                                    </div>
                                     {% elif order.status == 'COMPLETED' or order.status == 'PAID_OUT' %}
-                                    <span class="badge bg-success rounded-pill">Completed</span>
+                                    <span class="badge bg-success rounded-pill">
+                                        <i class="bi bi-check-circle-fill me-1"></i> Delivered & Paid
+                                    </span>
                                     {% elif order.status == 'CANCELLED' %}
                                     <span class="badge bg-danger rounded-pill">Cancelled</span>
                                     {% elif order.status == 'REJECTED' %}

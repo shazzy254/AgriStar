@@ -1,6 +1,6 @@
+
 from django.urls import path
-from . views import mpesa_callback
-from . views import b2c_result,b2c_timeout
+from .views import mpesa_callback, b2c_result, b2c_timeout
 
 urlpatterns = [
     path('callback/', mpesa_callback, name='mpesa_callback'),
