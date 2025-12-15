@@ -1,10 +1,12 @@
 from django.shortcuts import render, get_object_or_404, redirect
+from datetime import datetime
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
 from django.db.models import Sum, Count
 from rest_framework import viewsets, filters, permissions
-from users.models import User
+from users.models import User, DeliveryAddress
 from .models import Product, Order, CartItem, Favorite, Notification, StockHistory
 from .serializers import ProductSerializer, OrderSerializer
 from .forms import ProductForm
@@ -232,11 +234,31 @@ def checkout_cart(request):
         messages.warning(request, 'Your cart is empty')
         return redirect('view_cart')
     
-    # Validate stock for all items first
+    # Validate stock and delivery inputs for all items first
+    farmers_checked = set()
     for item in cart_items:
+        # Stock Check
         if item.quantity > item.product.quantity:
             messages.error(request, f"Stock insufficient for {item.product.name}. Only {item.product.quantity} {item.product.unit} available.")
             return redirect('view_cart')
+        
+        # Delivery Input Check
+        farmer_id = item.product.seller.id
+        if farmer_id not in farmers_checked:
+            delivery_key = f"delivery_method_{farmer_id}"
+            delivery_method = request.POST.get(delivery_key, 'PICKUP')
+            
+            if delivery_method == 'DELIVERY':
+                address_key = f"address_{farmer_id}"
+                address_id = request.POST.get(address_key)
+                if not address_id:
+                     messages.error(request, f"Please select a delivery address for items from {item.product.seller.username}")
+                     return redirect('view_cart')
+                # Validate address ownership
+                if not DeliveryAddress.objects.filter(id=address_id, user=request.user).exists():
+                     messages.error(request, "Invalid delivery address selected.")
+                     return redirect('view_cart')
+            farmers_checked.add(farmer_id)
 
     # Create orders (one per cart item)
     orders_created = 0
@@ -258,12 +280,25 @@ def checkout_cart(request):
             
             product.save()
 
+            # Get delivery method and address
+            delivery_key = f"delivery_method_{product.seller.id}"
+            delivery_method = request.POST.get(delivery_key, 'PICKUP')
+            
+            delivery_address = None
+            if delivery_method == 'DELIVERY':
+                address_key = f"address_{product.seller.id}"
+                address_id = request.POST.get(address_key)
+                if address_id:
+                    delivery_address = DeliveryAddress.objects.filter(id=address_id, user=request.user).first()
+
             # Create Order
             order = Order.objects.create(
                 buyer=request.user,
                 product=product,
                 quantity=item.quantity,
                 status='PENDING',
+                delivery_method=delivery_method,
+                delivery_address=delivery_address,
                 total_price=product.price * item.quantity # Explicitly set total_price as save() does it but good to be sure
             )
 
@@ -326,6 +361,24 @@ def initiate_payment(request, order_id):
     # Format phone number to 254...
     if phone.startswith('0'):
         phone = '254' + phone[1:]
+        
+    print(f"DEBUG PAYMENT: Phone={phone}, Env={settings.MPESA_ENV}")
+    
+    # SANDBOX AUTOMATION: Check for specific test number to auto-complete
+    # Matches 0708374149 or 254708374149
+    # Check if 'sandbox' is in the env string (handling whitespace/newlines)
+    is_sandbox = 'sandbox' in str(settings.MPESA_ENV).lower()
+    is_test_phone = '0708374149' in phone or '708374149' in phone
+    
+    if is_sandbox and is_test_phone:
+        print("DEBUG: Triggering Sandbox Simulation")
+        # Simulate successful payment immediately
+        order.status = 'ESCROW'
+        order.checkout_request_id = f"TEST-{datetime.now().timestamp()}"
+        order.mpesa_receipt_number = "TEST_RECEIPT_AUTO"
+        order.save()
+        messages.success(request, "Sandbox Test Payment Accepted! Funds in Escrow.")
+        return redirect('dashboard') # Redirect to dashboard to see status update
     
     # Call STK Push
     try:
@@ -336,9 +389,12 @@ def initiate_payment(request, order_id):
         if checkout_request_id:
             order.checkout_request_id = checkout_request_id
             order.save()
-            messages.success(request, "M-Pesa STK Push sent! Please check your phone to complete payment.")
+            messages.success(request, f"M-Pesa STK Push sent to {phone}! Please check your phone to complete payment.")
         else:
-            messages.error(request, "Failed to initiate M-Pesa payment. Please try again.")
+            # Capture specific error
+            error_desc = response.get('ResponseDescription') or response.get('errorMessage') or "Unknown Error"
+            error_code = response.get('ResponseCode') or response.get('errorCode')
+            messages.error(request, f"M-Pesa Failed: {error_desc} (Code: {error_code})")
             
     except Exception as e:
         messages.error(request, f"Error initiating payment: {str(e)}")
@@ -450,11 +506,16 @@ def accept_order(request, order_id):
         order.save()
         
         # Notify buyer
+        if order.delivery_method == 'PICKUP':
+             msg = f"Your order for {order.product.name} has been accepted! Please coordinate with the farmer for pickup and payment."
+        else:
+             msg = f"Your order for {order.product.name} has been accepted! You can now proceed to payment."
+
         Notification.objects.create(
             user=order.buyer,
             notification_type='ORDER_ACCEPTED',
             order=order,
-            message=f"Your order for {order.product.name} has been accepted! You can now proceed to payment."
+            message=msg
         )
         messages.success(request, f"Order #{order.id} accepted.")
     return redirect('dashboard')
@@ -485,17 +546,67 @@ def find_rider(request, order_id):
         messages.error(request, "Permission denied")
         return redirect('dashboard')
         
-    riders = User.objects.filter(role=User.Role.RIDER, rider_profile__is_available=True)
+    if order.delivery_method == 'PICKUP':
+        messages.warning(request, "This is a pickup order. No rider needed.")
+        return redirect('dashboard')
+        
+    riders = User.objects.filter(role=User.Role.RIDER, rider_profile__is_available=True, rider_profile__verification_status='VERIFIED')
     
+    # 1. Geolocation Filter (Primary)
+    # Check if we have farmer's location (user.profile)
+    farmer_lat = request.user.profile.latitude
+    farmer_lon = request.user.profile.longitude
+    
+    recommended_riders = None
+    
+    if farmer_lat and farmer_lon:
+        from .utils import get_nearby_riders
+        # Get riders within 50km (adjustable)
+        nearby_data = get_nearby_riders(farmer_lat, farmer_lon, radius_km=50) 
+        # nearby_data is list of (user, distance)
+        
+        # We need to map this back to the queryset or just use the list
+        # Using the list allows us to show distance
+        recommended_riders = nearby_data
+        
+        # If we have recommended riders, we might want to prioritize them in the main list or show them separately
+        # For now, let's pass them to context
+    
+    # 2. Manual/Backup Filter
     location_query = request.GET.get('location')
+    county_id = request.GET.get('county')
+    sub_county_id = request.GET.get('sub_county')
+    ward_id = request.GET.get('ward')
+    
     if location_query:
         # Search by profile location (simple text match)
         riders = riders.filter(profile__location__icontains=location_query)
         
+    if county_id:
+        riders = riders.filter(profile__county_id=county_id)
+    if sub_county_id:
+        riders = riders.filter(profile__sub_county_id=sub_county_id)
+    if ward_id:
+        riders = riders.filter(profile__ward_id=ward_id)
+    
+    # Generate QR Code for this order
+    from .utils import generate_order_qr
+    qr_code_base64 = generate_order_qr(order)
+    
+    # Get all counties for the dropdown
+    from users.models import County
+    counties = County.objects.all()
+        
     context = {
         'order': order,
         'riders': riders,
-        'search_query': location_query
+        'recommended_riders': recommended_riders,
+        'search_query': location_query,
+        'qr_code': qr_code_base64,
+        'counties': counties,
+        'selected_county': int(county_id) if county_id else None,
+        'selected_sub_county': int(sub_county_id) if sub_county_id else None,
+        'selected_ward': int(ward_id) if ward_id else None,
     }
     return render(request, 'marketplace/find_rider.html', context)
 
@@ -573,4 +684,29 @@ def update_order_status(request, order_id):
             )
             messages.success(request, "Order marked as Delivered.")
             
+    return redirect('dashboard')
+
+@login_required
+def complete_pickup_order(request, order_id):
+    """Farmer marks a pickup order as completed (handover done)"""
+    order = get_object_or_404(Order, id=order_id, product__seller=request.user)
+    
+    if order.delivery_method != 'PICKUP':
+        messages.error(request, "This action is only for pickup orders.")
+        return redirect('dashboard')
+        
+    if order.status == 'ACCEPTED':
+        order.status = 'COMPLETED'
+        order.save()
+        
+        # Notify Buyer
+        Notification.objects.create(
+            user=order.buyer,
+            notification_type='ORDER_COMPLETED',
+            order=order,
+            message=f"Order #{order.id} marked as completed by farmer. Thank you!"
+        )
+        
+        messages.success(request, f"Order #{order.id} marked as completed.")
+        
     return redirect('dashboard')

@@ -8,6 +8,10 @@
 {% endblock %}
 
 {% block content %}
+{% if user.role == 'FARMER' %}
+{% include 'users/farmer_menu.html' %}
+{% endif %}
+
 <div class="marketplace-ambient-bg"></div>
 
 <div class="row mb-5 align-items-end">

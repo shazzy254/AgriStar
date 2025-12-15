@@ -1,0 +1,271 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Find Rider - AgriStar{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="fw-bold"><i class="bi bi-bicycle me-2"></i>Find a Rider</h2>
+            <p class="text-muted">Assign a rider for Order #{{ order.id }} - {{ order.product.name }}</p>
+        </div>
+    </div>
+
+    <!-- QR Code Section -->
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <button class="btn btn-outline-dark" type="button" data-bs-toggle="collapse"
+                data-bs-target="#qrCodeCollapse">
+                <i class="bi bi-qr-code me-2"></i>Show Order QR Code
+            </button>
+            <div class="collapse mt-3" id="qrCodeCollapse">
+                <div class="card card-body mx-auto" style="max-width: 300px;">
+                    <h6 class="text-muted mb-2">Scan to View Order Details</h6>
+                    <img src="data:image/png;base64,{{ qr_code }}" class="img-fluid" alt="Order QR Code">
+                    <p class="small text-muted mt-2">Share this with the rider</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Section (Hierarchical & Text) -->
+    <div class="row mb-5">
+        <div class="col-12 px-4">
+            <div class="card glass-card border-0 shadow-sm p-4">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold small text-muted">County</label>
+                        <select name="county" id="id_county" class="form-select">
+                            <option value="">Select County</option>
+                            {% for county in counties %}
+                            <option value="{{ county.id }}" {% if selected_county==county.id %}selected{% endif %}>
+                                {{ county.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold small text-muted">Sub-County</label>
+                        <select name="sub_county" id="id_sub_county" class="form-select" {% if not selected_county
+                            %}disabled{% endif %}>
+                            <option value="">Select Sub-County</option>
+                            <!-- Populated via JS -->
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold small text-muted">Ward</label>
+                        <select name="ward" id="id_ward" class="form-select" {% if not selected_sub_county %}disabled{%
+                            endif %}>
+                            <option value="">Select Ward</option>
+                            <!-- Populated via JS -->
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold small text-muted">Manual Search</label>
+                        <div class="input-group">
+                            <input type="text" name="location" class="form-control" placeholder="Details..."
+                                value="{{ search_query|default:'' }}">
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-search"></i> Find
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const countySelect = document.getElementById('id_county');
+            const subCountySelect = document.getElementById('id_sub_county');
+            const wardSelect = document.getElementById('id_ward');
+
+            // Initial Load for SubCounties if County selected
+            const selectedCountyId = "{{ selected_county|default:'' }}";
+            const selectedSubCountyId = "{{ selected_sub_county|default:'' }}";
+            const selectedWardId = "{{ selected_ward|default:'' }}";
+
+            if (selectedCountyId) {
+                loadSubCounties(selectedCountyId, selectedSubCountyId);
+            }
+            if (selectedSubCountyId) {
+                loadWards(selectedSubCountyId, selectedWardId);
+            }
+
+            countySelect.addEventListener('change', function () {
+                const countyId = this.value;
+                if (countyId) {
+                    subCountySelect.disabled = false;
+                    loadSubCounties(countyId);
+                    // Reset Ward
+                    wardSelect.innerHTML = '<option value="">Select Ward</option>';
+                    wardSelect.disabled = true;
+                } else {
+                    subCountySelect.innerHTML = '<option value="">Select Sub-County</option>';
+                    subCountySelect.disabled = true;
+                    wardSelect.innerHTML = '<option value="">Select Ward</option>';
+                    wardSelect.disabled = true;
+                }
+            });
+
+            subCountySelect.addEventListener('change', function () {
+                const subCountyId = this.value;
+                if (subCountyId) {
+                    wardSelect.disabled = false;
+                    loadWards(subCountyId);
+                } else {
+                    wardSelect.innerHTML = '<option value="">Select Ward</option>';
+                    wardSelect.disabled = true;
+                }
+            });
+
+            function loadSubCounties(countyId, selectedId = null) {
+                fetch(`{% url 'get_locations' %}?parent_type=county&parent_id=${countyId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        let options = '<option value="">Select Sub-County</option>';
+                        data.results.forEach(item => {
+                            const isSelected = selectedId && parseInt(selectedId) === item.id ? 'selected' : '';
+                            options += `<option value="${item.id}" ${isSelected}>${item.name}</option>`;
+                        });
+                        subCountySelect.innerHTML = options;
+                    });
+            }
+
+            function loadWards(subCountyId, selectedId = null) {
+                fetch(`{% url 'get_locations' %}?parent_type=sub_county&parent_id=${subCountyId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        let options = '<option value="">Select Ward</option>';
+                        data.results.forEach(item => {
+                            const isSelected = selectedId && parseInt(selectedId) === item.id ? 'selected' : '';
+                            options += `<option value="${item.id}" ${isSelected}>${item.name}</option>`;
+                        });
+                        wardSelect.innerHTML = options;
+                    });
+            }
+        });
+    </script>
+
+    {% if recommended_riders %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4 class="fw-bold text-success"><i class="bi bi-geo-alt me-2"></i>Nearby Riders</h4>
+        </div>
+        {% for rider_info in recommended_riders %}
+        {% with rider=rider_info.0 distance=rider_info.1 %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 border-success shadow glass-card" style="border-width: 2px;">
+                <div class="card-header bg-transparent border-0 text-end">
+                    <span class="badge bg-success"><i class="bi bi-geo me-1"></i>{{ distance }} km away</span>
+                </div>
+                <div class="card-body text-center p-4 pt-0">
+                    {% if rider.profile.avatar %}
+                    <img src="{{ rider.profile.avatar.url }}" alt="{{ rider.username }}" class="rounded-circle mb-3"
+                        style="width: 100px; height: 100px; object-fit: cover;">
+                    {% else %}
+                    <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center mb-3"
+                        style="width: 100px; height: 100px;">
+                        <i class="bi bi-person fs-1 text-muted"></i>
+                    </div>
+                    {% endif %}
+
+                    <h5 class="card-title fw-bold mb-1">{{ rider.profile.display_name|default:rider.username }}</h5>
+
+                    <div class="mb-3">
+                        <span class="badge bg-primary rounded-pill">
+                            <i class="bi bi-geo-alt-fill me-1"></i>{{ rider.profile.location }}
+                        </span>
+                    </div>
+
+                    <div class="text-start mb-4 small text-muted">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="bi bi-telephone me-2"></i> {{ rider.profile.phone_number|default:"N/A" }}
+                        </div>
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="bi bi-truck me-2"></i> {{ rider.rider_profile.vehicle_type|title }}
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-card-text me-2"></i> {{ rider.rider_profile.vehicle_plate_number }}
+                        </div>
+                    </div>
+
+                    <form action="{% url 'assign_rider' order.id rider.id %}" method="POST">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success w-100 rounded-pill">
+                            Assign Rider <i class="bi bi-arrow-right ms-2"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endwith %}
+        {% endfor %}
+    </div>
+    <hr class="my-5">
+    {% endif %}
+
+    <!-- All Riders List -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4 class="fw-bold"><i class="bi bi-people me-2"></i>All Riders</h4>
+        </div>
+    </div>
+    <div class="row g-4">
+        {% for rider in riders %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm glass-card">
+                <div class="card-body text-center p-4">
+                    {% if rider.profile.avatar %}
+                    <img src="{{ rider.profile.avatar.url }}" alt="{{ rider.username }}" class="rounded-circle mb-3"
+                        style="width: 100px; height: 100px; object-fit: cover;">
+                    {% else %}
+                    <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center mb-3"
+                        style="width: 100px; height: 100px;">
+                        <i class="bi bi-person fs-1 text-muted"></i>
+                    </div>
+                    {% endif %}
+
+                    <h5 class="card-title fw-bold mb-1">{{ rider.profile.display_name|default:rider.username }}</h5>
+
+                    <div class="mb-3">
+                        <span class="badge bg-primary rounded-pill">
+                            <i class="bi bi-geo-alt-fill me-1"></i>{{ rider.profile.location }}
+                        </span>
+                    </div>
+
+                    <div class="text-start mb-4 small text-muted">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="bi bi-telephone me-2"></i> {{ rider.profile.phone_number|default:"N/A" }}
+                        </div>
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="bi bi-truck me-2"></i> {{ rider.rider_profile.vehicle_type|title }}
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-card-text me-2"></i> {{ rider.rider_profile.vehicle_plate_number }}
+                        </div>
+                    </div>
+
+                    <form action="{% url 'assign_rider' order.id rider.id %}" method="POST">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-success w-100 rounded-pill">
+                            Assign Rider <i class="bi bi-arrow-right ms-2"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <div class="empty-state">
+                <i class="bi bi-bicycle display-1 text-muted mb-3"></i>
+                <h4 class="text-muted">No available riders found</h4>
+                <p class="text-secondary">Try searching for a different location or check back later.</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

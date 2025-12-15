@@ -1,216 +1,656 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Farmer Dashboard - AgriStar{% endblock %}
 
-{% block content %}
-<div class="row">
-    <!-- Sidebar -->
-    <div class="col-md-3">
-        <div class="card glass-card mb-4 border-0">
-            <div class="card-body text-center py-4">
-                <div class="rounded-circle bg-success d-inline-flex align-items-center justify-content-center mb-3"
-                    style="width: 80px; height: 80px;">
-                    <i class="bi bi-person-fill text-white fs-1"></i>
-                </div>
-                <h5 class="fw-bold">{{ user.username }}</h5>
-                <span class="badge bg-success rounded-pill">Farmer Account</span>
-            </div>
-            <div class="list-group list-group-flush bg-transparent">
-                <a href="{% url 'dashboard' %}"
-                    class="list-group-item list-group-item-action bg-transparent border-0 active fw-bold text-success">
-                    <i class="bi bi-speedometer2 me-2"></i>Dashboard
-                </a>
-                <a href="{% url 'feed' %}" class="list-group-item list-group-item-action bg-transparent border-0">
-                    <i class="bi bi-people me-2"></i>Community Feed
-                </a>
-                <a href="{% url 'profile' %}" class="list-group-item list-group-item-action bg-transparent border-0">
-                    <i class="bi bi-person-circle me-2"></i>My Profile
-                </a>
-                <a href="{% url 'calendar' %}" class="list-group-item list-group-item-action bg-transparent border-0">
-                    <i class="bi bi-calendar-event me-2"></i>Calendar & Journal
-                </a>
-                <a href="{% url 'ai_assistant_index' %}"
-                    class="list-group-item list-group-item-action bg-transparent border-0">
-                    <i class="bi bi-robot me-2"></i>AI Assistant
-                </a>
-            </div>
-        </div>
-    </div>
+{% block extra_css %}
+<style>
+    :root {
+        --agri-green: #2d5016;
+        --agri-light-green: #4a7c2c;
+        --agri-earth: #8b6f47;
+        --agri-gold: #d4af37;
+        --agri-cream: #f5f1e8;
+    }
 
-    <!-- Main Content -->
-    <div class="col-md-9">
-        <h2 class="mb-4 fw-bold text-dark">Dashboard Overview</h2>
+    .dashboard-wrapper {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
+
+    /* Hamburger Menu Button */
+    .menu-toggle {
+        position: fixed;
+        top: 80px;
+        left: 20px;
+        z-index: 1001;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--agri-green) 0%, var(--agri-light-green) 100%);
+        border: none;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .menu-toggle:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .menu-toggle i {
+        color: white;
+        font-size: 1.5rem;
+    }
+
+    /* Side Menu Overlay */
+    .menu-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(5px);
+        z-index: 999;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .menu-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    /* Side Menu Panel */
+    .side-menu-panel {
+        position: fixed;
+        top: 0;
+        left: -300px;
+        width: 280px;
+        height: 100%;
+        background: linear-gradient(180deg, var(--agri-green) 0%, var(--agri-light-green) 100%);
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+        z-index: 1000;
+        transition: left 0.3s ease;
+        overflow-y: auto;
+    }
+
+    .side-menu-panel.active {
+        left: 0;
+    }
+
+    .menu-header {
+        padding: 2rem 1.5rem;
+        text-align: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .menu-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+    }
+
+    .menu-header h6 {
+        color: white;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .menu-header .badge {
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+    }
+
+    .menu-links {
+        padding: 1.5rem 1rem;
+    }
+
+    .menu-link {
+        display: flex;
+        align-items: center;
+        padding: 1rem 1.5rem;
+        margin-bottom: 0.5rem;
+        border-radius: 12px;
+        color: rgba(255, 255, 255, 0.9);
+        text-decoration: none;
+        transition: all 0.3s ease;
+        font-weight: 500;
+        position: relative;
+    }
+
+    .menu-link::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        height: 0;
+        width: 4px;
+        background: var(--agri-gold);
+        transition: height 0.3s ease;
+    }
+
+    .menu-link:hover {
+        background: rgba(255, 255, 255, 0.15);
+        color: white;
+        padding-left: 2rem;
+    }
+
+    .menu-link:hover::before {
+        height: 70%;
+    }
+
+    .menu-link.active {
+        background: var(--agri-gold);
+        color: white;
+    }
+
+    .menu-link i {
+        margin-right: 1rem;
+        font-size: 1.2rem;
+        width: 24px;
+    }
+
+    /* Dashboard Content */
+    .dashboard-content {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 1.5rem;
+    }
+
+    .page-header {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.08);
+    }
+
+    .page-header h2 {
+        color: var(--agri-green);
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .page-header h2 i {
+        color: var(--agri-gold);
+    }
+
+    .page-header p {
+        color: #6c757d;
+        margin: 0;
+    }
+
+    /* Stats Cards */
+    .stat-card {
+        border-radius: 16px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+        border: none;
+        height: 100%;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+    }
+
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+    }
+
+    /* Table Styling */
+    .table-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+        border: none;
+        margin-bottom: 2rem;
+    }
+
+    .table-card-header {
+        background: linear-gradient(135deg, var(--agri-cream) 0%, #ffffff 100%);
+        padding: 1.5rem 2rem;
+        border-bottom: 2px solid var(--agri-gold);
+    }
+
+    .section-title {
+        color: var(--agri-green);
+        font-weight: 700;
+        margin-bottom: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .section-title i {
+        color: var(--agri-gold);
+    }
+
+    .modern-table {
+        margin: 0;
+    }
+
+    .modern-table thead {
+        background: linear-gradient(135deg, var(--agri-green) 0%, var(--agri-light-green) 100%);
+        color: white;
+    }
+
+    .modern-table thead th {
+        border: none;
+        padding: 1rem 1.5rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+    }
+
+    .modern-table tbody tr {
+        transition: all 0.2s ease;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .modern-table tbody tr:hover {
+        background: linear-gradient(90deg, rgba(45, 80, 22, 0.05) 0%, transparent 100%);
+    }
+
+    .modern-table tbody td {
+        padding: 1.25rem 1.5rem;
+        vertical-align: middle;
+        border: none;
+    }
+
+    .product-preview {
+        width: 45px;
+        height: 45px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, var(--agri-cream) 0%, #e8e4d9 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--agri-green);
+        font-weight: bold;
+    }
+
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        text-transform: uppercase;
+    }
+
+    .action-btn {
+        padding: 0.5rem 1.25rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        border: none;
+    }
+
+    .action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .empty-state {
+        padding: 4rem 2rem;
+        text-align: center;
+    }
+
+    .empty-state-icon {
+        width: 100px;
+        height: 100px;
+        margin: 0 auto 1.5rem;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--agri-cream) 0%, #e8e4d9 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--agri-green);
+    }
+
+    @media (max-width: 768px) {
+        .dashboard-content {
+            padding: 0 1rem;
+        }
+
+        .page-header {
+            padding: 1.5rem;
+        }
+
+        .modern-table {
+            font-size: 0.85rem;
+        }
+
+        .modern-table thead th,
+        .modern-table tbody td {
+            padding: 0.75rem;
+        }
+
+        .action-btn {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.75rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Include Farmer Menu -->
+{% include 'users/farmer_menu.html' %}
+
+<div class="dashboard-wrapper">
+    <div class="dashboard-content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h2>
+                <i class="bi bi-speedometer2"></i>
+                Dashboard Overview
+            </h2>
+            <p>Welcome back! Here's what's happening with your farm today.</p>
+        </div>
 
         <!-- Stats Cards -->
-        <div class="row mb-4 g-4">
+        <div class="row g-3 mb-4">
             <div class="col-md-4">
-                <div class="card glass-card border-0 h-100 bg-primary text-white"
-                    style="background: linear-gradient(135deg, #3498db, #2980b9);">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <h6 class="card-title opacity-75">Total Orders</h6>
-                                <h2 class="fw-bold mb-0">{{ orders_count }}</h2>
+                <div class="stat-card"
+                    style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="small mb-2" style="opacity: 0.9;">Total Orders</div>
+                            <h2 class="fw-bold mb-0">{{ orders_count }}</h2>
+                            <div class="small mt-2" style="opacity: 0.8;">
+                                <i class="bi bi-graph-up me-1"></i>All time
                             </div>
-                            <i class="bi bi-cart-check fs-1 opacity-50"></i>
                         </div>
-                        <p class="card-text small mt-3 opacity-75">All time orders received</p>
+                        <div class="stat-icon">
+                            <i class="bi bi-cart-check fs-3"></i>
+                        </div>
                     </div>
                 </div>
             </div>
+
             <div class="col-md-4">
-                <div class="card glass-card border-0 h-100 bg-success text-white"
-                    style="background: linear-gradient(135deg, #2ecc71, #27ae60);">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <h6 class="card-title opacity-75">Total Earnings</h6>
-                                <h2 class="fw-bold mb-0">KSh {{ total_earnings }}</h2>
+                <div class="stat-card"
+                    style="background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); color: white;">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="small mb-2" style="opacity: 0.9;">Total Earnings</div>
+                            <h2 class="fw-bold mb-0">KSh {{ total_earnings|floatformat:0 }}</h2>
+                            <div class="small mt-2" style="opacity: 0.8;">
+                                <i class="bi bi-calendar-month me-1"></i>This month
                             </div>
-                            <i class="bi bi-wallet2 fs-1 opacity-50"></i>
                         </div>
-                        <p class="card-text small mt-3 opacity-75">Revenue this month</p>
+                        <div class="stat-icon">
+                            <i class="bi bi-wallet2 fs-3"></i>
+                        </div>
                     </div>
                 </div>
             </div>
+
             <div class="col-md-4">
-                <div class="card glass-card border-0 h-100 bg-warning text-white"
-                    style="background: linear-gradient(135deg, #f1c40f, #f39c12);">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <h6 class="card-title opacity-75">Active Listings</h6>
-                                <h2 class="fw-bold mb-0">0</h2>
+                <div class="stat-card"
+                    style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); color: white;">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="small mb-2" style="opacity: 0.9;">Active Listings</div>
+                            <h2 class="fw-bold mb-0">{{ active_products_count|default:0 }}</h2>
+                            <div class="small mt-2" style="opacity: 0.8;">
+                                <i class="bi bi-box-seam me-1"></i>Products
                             </div>
-                            <i class="bi bi-shop fs-1 opacity-50"></i>
                         </div>
-                        <p class="card-text small mt-3 opacity-75">Products currently for sale</p>
+                        <div class="stat-icon">
+                            <i class="bi bi-shop fs-3"></i>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Pending Orders -->
-        <div class="card glass-card border-0">
-            <div
-                class="card-header bg-transparent border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
-                <h4 class="mb-0 fw-bold">Pending Orders</h4>
-                <a href="#" class="btn btn-sm btn-outline-primary rounded-pill">View All</a>
-            </div>
-            <div class="card-body px-4">
-                {% if pending_orders %}
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Order ID</th>
-                                <th>Product</th>
-                                <th>Buyer</th>
-                                <th>Date</th>
-                                <th>Status</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for order in pending_orders %}
-                            <tr>
-                                <td class="fw-bold text-primary">#{{ order.id }}</td>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        <div class="rounded bg-light me-2" style="width: 40px; height: 40px;"></div>
-                                        {{ order.product.name }}
-                                    </div>
-                                </td>
-                                <td>{{ order.buyer.username }}</td>
-                                <td>{{ order.created_at|date:"M d, Y" }}</td>
-                                <td><span class="badge bg-warning text-dark rounded-pill">{{ order.status }}</span></td>
-                                <td>
-                                    <div class="d-flex gap-2">
-                                        <a href="{% url 'accept_order' order.id %}"
-                                            class="btn btn-sm btn-success rounded-pill px-3">Accept</a>
-                                        <a href="{% url 'find_rider' order.id %}"
-                                            class="btn btn-sm btn-info text-white rounded-pill px-3">Assign Rider</a>
-                                        <a href="{% url 'reject_order' order.id %}"
-                                            class="btn btn-sm btn-outline-danger rounded-pill px-3">Reject</a>
-                                    </div>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+        <div class="table-card">
+            <div class="table-card-header">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <h4 class="section-title mb-0">
+                        <i class="bi bi-hourglass-split"></i>
+                        Pending Orders
+                    </h4>
+                    <span class="badge bg-warning text-dark px-3 py-2" style="border-radius: 20px;">
+                        {{ pending_orders.count }} Awaiting Action
+                    </span>
                 </div>
+            </div>
+            <div class="table-responsive">
+                {% if pending_orders %}
+                <table class="modern-table table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Product</th>
+                            <th>Buyer</th>
+                            <th>Method</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in pending_orders %}
+                        <tr>
+                            <td class="fw-bold" style="color: var(--agri-green);">#{{ order.id }}</td>
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="product-preview">
+                                        <i class="bi bi-box-seam"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-semibold">{{ order.product.name }}</div>
+                                        <small class="text-muted">{{ order.quantity }} {{ order.product.unit }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ order.buyer.username }}</td>
+                            <td>
+                                {% if order.delivery_method == 'PICKUP' %}
+                                <span class="badge bg-secondary rounded-pill"><i
+                                        class="bi bi-people-fill me-1"></i>Pickup</span>
+                                {% else %}
+                                <span class="badge bg-info text-dark rounded-pill"><i
+                                        class="bi bi-truck me-1"></i>Delivery</span>
+                                {% if order.delivery_address %}
+                                <div class="mt-2 small text-muted">
+                                    <i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ order.delivery_address.county }}, {{ order.delivery_address.ward }}
+                                    <br>
+                                    <span class="text-xs">{{ order.delivery_address.additional_details|truncatechars:20 }}</span>
+                                </div>
+                                {% endif %}
+                                {% endif %}
+                            </td>
+                            <td>{{ order.created_at|date:"M d, Y" }}</td>
+                            <td>
+                                <span class="status-badge bg-warning text-dark">
+                                    {{ order.status }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <a href="{% url 'accept_order' order.id %}"
+                                        class="btn action-btn btn-success text-white">
+                                        <i class="bi bi-check-circle me-1"></i>Accept
+                                    </a>
+                                    {% if order.delivery_method == 'DELIVERY' %}
+                                    <a href="{% url 'find_rider' order.id %}"
+                                        class="btn action-btn btn-info text-white">
+                                        <i class="bi bi-bicycle me-1"></i>Assign Rider
+                                    </a>
+                                    {% endif %}
+                                    <a href="{% url 'reject_order' order.id %}"
+                                        class="btn action-btn btn-outline-danger">
+                                        <i class="bi bi-x-circle me-1"></i>Reject
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
                 {% else %}
-                <div class="text-center py-5">
-                    <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
-                    <p class="text-muted mt-3">No pending orders at the moment.</p>
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <i class="bi bi-inbox fs-1"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2" style="color: var(--agri-green);">No Pending Orders</h5>
+                    <p class="text-muted">You're all caught up! New orders will appear here.</p>
                 </div>
                 {% endif %}
             </div>
         </div>
 
-        <!-- Accepted/Processing Orders -->
-        <div class="card glass-card border-0 mt-4">
-            <div class="card-header bg-transparent border-0 pt-4 px-4">
-                <h4 class="mb-0 fw-bold">Active Orders</h4>
-            </div>
-            <div class="card-body px-4">
-                {% if accepted_orders %}
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Order ID</th>
-                                <th>Product</th>
-                                <th>Buyer</th>
-                                <th>Rider</th>
-                                <th>Status</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for order in accepted_orders %}
-                            <tr>
-                                <td class="fw-bold text-primary">#{{ order.id }}</td>
-                                <td>{{ order.product.name }}</td>
-                                <td>{{ order.buyer.username }}</td>
-                                <td>
-                                    {% if order.assigned_rider %}
-                                    <span class="badge bg-info text-dark">
-                                        <i class="bi bi-bicycle me-1"></i>{{ order.assigned_rider.username }}
-                                    </span>
-                                    {% else %}
-                                    <span class="text-muted small">Not Assigned</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if order.status == 'ESCROW' %}
-                                    <span class="badge bg-info text-dark rounded-pill">Escrow (Funds Held)</span>
-                                    {% elif order.status == 'PAID_OUT' %}
-                                    <span class="badge bg-success rounded-pill"><i
-                                            class="bi bi-check-circle-fill me-1"></i> Paid (Funds Released)</span>
-                                    {% else %}
-                                    <span class="badge bg-secondary rounded-pill">{{ order.status }}</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if order.status == 'PAID_OUT' or order.status == 'COMPLETED' %}
-                                    <button class="btn btn-sm btn-outline-success rounded-pill px-3" disabled>
-                                        <i class="bi bi-file-earmark-check me-1"></i> Transaction Complete
-                                    </button>
-                                    {% else %}
-                                    <a href="{% url 'find_rider' order.id %}"
-                                        class="btn btn-sm btn-outline-primary rounded-pill px-3">
-                                        {% if order.assigned_rider %}Change Rider{% else %}Assign Rider{% endif %}
-                                    </a>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+        <!-- Active Orders -->
+        <div class="table-card">
+            <div class="table-card-header">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <h4 class="section-title mb-0">
+                        <i class="bi bi-truck"></i>
+                        Active Orders
+                    </h4>
+                    <span class="badge bg-success px-3 py-2" style="border-radius: 20px;">
+                        {{ accepted_orders.count }} In Progress
+                    </span>
                 </div>
+            </div>
+            <div class="table-responsive">
+                {% if accepted_orders %}
+                <table class="modern-table table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Product</th>
+                            <th>Buyer</th>
+                            <th>Method</th>
+                            <th>Rider</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in accepted_orders %}
+                        <tr>
+                            <td class="fw-bold" style="color: var(--agri-green);">#{{ order.id }}</td>
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="product-preview">
+                                        <i class="bi bi-box-seam"></i>
+                                    </div>
+                                    <span class="fw-semibold">{{ order.product.name }}</span>
+                                </div>
+                            </td>
+                            <td>{{ order.buyer.username }}</td>
+                            <td>
+                            <td>
+                                {% if order.delivery_method == 'PICKUP' %}
+                                <span class="badge bg-secondary rounded-pill"><i
+                                        class="bi bi-people-fill me-1"></i>Pickup</span>
+                                {% else %}
+                                <span class="badge bg-info text-dark rounded-pill"><i
+                                        class="bi bi-truck me-1"></i>Delivery</span>
+                                {% if order.delivery_address %}
+                                <div class="mt-2 small text-muted">
+                                    <i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ order.delivery_address.county }}, {{ order.delivery_address.ward }}
+                                    <br>
+                                    <span class="text-xs">{{ order.delivery_address.additional_details|truncatechars:20 }}</span>
+                                </div>
+                                {% endif %}
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if order.assigned_rider %}
+                                <span class="badge bg-info text-dark">
+                                    <i class="bi bi-bicycle me-1"></i>{{ order.assigned_rider.username }}
+                                </span>
+                                {% else %}
+                                <span class="text-muted small">Not Assigned</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if order.status == 'ESCROW' %}
+                                <span class="status-badge bg-info text-white">
+                                    <i class="bi bi-shield-lock me-1"></i>Escrow
+                                </span>
+                                {% elif order.status == 'PAID_OUT' %}
+                                <span class="status-badge bg-success text-white">
+                                    <i class="bi bi-check-circle-fill me-1"></i>Paid
+                                </span>
+                                {% else %}
+                                <span class="status-badge bg-secondary text-white">
+                                    {{ order.status }}
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if order.status == 'PAID_OUT' or order.status == 'COMPLETED' %}
+                                <button class="btn action-btn btn-outline-success" disabled>
+                                    <i class="bi bi-file-earmark-check me-1"></i>Complete
+                                </button>
+                                {% else %}
+
+                                {% if order.delivery_method == 'DELIVERY' %}
+                                <a href="{% url 'find_rider' order.id %}" class="btn action-btn btn-outline-primary">
+                                    {% if order.assigned_rider %}Change Rider{% else %}Assign Rider{% endif %}
+                                </a>
+                                {% else %}
+                                <a href="{% url 'complete_pickup_order' order.id %}"
+                                    class="btn action-btn btn-outline-success">
+                                    <i class="bi bi-check-circle me-1"></i>Mark Completed
+                                </a>
+                                {% endif %}
+
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
                 {% else %}
-                <p class="text-muted text-center py-3">No active orders.</p>
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <i class="bi bi-truck fs-1"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2" style="color: var(--agri-green);">No Active Orders</h5>
+                    <p class="text-muted">Accepted orders will be tracked here.</p>
+                </div>
                 {% endif %}
             </div>
         </div>

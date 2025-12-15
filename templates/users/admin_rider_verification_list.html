@@ -1,0 +1,137 @@
+{% extends 'administration/base_admin.html' %}
+{% load static %}
+
+{% block title %}Rider Verification Queue - AgriStar Admin{% endblock %}
+{% block header %}Rider Verification Queue{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Pending Reviews -->
+    <div class="card mb-4">
+        <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-hourglass-split me-2"></i>Pending Reviews</h5>
+            <span class="badge bg-dark rounded-pill">{{ pending_riders.count }}</span>
+        </div>
+        <div class="card-body p-0">
+            {% if pending_riders %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">Rider</th>
+                            <th>Vehicle</th>
+                            <th>Submitted</th>
+                            <th>Safety Score</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for rider in pending_riders %}
+                        <tr>
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center">
+                                    <img src="{{ rider.user.profile.avatar.url }}" class="rounded-circle me-3"
+                                        width="40" height="40" style="object-fit: cover;">
+                                    <div>
+                                        <div class="fw-bold">{{ rider.user.get_full_name|default:rider.user.username }}
+                                        </div>
+                                        <div class="small text-muted">{{ rider.user.email }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div>{{ rider.get_vehicle_type_display }}</div>
+                                <div class="small text-muted font-monospace">{{ rider.vehicle_plate_number }}</div>
+                            </td>
+                            <td>
+                                {{ rider.user.date_joined|date:"M d, Y" }}
+                            </td>
+                            <td>
+                                {% if rider.verification_good_conduct %}
+                                <span class="badge bg-success">Yes</span>
+                                {% else %}
+                                <span class="badge bg-secondary">No</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'admin_rider_verification_detail' rider.id %}"
+                                    class="btn btn-sm btn-primary">
+                                    Review Docs
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="p-5 text-center text-muted">
+                <i class="bi bi-check-circle display-4 mb-3 d-block"></i>
+                <p>No pending verification requests.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Other Riders (Verified/Rejected) -->
+    <div class="card">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 text-muted"><i class="bi bi-people me-2"></i>Rider History</h5>
+        </div>
+        <div class="card-body p-0">
+            {% if other_riders %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">Rider</th>
+                            <th>Status</th>
+                            <th>Updated</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for rider in other_riders %}
+                        <tr>
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center">
+                                    <img src="{{ rider.user.profile.avatar.url }}" class="rounded-circle me-3"
+                                        width="32" height="32" style="object-fit: cover; opacity: 0.7;">
+                                    <div>
+                                        <div class="fw-bold">{{ rider.user.get_full_name|default:rider.user.username }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                {% if rider.verification_status == 'VERIFIED' %}
+                                <span class="badge bg-success">Verified</span>
+                                {% elif rider.verification_status == 'REJECTED' %}
+                                <span class="badge bg-danger">Rejected</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ rider.get_verification_status_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <small class="text-muted">Since {{ rider.user.last_login|date:"M d, Y" }}</small>
+                            </td>
+                            <td>
+                                <a href="{% url 'admin_rider_verification_detail' rider.id %}"
+                                    class="btn btn-sm btn-outline-secondary">
+                                    View
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="p-4 text-center text-muted">
+                <p>No other riders found.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

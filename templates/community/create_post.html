@@ -1,0 +1,380 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Create Post - AgriStar{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --agri-green: #4CAF50;
+        --agri-dark-green: #2d5016;
+    }
+
+    .create-post-container {
+        max-width: 700px;
+        margin: 3rem auto;
+        padding: 0 1rem;
+    }
+
+    .create-post-card {
+        background: white;
+        border-radius: 20px;
+        padding: 2.5rem;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    .create-post-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .create-post-header h2 {
+        color: var(--agri-dark-green);
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control,
+    .form-select {
+        border: 2px solid #e0e0e0;
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: var(--agri-green);
+        box-shadow: 0 0 0 4px rgba(76, 175, 80, 0.1);
+    }
+
+    .image-preview-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .image-preview {
+        position: relative;
+        border-radius: 12px;
+        overflow: hidden;
+        aspect-ratio: 1;
+    }
+
+    .image-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .remove-image {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        background: rgba(255, 0, 0, 0.8);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn-submit {
+        background: linear-gradient(135deg, var(--agri-green), var(--agri-dark-green));
+        color: white;
+        border: none;
+        padding: 0.9rem 2.5rem;
+        border-radius: 25px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 6px 20px rgba(76, 175, 80, 0.3);
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(76, 175, 80, 0.4);
+    }
+
+    .btn-cancel {
+        background: #f5f5f5;
+        color: #666;
+        border: none;
+        padding: 0.9rem 2.5rem;
+        border-radius: 25px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-cancel:hover {
+        background: #e0e0e0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{% if user.role == 'FARMER' %}
+{% include 'users/farmer_menu.html' %}
+{% endif %}
+
+<div class="create-post-container">
+    <div class="create-post-card">
+        <div class="create-post-header">
+            <h2><i class="bi bi-pencil-square me-2"></i>Create New Post</h2>
+            <p class="text-muted mb-0">Share your thoughts with the community</p>
+        </div>
+
+        <form method="POST" enctype="multipart/form-data" id="postForm">
+            {% csrf_token %}
+
+            <div class="mb-4">
+                <label class="form-label">Category</label>
+                {{ form.category }}
+                {% if form.category.errors %}
+                <div class="text-danger small mt-1">{{ form.category.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label">What's on your mind?</label>
+                {{ form.content }}
+                {% if form.content.errors %}
+                <div class="text-danger small mt-1">{{ form.content.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label">Tags (Optional)</label>
+                {{ form.tags }}
+                <small class="text-muted">Separate tags with spaces (e.g. #corn #sale)</small>
+                {% if form.tags.errors %}
+                <div class="text-danger small mt-1">{{ form.tags.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label">Location (Optional)</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white">
+                        <i class="bi bi-geo-alt text-danger"></i>
+                    </span>
+                    {{ form.location }}
+                    <button type="button" class="btn btn-outline-secondary" onclick="getLocation()"
+                        title="Use Current Location">
+                        <i class="bi bi-crosshair"></i>
+                    </button>
+                </div>
+                {% if form.location.errors %}
+                <div class="text-danger small mt-1">{{ form.location.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label">
+                    <i class="bi bi-images me-2"></i>Add Photos (Max 5)
+                </label>
+                <div class="d-flex gap-2 align-items-center mb-2">
+                    <input type="file" accept="image/*" class="d-none" id="imageSelector" onchange="addImage(this)">
+                    <button type="button" class="btn btn-outline-success"
+                        onclick="document.getElementById('imageSelector').click()"
+                        style="border-radius: 12px; padding: 0.75rem 1.5rem;">
+                        <i class="bi bi-plus-circle me-2"></i>Add Image
+                    </button>
+                    <span id="fileCount" class="badge bg-success" style="display: none;">0 images added</span>
+                </div>
+                <small class="text-muted d-block mb-2">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Click "Add Image" for each photo you want to upload (up to 5 total)
+                </small>
+                {% if form.images.errors %}
+                <div class="text-danger small mt-1">{{ form.images.errors }}</div>
+                {% endif %}
+                <div class="image-preview-container" id="imagePreview"></div>
+                <!-- Hidden inputs to store selected files -->
+                <div id="hiddenFileInputs"></div>
+            </div>
+
+            <div class="d-flex gap-3 justify-content-end">
+                <a href="{% url 'feed' %}" class="btn-cancel">
+                    <i class="bi bi-x-lg me-2"></i>Cancel
+                </a>
+                <button type="submit" class="btn-submit">
+                    <i class="bi bi-check-lg me-2"></i>Post
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Store selected images
+    let selectedImages = [];
+    let imageCounter = 0;
+
+    // Add image one at a time
+    function addImage(input) {
+        if (input.files && input.files[0]) {
+            if (selectedImages.length >= 5) {
+                alert('Maximum 5 images allowed');
+                input.value = '';
+                return;
+            }
+
+            const file = input.files[0];
+            const imageId = imageCounter++;
+
+            // Store the file with a unique ID
+            selectedImages.push({ id: imageId, file: file });
+
+            // Create preview
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const previewContainer = document.getElementById('imagePreview');
+                const div = document.createElement('div');
+                div.className = 'image-preview';
+                div.id = `preview-${imageId}`;
+                div.innerHTML = `
+                    <img src="${e.target.result}" alt="Preview">
+                    <button type="button" class="remove-image" onclick="removeImageById(${imageId})">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                `;
+                previewContainer.appendChild(div);
+            };
+            reader.readAsDataURL(file);
+
+            // Update counter
+            updateFileCount();
+
+            // Reset input so same file can be selected again
+            input.value = '';
+        }
+    }
+
+    function removeImageById(imageId) {
+        // Remove from array
+        selectedImages = selectedImages.filter(img => img.id !== imageId);
+
+        // Remove preview
+        const preview = document.getElementById(`preview-${imageId}`);
+        if (preview) {
+            preview.remove();
+        }
+
+        // Update counter
+        updateFileCount();
+    }
+
+    function updateFileCount() {
+        const fileCount = document.getElementById('fileCount');
+        if (selectedImages.length > 0) {
+            fileCount.textContent = `${selectedImages.length} image${selectedImages.length > 1 ? 's' : ''} added`;
+            fileCount.style.display = 'inline-block';
+        } else {
+            fileCount.style.display = 'none';
+        }
+    }
+
+    // Before form submission, create file inputs for each image
+    document.getElementById('postForm').addEventListener('submit', function (e) {
+        // Prevent double submission
+        const submitBtn = this.querySelector('.btn-submit');
+        if (submitBtn.disabled) {
+            e.preventDefault();
+            return;
+        }
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Posting...';
+
+        const hiddenInputsContainer = document.getElementById('hiddenFileInputs');
+        hiddenInputsContainer.innerHTML = '';
+
+        // Create a DataTransfer object to hold multiple files
+        const dt = new DataTransfer();
+        selectedImages.forEach(img => {
+            dt.items.add(img.file);
+        });
+
+        // Create a single file input with all files
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.name = 'images';
+        fileInput.multiple = true;
+        fileInput.files = dt.files;
+        fileInput.style.display = 'none';
+        hiddenInputsContainer.appendChild(fileInput);
+    });
+
+    // Geolocation support
+    function getLocation() {
+        if (!navigator.geolocation) {
+            alert('Geolocation is not supported by your browser');
+            return;
+        }
+
+        const locationBtn = document.querySelector('button[onclick="getLocation()"]');
+        const icon = locationBtn.querySelector('i');
+        const originalClass = icon.className;
+
+        // Show loading state
+        icon.className = 'bi bi-arrow-clockwise fa-spin';
+        locationBtn.disabled = true;
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                // Success
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+
+                // Use reverse geocoding to get city/area name (optional, but better UX)
+                // For now we'll just try to fetch a city name using a free API or just put coords if offline
+                // Using OpenStreetMap Nominatim for free reverse geocoding
+                fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const locationInput = document.getElementById('id_location');
+                        if (data.address) {
+                            // Try to construct a meaningful location string
+                            const city = data.address.city || data.address.town || data.address.village || data.address.county;
+                            const state = data.address.state || data.address.region;
+                            const country = data.address.country;
+
+                            let locationStr = city;
+                            if (state && city !== state) locationStr += `, ${state}`;
+                            if (!locationStr) locationStr = country;
+
+                            locationInput.value = locationStr;
+                        } else {
+                            locationInput.value = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+                        }
+                    })
+                    .catch(() => {
+                        // Fallback to coordinates
+                        document.getElementById('id_location').value = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+                    })
+                    .finally(() => {
+                        icon.className = originalClass;
+                        locationBtn.disabled = false;
+                    });
+            },
+            (error) => {
+                // Error
+                console.error('Geolocation error:', error);
+                alert('Unable to retrieve your location. Please check your browser settings.');
+                icon.className = originalClass;
+                locationBtn.disabled = false;
+            }
+        );
+    }
+</script>
+{% endblock %}

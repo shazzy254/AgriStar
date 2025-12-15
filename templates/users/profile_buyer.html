@@ -104,8 +104,12 @@
                     <span class="fw-bold">{{ profile_user.profile.marketplace_location }}</span>
                 </div>
                 {% endif %}
-                {% if not profile_user.profile.buyer_type and not profile_user.profile.business_name and not profile_user.profile.marketplace_location %}
+                {% if not profile_user.profile.buyer_type %}
+                {% if not profile_user.profile.business_name %}
+                {% if not profile_user.profile.marketplace_location %}
                 <p class="text-muted mb-0 small">No buyer information provided</p>
+                {% endif %}
+                {% endif %}
                 {% endif %}
             </div>
         </div>
@@ -158,8 +162,14 @@
 
                                 {% if is_own_profile %}
                                 <div class="mt-3 d-flex gap-2">
-                                    <button class="btn btn-sm btn-outline-primary"
-                                        onclick="editAddress({{ address.id }})">
+                                    <button class="btn btn-sm btn-outline-primary" data-label="{{ address.label }}"
+                                        data-county="{{ address.county }}"
+                                        data-constituency="{{ address.constituency }}" data-ward="{{ address.ward }}"
+                                        data-gps="{{ address.gps_coordinates|default:'' }}"
+                                        data-details="{{ address.additional_details|default:'' }}"
+                                        data-default="{{ address.is_default|yesno:'true,false' }}"
+                                        data-action-url="{% url 'edit_delivery_address' address.id %}"
+                                        onclick="editAddress(this)">
                                         <i class="bi bi-pencil"></i>
                                     </button>
                                     {% if not address.is_default %}
@@ -215,6 +225,13 @@
             <form method="POST" action="{% url 'add_delivery_address' %}">
                 {% csrf_token %}
                 <div class="modal-body">
+                    <div class="mb-3 text-center">
+                        <button type="button" class="btn btn-outline-primary" id="useLocationBtn"
+                            onclick="useMyLocation()">
+                            <i class="bi bi-geo-alt-fill me-2"></i>Use My Current Location
+                        </button>
+                        <div id="locationStatus" class="small text-muted mt-1"></div>
+                    </div>
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Address Label</label>
@@ -307,4 +324,133 @@
     </div>
 </div>
 {% endif %}
+
+<script>
+    function editAddress(btn) {
+        const data = btn.dataset;
+        const modalEl = document.getElementById('addAddressModal');
+        const actionUrl = btn.dataset.actionUrl;
+        const modal = new bootstrap.Modal(modalEl);
+        const form = modalEl.querySelector('form');
+
+        // Update Modal Title
+        modalEl.querySelector('.modal-title').innerHTML = '<i class="bi bi-pencil me-2"></i>Edit Delivery Address';
+
+        // Update Form Action
+        form.action = actionUrl;
+
+        // Populate Fields
+        form.querySelector('[name="label"]').value = data.label;
+        form.querySelector('[name="county"]').value = data.county;
+        form.querySelector('[name="constituency"]').value = data.constituency;
+        form.querySelector('[name="ward"]').value = data.ward;
+        form.querySelector('[name="gps_coordinates"]').value = data.gps;
+        form.querySelector('[name="additional_details"]').value = data.details;
+        form.querySelector('[name="is_default"]').checked = (data.default === 'true');
+
+        // Update Submit Button
+        const submitBtn = modalEl.querySelector('button[type="submit"]');
+        submitBtn.innerHTML = '<i class="bi bi-check-lg me-2"></i>Update Address';
+        submitBtn.classList.remove('btn-success');
+        submitBtn.classList.add('btn-primary');
+
+        // Reset on close
+        modalEl.addEventListener('hidden.bs.modal', function () {
+            form.reset();
+            form.action = "{% url 'add_delivery_address' %}";
+            modalEl.querySelector('.modal-title').innerHTML = '<i class="bi bi-geo-alt me-2"></i>Add Delivery Address';
+            submitBtn.innerHTML = '<i class="bi bi-check-lg me-2"></i>Save Address';
+            submitBtn.classList.add('btn-success');
+            submitBtn.classList.remove('btn-primary');
+            // Uncheck default by default
+            form.querySelector('[name="is_default"]').checked = false;
+        }, { once: true });
+
+        modal.show();
+    }
+
+    // Geolocation Autofill Logic
+    function useMyLocation() {
+        const statusDiv = document.getElementById('locationStatus');
+        const btn = document.getElementById('useLocationBtn');
+
+        if (!navigator.geolocation) {
+            statusDiv.innerHTML = "<span class='text-danger'>Geolocation is not supported by your browser.</span>";
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Locating...';
+        statusDiv.innerHTML = "";
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+
+                // Fill GPS Field
+                const gpsField = document.querySelector('input[name="gps_coordinates"]');
+                if (gpsField) gpsField.value = `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
+
+                // Reverse Geocoding via Nominatim (OSM)
+                statusDiv.innerHTML = "<span class='text-primary'>Coordinates found. Fetching address details...</span>";
+
+                fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`, {
+                    headers: {
+                        'User-Agent': 'AgriStar-App'
+                    }
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data && data.address) {
+                            const addr = data.address;
+
+                            // Map fields (Best effort mapping)
+                            const county = addr.county || addr.state || addr.region || '';
+                            const constituency = addr.suburb || addr.city_district || addr.district || '';
+                            const ward = addr.quarter || addr.neighbourhood || addr.suburb || '';
+                            const details = [addr.road, addr.house_number, addr.amenity, addr.building].filter(Boolean).join(', ');
+
+                            // Fill inputs
+                            const form = document.getElementById('addAddressModal').querySelector('form');
+                            if (county) form.querySelector('input[name="county"]').value = county;
+                            if (constituency) form.querySelector('input[name="constituency"]').value = constituency;
+                            if (ward) form.querySelector('input[name="ward"]').value = ward;
+                            if (details) form.querySelector('textarea[name="additional_details"]').value = details;
+
+                            // Update Label suggestion if empty
+                            const labelInput = form.querySelector('input[name="label"]');
+                            if (!labelInput.value) {
+                                labelInput.value = (addr.suburb || addr.neighbourhood || "New Location");
+                            }
+
+                            statusDiv.innerHTML = "<span class='text-success'><i class='bi bi-check-circle me-1'></i>Address auto-filled! Please review.</span>";
+                        } else {
+                            statusDiv.innerHTML = "<span class='text-warning'>Coordinates saved, but address details unavailable.</span>";
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Geocoding error:", err);
+                        statusDiv.innerHTML = "<span class='text-warning'>Location found, but auto-fill failed.</span>";
+                    })
+                    .finally(() => {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="bi bi-geo-alt-fill me-2"></i>Use My Current Location';
+                    });
+
+            },
+            (error) => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-geo-alt-fill me-2"></i>Use My Current Location';
+                let msg = "Unable to retrieve location.";
+                switch (error.code) {
+                    case error.PERMISSION_DENIED: msg = "User denied the request for Geolocation."; break;
+                    case error.POSITION_UNAVAILABLE: msg = "Location information is unavailable."; break;
+                    case error.TIMEOUT: msg = "The request to get user location timed out."; break;
+                }
+                statusDiv.innerHTML = `<span class='text-danger'>${msg}</span>`;
+            }
+        );
+    }
+</script>
 {% endblock %}

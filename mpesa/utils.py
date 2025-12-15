@@ -6,12 +6,18 @@ import base64
 from datetime import datetime
 
 def get_access_token():
-    url = "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials"
-    r = requests.get(url, auth=HTTPBasicAuth(
+    base_url = "https://api.safaricom.co.ke" if settings.MPESA_ENV == 'production' else "https://sandbox.safaricom.co.ke"
+    url = f"{base_url}/oauth/v1/generate?grant_type=client_credentials"
+    
+    response = requests.get(url, auth=HTTPBasicAuth(
         settings.MPESA_CONSUMER_KEY,
         settings.MPESA_CONSUMER_SECRET
     ))
-    return r.json().get("access_token")
+    try:
+        return response.json().get("access_token")
+    except Exception as e:
+        print("M-Pesa Access Token Error:", response.text)
+        return None
 
 # IMPORTANT: UPDATE THIS URL TO YOUR CURRENT RUNNING NGROK URL
 # Example: "https://your-id.ngrok-free.app"
@@ -19,7 +25,18 @@ def get_access_token():
 NGROK_URL = "https://britt-unlacerated-alpinely.ngrok-free.dev"
 
 def stk_push(phone, amount, account_reference="AgriStar Order"):
+    # Robust Phone Formatting
+    phone = str(phone).strip().replace(" ", "").replace("+", "")
+    if phone.startswith("0"):
+        phone = "254" + phone[1:]
+    elif phone.startswith("7") or phone.startswith("1"):
+        phone = "254" + phone
+        
     access_token = get_access_token()
+    if not access_token:
+        print("M-Pesa Logic Error: Could not generate Access Token. Check Credentials.")
+        return {"ResponseCode": "1", "ResponseDescription": "Failed to authenticate with M-Pesa."}
+        
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
 
     password = base64.b64encode(
@@ -33,7 +50,7 @@ def stk_push(phone, amount, account_reference="AgriStar Order"):
         "Password": password,
         "Timestamp": timestamp,
         "TransactionType": "CustomerPayBillOnline",
-        "Amount": amount,
+        "Amount": int(amount), # Ensure integer
         "PartyA": phone,
         "PartyB": settings.MPESA_SHORTCODE,
         "PhoneNumber": phone,
@@ -42,12 +59,25 @@ def stk_push(phone, amount, account_reference="AgriStar Order"):
         "TransactionDesc": "Payment for AgriStar order",
     }
 
-    response = requests.post(
-        "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
-        json=payload, headers=headers
-    )
-
-    return response.json()
+    base_url = "https://api.safaricom.co.ke" if settings.MPESA_ENV == 'production' else "https://sandbox.safaricom.co.ke"
+    try:
+        print(f"Sending STK Push to {phone} for KES {amount} (Env: {settings.MPESA_ENV})...")
+        response = requests.post(
+            f"{base_url}/mpesa/stkpush/v1/processrequest",
+            json=payload, headers=headers
+        )
+        
+        # Log to file
+        with open("mpesa_debug.log", "a") as f:
+            f.write(f"[{datetime.now()}] Phone: {phone}, Amount: {amount}, Response: {response.text}\n")
+            
+        print("M-Pesa API Response:", response.text)
+        return response.json()
+    except Exception as e:
+        with open("mpesa_debug.log", "a") as f:
+             f.write(f"[{datetime.now()}] Error: {str(e)}\n")
+        print(f"M-Pesa Network Error: {e}")
+        return {"ResponseCode": "1", "ResponseDescription": str(e)}
 
 def release_escrow_to_farmer(farmer_phone, amount):
     """

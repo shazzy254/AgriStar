@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Delete Post - AgriStar{% endblock %}
+
+{% block extra_css %}
+<style>
+    .delete-container {
+        max-width: 600px;
+        margin: 5rem auto;
+        padding: 0 1rem;
+    }
+
+    .delete-card {
+        background: white;
+        border-radius: 20px;
+        padding: 3rem;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+
+    .warning-icon {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 2rem;
+        animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+
+        0%,
+        100% {
+            transform: scale(1);
+        }
+
+        50% {
+            transform: scale(1.05);
+        }
+    }
+
+    .post-preview {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin: 2rem 0;
+        text-align: left;
+    }
+
+    .btn-delete {
+        background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+        color: white;
+        border: none;
+        padding: 0.9rem 2.5rem;
+        border-radius: 25px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-delete:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(255, 107, 107, 0.4);
+    }
+
+    .btn-cancel {
+        background: #f5f5f5;
+        color: #666;
+        border: none;
+        padding: 0.9rem 2.5rem;
+        border-radius: 25px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-cancel:hover {
+        background: #e0e0e0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{% if user.role == 'FARMER' %}
+{% include 'users/farmer_menu.html' %}
+{% endif %}
+
+<div class="delete-container">
+    <div class="delete-card">
+        <div class="warning-icon">
+            <i class="bi bi-exclamation-triangle text-white" style="font-size: 3rem;"></i>
+        </div>
+
+        <h2 class="fw-bold mb-3">Delete Post?</h2>
+        <p class="text-muted mb-4">This action cannot be undone. Your post will be permanently deleted.</p>
+
+        <div class="post-preview">
+            <div class="d-flex align-items-start gap-3 mb-3">
+                <div
+                    style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #4CAF50, #2d5016); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700;">
+                    {{ post.author.username|slice:":1"|upper }}
+                </div>
+                <div class="flex-grow-1">
+                    <h6 class="mb-1 fw-bold">{{ post.author.username }}</h6>
+                    <small class="text-muted">{{ post.created_at|date:"M d, Y" }}</small>
+                </div>
+            </div>
+            <p class="mb-0">{{ post.content|truncatewords:30 }}</p>
+        </div>
+
+        <form method="POST" class="d-flex gap-3 justify-content-center">
+            {% csrf_token %}
+            <a href="{% url 'feed' %}" class="btn-cancel">
+                <i class="bi bi-x-lg me-2"></i>Cancel
+            </a>
+            <button type="submit" class="btn-delete">
+                <i class="bi bi-trash me-2"></i>Yes, Delete
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,263 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ profile_user.username }} - AgriStar{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --agri-green: #4CAF50;
+        --agri-dark-green: #2d5016;
+    }
+
+    .profile-container {
+        max-width: 1000px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .profile-header {
+        background: linear-gradient(135deg, var(--agri-green) 0%, var(--agri-dark-green) 100%);
+        border-radius: 20px;
+        padding: 3rem 2rem;
+        color: white;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .profile-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+        animation: pulse 15s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+
+        0%,
+        100% {
+            transform: scale(1);
+        }
+
+        50% {
+            transform: scale(1.1);
+        }
+    }
+
+    .profile-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .profile-avatar-large {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        font-weight: 700;
+        margin: 0 auto 1.5rem;
+    }
+
+    .profile-stats {
+        display: flex;
+        gap: 2rem;
+        justify-content: center;
+        margin-top: 2rem;
+    }
+
+    .stat-item {
+        text-align: center;
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        display: block;
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+
+    .follow-btn {
+        padding: 0.75rem 2rem;
+        border-radius: 25px;
+        border: 2px solid white;
+        background: transparent;
+        color: white;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        margin-top: 1rem;
+    }
+
+    .follow-btn:hover {
+        background: white;
+        color: var(--agri-green);
+    }
+
+    .follow-btn.following {
+        background: white;
+        color: var(--agri-green);
+    }
+
+    .posts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 2rem;
+    }
+
+    .post-card-mini {
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+    }
+
+    .post-card-mini:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+    }
+
+    .post-image-preview {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+    }
+
+    .post-card-body {
+        padding: 1.5rem;
+    }
+
+    .empty-profile {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.08);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{% if user.role == 'FARMER' %}
+{% include 'users/farmer_menu.html' %}
+{% endif %}
+
+<div class="profile-container">
+    <div class="profile-header">
+        <div class="profile-content">
+            <div class="profile-avatar-large">
+                {{ profile_user.username|slice:":1"|upper }}
+            </div>
+            <h2 class="text-center fw-bold mb-2">{{ profile_user.username }}</h2>
+            <div class="text-center">
+                <span class="badge"
+                    style="background: rgba(255,255,255,0.2); padding: 0.5rem 1.5rem; border-radius: 20px; font-size: 1rem;">
+                    <i class="bi bi-flower2 me-2"></i>{{ profile_user.get_role_display }}
+                </span>
+            </div>
+
+            <div class="profile-stats">
+                <div class="stat-item">
+                    <span class="stat-number">{{ posts.count }}</span>
+                    <span class="stat-label">Posts</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">{{ followers_count }}</span>
+                    <span class="stat-label">Followers</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">{{ following_count }}</span>
+                    <span class="stat-label">Following</span>
+                </div>
+            </div>
+
+            {% if not is_own_profile %}
+            <div class="text-center">
+                <button class="follow-btn {% if is_following %}following{% endif %}"
+                    onclick="toggleFollow({{ profile_user.id }}, this)">
+                    <i class="bi bi-person-plus me-2"></i>
+                    <span class="follow-text">{% if is_following %}Following{% else %}Follow{% endif %}</span>
+                </button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <h4 class="fw-bold mb-4" style="color: var(--agri-dark-green);">
+        <i class="bi bi-grid-3x3 me-2"></i>Posts
+    </h4>
+
+    {% if posts %}
+    <div class="posts-grid">
+        {% for post in posts %}
+        <div class="post-card-mini">
+            {% if post.images.first %}
+            <img src="{{ post.images.first.image.url }}" alt="Post" class="post-image-preview">
+            {% else %}
+            <div class="post-image-preview"
+                style="background: linear-gradient(135deg, var(--agri-green), var(--agri-dark-green)); display: flex; align-items: center; justify-content: center;">
+                <i class="bi bi-chat-quote text-white" style="font-size: 3rem;"></i>
+            </div>
+            {% endif %}
+            <div class="post-card-body">
+                <span class="badge mb-2" style="background: linear-gradient(135deg, #FDE047, #FCD34D); color: #2E2A23;">
+                    {{ post.get_category_display }}
+                </span>
+                <p class="mb-3">{{ post.content|truncatewords:20 }}</p>
+                <div class="d-flex gap-3 text-muted small">
+                    <span><i class="bi bi-heart-fill text-danger me-1"></i>{{ post.likes_count }}</span>
+                    <span><i class="bi bi-chat-fill text-primary me-1"></i>{{ post.comments_count }}</span>
+                    <span class="ms-auto">{{ post.created_at|timesince }} ago</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-profile">
+        <i class="bi bi-inbox" style="font-size: 4rem; color: var(--agri-green);"></i>
+        <h5 class="fw-bold mt-3 mb-2">No Posts Yet</h5>
+        <p class="text-muted">{% if is_own_profile %}Start sharing with the community!{% else %}This user hasn't posted
+            anything yet.{% endif %}</p>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    function toggleFollow(userId, button) {
+        fetch(`/community/user/${userId}/follow/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    button.classList.toggle('following', data.following);
+                    button.querySelector('.follow-text').textContent = data.following ? 'Following' : 'Follow';
+
+                    // Update follower count
+                    const followerCount = document.querySelector('.stat-item:nth-child(2) .stat-number');
+                    followerCount.textContent = data.followers_count;
+                }
+            });
+    }
+</script>
+{% endblock %}

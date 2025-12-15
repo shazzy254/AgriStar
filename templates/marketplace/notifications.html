@@ -3,6 +3,24 @@
 {% block title %}Notifications - AgriStar{% endblock %}
 
 {% block content %}
+<style>
+    .bg-soft-success {
+        background-color: rgba(25, 135, 84, 0.1);
+    }
+
+    .bg-soft-danger {
+        background-color: rgba(220, 53, 69, 0.1);
+    }
+
+    .bg-soft-warning {
+        background-color: rgba(255, 193, 7, 0.1);
+    }
+
+    .notification-icon-wrapper {
+        width: 50px;
+        height: 50px;
+    }
+</style>
 <div class="row mb-4">
     <div class="col-md-8">
         <h2><i class="bi bi-bell me-2"></i>Notifications</h2>
@@ -30,12 +48,12 @@
 <div class="d-grid gap-3">
     {% for notification in notifications %}
     <div class="card glass-card border-0 animate__animated animate__fadeInUp"
-        style="animation-delay: {{ forloop.counter0|add:'1' }}00ms;">
+        style="animation-delay: {{ forloop.counter }}00ms;">
         <div class="card-body p-4">
             <div class="row align-items-center">
                 <div class="col-auto">
-                    <div class="rounded-circle d-flex align-items-center justify-content-center"
-                        style="width: 50px; height: 50px; background: {% if notification.notification_type == 'ORDER_PLACED' %}rgba(25, 135, 84, 0.1){% elif notification.notification_type == 'ORDER_REJECTED' %}rgba(220, 53, 69, 0.1){% else %}rgba(255, 193, 7, 0.1){% endif %};">
+                    <div
+                        class="rounded-circle d-flex align-items-center justify-content-center notification-icon-wrapper {% if notification.notification_type == 'ORDER_PLACED' %}bg-soft-success{% elif notification.notification_type == 'ORDER_REJECTED' %}bg-soft-danger{% else %}bg-soft-warning{% endif %}">
                         <i
                             class="bi bi-{% if notification.notification_type == 'ORDER_PLACED' %}check-circle-fill text-success{% elif notification.notification_type == 'ORDER_ACCEPTED' %}hand-thumbs-up-fill text-success{% elif notification.notification_type == 'ORDER_REJECTED' %}x-circle-fill text-danger{% else %}bell-fill text-warning{% endif %} fs-4"></i>
                     </div>

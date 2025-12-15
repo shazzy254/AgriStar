@@ -1,64 +1,1035 @@
 {% extends 'base.html' %}
+{% load static %}
+{% load community_extras %}
 
 {% block title %}Community Feed - AgriStar{% endblock %}
 
+{% block extra_css %}
+<style>
+    :root {
+        --agri-green: #4CAF50;
+        --agri-dark-green: #2d5016;
+        --agri-brown: #8B5E3C;
+        --agri-yellow: #FDE047;
+        --agri-soil: #2E2A23;
+    }
+
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    }
+
+    .feed-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+
+    .feed-header {
+        background: linear-gradient(135deg, var(--agri-green) 0%, var(--agri-dark-green) 100%);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        color: white;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .feed-header h2 {
+        margin: 0;
+        font-weight: 700;
+    }
+
+    .filter-bar {
+        background: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+    }
+
+    .category-pills {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-top: 1rem;
+    }
+
+    .category-pill {
+        padding: 0.5rem 1.25rem;
+        border-radius: 20px;
+        border: 2px solid #e0e0e0;
+        background: white;
+        color: #666;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .category-pill:hover {
+        border-color: var(--agri-green);
+        color: var(--agri-green);
+        transform: translateY(-2px);
+    }
+
+    .category-pill.active {
+        background: linear-gradient(135deg, var(--agri-green), var(--agri-dark-green));
+        color: white;
+        border-color: var(--agri-green);
+    }
+
+    .post-card {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+    }
+
+    .post-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 35px rgba(0, 0, 0, 0.12);
+    }
+
+    .post-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .post-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--agri-green), var(--agri-dark-green));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+        font-size: 1.2rem;
+    }
+
+    .post-author-info h6 {
+        margin: 0;
+        font-weight: 700;
+        color: #333;
+    }
+
+    .post-meta {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        font-size: 0.85rem;
+        color: #666;
+    }
+
+    .role-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .role-farmer {
+        background: linear-gradient(135deg, #4CAF50, #2d5016);
+        color: white;
+    }
+
+    .role-buyer {
+        background: linear-gradient(135deg, #2196F3, #1565C0);
+        color: white;
+    }
+
+    .role-rider {
+        background: linear-gradient(135deg, #FF9800, #F57C00);
+        color: white;
+    }
+
+    .category-badge {
+        padding: 0.4rem 1rem;
+        border-radius: 15px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        background: linear-gradient(135deg, var(--agri-yellow), #FCD34D);
+        color: var(--agri-soil);
+        display: inline-block;
+        margin-bottom: 1rem;
+    }
+
+    .post-content {
+        font-size: 1.05rem;
+        line-height: 1.7;
+        color: #333;
+        margin-bottom: 1.5rem;
+    }
+
+    .post-images {
+        display: grid;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+        border-radius: 16px;
+        overflow: hidden;
+    }
+
+    .post-images.single {
+        grid-template-columns: 1fr;
+    }
+
+    .post-images.double {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .post-images.multiple {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .post-image {
+        width: 100%;
+        height: 250px;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+
+    .post-image:hover {
+        transform: scale(1.05);
+    }
+
+    .post-actions {
+        display: flex;
+        gap: 1rem;
+        padding-top: 1rem;
+        border-top: 2px solid #f0f0f0;
+    }
+
+    .action-btn {
+        padding: 0.6rem 1.5rem;
+        border-radius: 20px;
+        border: none;
+        background: #f5f5f5;
+        color: #666;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .action-btn:hover {
+        background: #e0e0e0;
+        transform: translateY(-2px);
+    }
+
+    .action-btn.liked {
+        background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+        color: white;
+    }
+
+    .action-btn i {
+        font-size: 1.1rem;
+    }
+
+    .create-post-btn {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--agri-green), var(--agri-dark-green));
+        color: white;
+        border: none;
+        box-shadow: 0 8px 25px rgba(76, 175, 80, 0.4);
+        font-size: 1.5rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        z-index: 100;
+    }
+
+    .create-post-btn:hover {
+        transform: scale(1.1);
+        box-shadow: 0 12px 35px rgba(76, 175, 80, 0.5);
+    }
+
+    .comments-section {
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 2px solid #f0f0f0;
+    }
+
+    .comment-item {
+        margin-bottom: 1rem;
+    }
+
+    .comment-bubble {
+        background: #f8f9fa;
+        padding: 0.75rem 1rem;
+        border-radius: 12px;
+    }
+
+    .comment-bubble strong {
+        color: var(--agri-dark-green);
+    }
+
+    .comment-form input {
+        flex-grow: 1;
+    }
+
+    .comment-like-btn {
+        transition: all 0.3s ease;
+    }
+
+    .comment-like-btn.liked {
+        color: #ff6b6b !important;
+    }
+
+    .comment-like-btn:hover {
+        transform: scale(1.1);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.08);
+    }
+
+    .empty-state i {
+        font-size: 4rem;
+        color: var(--agri-green);
+        margin-bottom: 1rem;
+    }
+
+    @media (max-width: 768px) {
+        .feed-container {
+            padding: 1rem 0.5rem;
+        }
+
+        .post-card {
+            padding: 1.5rem;
+        }
+
+        .category-pills {
+            overflow-x: auto;
+            flex-wrap: nowrap;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="mb-0"><i class="bi bi-people-fill me-2"></i>Community Feed</h2>
-            <a href="#" class="btn btn-success rounded-pill"><i class="bi bi-plus-lg me-1"></i>New Post</a>
-        </div>
+<!-- Updated: 2025-12-12 20:21 -->
+{% if user.role == 'FARMER' %}
+{% include 'users/farmer_menu.html' %}
+{% endif %}
 
-        {% for post in posts %}
-        <div class="card glass-card mb-4 animate__animated animate__fadeInUp">
-            <div class="card-header bg-transparent border-bottom-0 pt-4 px-4">
-                <div class="d-flex align-items-center">
-                    <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center me-3"
-                        style="width: 45px; height: 45px; font-size: 1.2rem;">
-                        {{ post.author.username|make_list|first|upper }}
+<div class="container py-4">
+    <div class="row g-4">
+        <!-- Main Feed Column -->
+        <div class="col-lg-8">
+            <div class="feed-header mb-4">
+                <h2><i class="bi bi-people-fill me-2"></i>Community Feed</h2>
+                <p class="mb-0 mt-2 text-muted">Connect, share, and learn from fellow farmers</p>
+            </div>
+
+            <!-- Filter & Search Bar -->
+            <div class="filter-bar mb-4">
+                <!-- Search Form -->
+                <form action="" method="GET" class="mb-4">
+                    <div class="input-group shadow-sm">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="bi bi-search text-muted"></i>
+                        </span>
+                        <input type="text" name="search" class="form-control border-start-0 ps-0"
+                            placeholder="Search posts, people, or tags..." value="{{ search_query|default:'' }}">
+                        <button class="btn btn-success" type="submit">Search</button>
                     </div>
-                    <div>
-                        <h5 class="mb-0 fw-bold">{{ post.author.username }}</h5>
-                        <small class="text-muted"><i class="bi bi-clock me-1"></i>{{ post.created_at|date:"M d, Y H:i"
-                            }}</small>
+                    {% if current_category and current_category != 'ALL' %}
+                    <input type="hidden" name="category" value="{{ current_category }}">
+                    {% endif %}
+                    {% if current_filter and current_filter != 'latest' %}
+                    <input type="hidden" name="filter" value="{{ current_filter }}">
+                    {% endif %}
+                </form>
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="mb-0 fw-bold">Filter Posts</h6>
+                    <div class="btn-group btn-group-sm">
+                        <a href="?filter=latest{% if search_query %}&search={{ search_query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}"
+                            class="btn btn-sm {% if current_filter == 'latest' or not current_filter %}btn-success{% else %}btn-outline-secondary{% endif %}">Latest</a>
+                        <a href="?filter=popular{% if search_query %}&search={{ search_query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}"
+                            class="btn btn-sm {% if current_filter == 'popular' %}btn-success{% else %}btn-outline-secondary{% endif %}">Popular</a>
+                        <a href="?filter=following{% if search_query %}&search={{ search_query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}"
+                            class="btn btn-sm {% if current_filter == 'following' %}btn-success{% else %}btn-outline-secondary{% endif %}">Following</a>
                     </div>
+                </div>
+
+                <div class="category-pills d-flex gap-2 overflow-auto py-2">
+                    <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if current_filter %}filter={{ current_filter }}{% endif %}"
+                        class="category-pill btn btn-sm rounded-pill {% if not current_category or current_category == 'ALL' %}btn-dark{% else %}btn-light border{% endif %}">
+                        All
+                    </a>
+                    {% for value, label in categories %}
+                    <a href="?category={{ value }}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_filter %}&filter={{ current_filter }}{% endif %}"
+                        class="category-pill btn btn-sm rounded-pill {% if current_category == value %}btn-dark{% else %}btn-light border{% endif %}">
+                        {{ label }}
+                    </a>
+                    {% endfor %}
                 </div>
             </div>
 
-            {% if post.image %}
-            <div class="px-4 mt-2">
-                <img src="{{ post.image.url }}" class="img-fluid rounded-3 w-100 shadow-sm" alt="Post image"
-                    style="max-height: 400px; object-fit: cover;">
+            <!-- Posts -->
+            {% for post in posts %}
+            <div class="post-card card border-0 shadow-sm mb-4" style="border-radius: 15px;">
+                <div class="card-body p-4">
+                    <div class="post-header d-flex gap-3 mb-3">
+                        <a href="{% url 'user_profile' post.author.id %}" class="text-decoration-none">
+                            <div class="post-avatar"
+                                style="width: 45px; height: 45px; border-radius: 50%; background: linear-gradient(135deg, #4CAF50, #2d5016); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem;">
+                                {{ post.author.username|slice:":1"|upper }}
+                            </div>
+                        </a>
+                        <div class="post-author-info flex-grow-1">
+                            <h6 class="mb-0">
+                                <a href="{% url 'user_profile' post.author.id %}"
+                                    class="text-decoration-none text-dark fw-bold">
+                                    {{ post.author.username }}
+                                </a>
+                                <span class="badge bg-light text-dark ms-2 border">
+                                    {{ post.author.get_role_display }}
+                                </span>
+                                <!-- Follow Button (Small) for non-owners -->
+                                {% if post.author != user %}
+                                <button
+                                    class="btn btn-sm btn-link text-decoration-none p-0 ms-2 follow-link-{{ post.author.id }}"
+                                    onclick="toggleFollowFromFeed({{ post.author.id }})"
+                                    style="font-size: 0.8rem; font-weight: 600; color: #4CAF50;">
+                                    {% if post.author.id|is_following:user %}Following{% else %}Follow{% endif %}
+                                </button>
+                                {% endif %}
+                            </h6>
+                            <div class="post-meta text-muted small mt-1">
+                                {% if post.location %}
+                                <span class="me-2"><i class="bi bi-geo-alt-fill text-danger"></i> {{ post.location }}</span>
+                                {% endif %}
+                                <span><i class="bi bi-clock"></i> {{ post.created_at|timesince }} ago</span>
+                            </div>
+                        </div>
+                        {% if post.author == user %}
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-light rounded-circle" data-bs-toggle="dropdown">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                                <li>
+                                    <a class="dropdown-item text-danger" href="{% url 'delete_post' post.id %}">
+                                        <i class="bi bi-trash me-2"></i>Delete
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <span class="badge bg-success bg-opacity-10 text-success mb-3">{{ post.get_category_display }}</span>
+
+                    <div class="post-content mb-3">
+                        {{ post.content }}
+                        {% if post.tags %}
+                        <div class="mt-2 text-success fw-medium">
+                            {{ post.tags }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    {% if post.images.all %}
+                    <div
+                        class="post-images mb-3 {% if post.images.count == 1 %}single{% elif post.images.count == 2 %}double{% else %}multiple{% endif %} overflow-hidden">
+                        {% for image in post.images.all|slice:":5" %}
+                        <img src="{{ image.image.url }}" alt="Post image" class="post-image rounded"
+                            onclick="window.open('{{ image.image.url }}', '_blank')">
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <div class="post-actions d-flex gap-4 border-top pt-3 text-muted">
+                        <button
+                            class="btn btn-link text-decoration-none text-muted p-0 d-flex align-items-center gap-1 like-btn {% if user in post.likes.all %}liked text-danger{% endif %}"
+                            data-post-id="{{ post.id }}">
+                            <i class="bi {% if user in post.likes.all %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
+                            <span class="like-count">{{ post.likes_count }}</span>
+                        </button>
+                        <button class="btn btn-link text-decoration-none text-muted p-0 d-flex align-items-center gap-1"
+                            onclick="toggleComments({{ post.id }})">
+                            <i class="bi bi-chat"></i>
+                            <span>{{ post.comments_count }}</span>
+                        </button>
+                        <button
+                            class="btn btn-link text-decoration-none text-muted p-0 d-flex align-items-center gap-1 share-btn"
+                            onclick="sharePost('{{ request.build_absolute_uri }}')">
+                            <i class="bi bi-share"></i>
+                        </button>
+                        <button class="btn btn-link text-decoration-none text-muted p-0 ms-auto save-btn"
+                            data-post-id="{{ post.id }}" onclick="toggleSave({{ post.id }}, this)">
+                            <i
+                                class="bi {% if user in post.saved_by.all %}bi-bookmark-fill text-success{% else %}bi-bookmark{% endif %}"></i>
+                        </button>
+                        {% if post.author != user %}
+                        <button class="btn btn-link text-decoration-none text-muted p-0"
+                            onclick="window.location.href='{% url 'report_post' post.id %}'">
+                            <i class="bi bi-flag"></i>
+                        </button>
+                        {% endif %}
+                    </div>
+
+                    <!-- Comments Section -->
+                    <div class="comments-section" id="comments-{{ post.id }}" style="display: none;">
+                        <div class="comments-list mt-3">
+                            {% for comment in post.comments.all %}
+                            {% if not comment.parent %}
+                            <div class="comment-item mb-3" id="comment-{{ comment.id }}">
+                                <div class="d-flex gap-2">
+                                    <div
+                                        style="width: 35px; height: 35px; border-radius: 50%; background: #f0f2f5; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9rem;">
+                                        {{ comment.author.username|slice:":1"|upper }}
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="comment-bubble bg-light p-2 rounded-3">
+                                            <div class="d-flex justify-content-between align-items-start mb-1">
+                                                <strong>{{ comment.author.username }}</strong>
+                                                <div class="comment-actions">
+                                                    {% if comment.author == user %}
+                                                    <button class="btn btn-sm btn-link text-muted p-0 me-1"
+                                                        onclick="editComment({{ comment.id }})" title="Edit">
+                                                        <i class="bi bi-pencil small"></i>
+                                                    </button>
+                                                    {% endif %}
+                                                    {% if comment.author == user or post.author == user %}
+                                                    <button class="btn btn-sm btn-link text-danger p-0"
+                                                        onclick="deleteComment({{ comment.id }})" title="Delete">
+                                                        <i class="bi bi-trash small"></i>
+                                                    </button>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            <p class="mb-1 comment-content-{{ comment.id }}">{{
+                                                comment.content|process_mentions }}</p>
+                                            {% if comment.image %}
+                                            <div class="mt-2">
+                                                <img src="{{ comment.image.url }}" alt="Comment image"
+                                                    style="max-width: 100%; max-height: 200px; border-radius: 10px; cursor: pointer;"
+                                                    onclick="window.open('{{ comment.image.url }}', '_blank')">
+                                            </div>
+                                            {% endif %}
+                                            {% if comment.is_edited %}
+                                            <small class="text-muted fst-italic">(edited)</small>
+                                            {% endif %}
+
+                                            <!-- Edit Form -->
+                                            <div class="edit-form-{{ comment.id }}" style="display: none;">
+                                                <input type="text" class="form-control form-control-sm mt-2"
+                                                    value="{{ comment.content }}" id="edit-input-{{ comment.id }}">
+                                                <div class="mt-2">
+                                                    <button class="btn btn-sm btn-success"
+                                                        onclick="saveEdit({{ comment.id }})">Save</button>
+                                                    <button class="btn btn-sm btn-secondary"
+                                                        onclick="cancelEdit({{ comment.id }})">Cancel</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex gap-3 mt-1 ms-1 align-items-center">
+                                            <small class="text-muted">{{ comment.created_at|timesince }} ago</small>
+                                            <button
+                                                class="btn btn-sm btn-link p-0 comment-like-btn text-muted text-decoration-none {% if user in comment.likes.all %}liked text-danger{% endif %}"
+                                                onclick="likeComment({{ comment.id }}, this)">
+                                                <i class="bi bi-heart-fill"></i>
+                                                <span class="comment-like-count-{{ comment.id }}">{{ comment.likes_count
+                                                    }}</span>
+                                            </button>
+                                            <button class="btn btn-sm btn-link text-secondary text-decoration-none p-0"
+                                                onclick="showReplyForm({{ comment.id }})">
+                                                Reply
+                                            </button>
+                                        </div>
+
+                                        <!-- Reply Form -->
+                                        <div class="reply-form-{{ comment.id }} mt-2" style="display: none;">
+                                            <div class="input-group input-group-sm">
+                                                <input type="text" class="form-control" placeholder="Write a reply..."
+                                                    id="reply-input-{{ comment.id }}">
+                                                <button class="btn btn-success" onclick="submitReply({{ comment.id }})">
+                                                    <i class="bi bi-send-fill"></i>
+                                                </button>
+                                            </div>
+                                            <input type="file" accept="image/*" class="d-none"
+                                                id="reply-image-{{ comment.id }}"
+                                                onchange="previewReplyImage({{ comment.id }}, this)">
+                                        </div>
+
+                                        <!-- Replies -->
+                                        {% if comment.replies.all %}
+                                        <div class="ms-3 mt-2 border-start ps-3">
+                                            {% for reply in comment.replies.all %}
+                                            <div class="reply-item mb-2" id="comment-{{ reply.id }}">
+                                                <div class="bg-light p-2 rounded-3">
+                                                    <strong>{{ reply.author.username }}</strong>
+                                                    <p class="mb-0">{{ reply.content|process_mentions }}</p>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+
+                        <!-- Add Comment Form -->
+                        <form class="comment-form mt-3" onsubmit="submitComment(event, {{ post.id }})"
+                            enctype="multipart/form-data" id="comment-form-{{ post.id }}">
+                            {% csrf_token %}
+                            <div class="d-flex gap-2">
+                                <input type="text" name="content" class="form-control rounded-pill"
+                                    placeholder="Write a comment...">
+                                <button type="submit" class="btn btn-circle btn-success rounded-circle">
+                                    <i class="bi bi-send-fill"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
+            {% empty %}
+            <div class="empty-state text-center py-5">
+                <i class="bi bi-chat-square-quote display-1 text-muted opacity-25"></i>
+                <h4 class="fw-bold mb-2 mt-3">No posts yet</h4>
+                <p class="text-muted">Be the first to share something with the community!</p>
+                <a href="{% url 'create_post' %}" class="btn btn-success mt-3 rounded-pill px-4">
+                    <i class="bi bi-plus-lg me-2"></i>Create Post
+                </a>
+            </div>
+            {% endfor %}
+
+            <!-- Pagination -->
+            {% if posts.has_other_pages %}
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if posts.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ posts.previous_page_number }}">Previous</a>
+                    </li>
+                    {% endif %}
+
+                    <li class="page-item active">
+                        <span class="page-link">Page {{ posts.number }} of {{ posts.paginator.num_pages }}</span>
+                    </li>
+
+                    {% if posts.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ posts.next_page_number }}">Next</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
             {% endif %}
+        </div>
 
-            <div class="card-body px-4">
-                <p class="card-text fs-5">{{ post.content }}</p>
-            </div>
-
-            <div class="card-footer bg-transparent border-top-0 pb-4 px-4">
-                <div class="d-flex gap-3">
-                    <button class="btn btn-outline-danger btn-sm rounded-pill px-3">
-                        <i class="bi bi-heart me-1"></i> {{ post.likes.count }} Likes
-                    </button>
-                    <button class="btn btn-outline-primary btn-sm rounded-pill px-3">
-                        <i class="bi bi-chat me-1"></i> Comment
-                    </button>
-                    <button class="btn btn-outline-secondary btn-sm rounded-pill px-3 ms-auto">
-                        <i class="bi bi-share me-1"></i> Share
-                    </button>
+        <!-- Sidebar Column -->
+        <div class="col-lg-4 d-none d-lg-block">
+            <!-- Create Post Widget -->
+            <div class="card border-0 shadow-sm mb-4 bg-success text-white"
+                style="border-radius: 15px; background: linear-gradient(135deg, #4CAF50, #2d5016);">
+                <div class="card-body p-4 text-center">
+                    <h5 class="fw-bold mb-2">Share your updates!</h5>
+                    <p class="small opacity-75 mb-3">Ask questions, share photos, or give advice.</p>
+                    <a href="{% url 'create_post' %}" class="btn btn-light rounded-pill w-100 fw-bold text-success">
+                        <i class="bi bi-plus-lg me-2"></i>Create New Post
+                    </a>
                 </div>
             </div>
+
+            <!-- Following List -->
+            <div class="card border-0 shadow-sm mb-4" style="border-radius: 15px; overflow: hidden;">
+                <div class="card-header bg-white border-0 py-3">
+                    <h6 class="fw-bold mb-0">Your Network</h6>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for f_user in following_list %}
+                    <a href="{% url 'user_profile' f_user.id %}"
+                        class="list-group-item list-group-item-action d-flex align-items-center gap-2 border-0 px-3 py-2">
+                        <div
+                            style="width: 35px; height: 35px; border-radius: 50%; background: #e9ecef; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                            {{ f_user.username|slice:":1"|upper }}
+                        </div>
+                        <span class="flex-grow-1 text-truncate fw-medium">{{ f_user.username }}</span>
+                        <i class="bi bi-chevron-right text-muted small"></i>
+                    </a>
+                    {% empty %}
+                    <div class="p-4 text-center text-muted small">
+                        <p class="mb-0">You aren't following anyone yet.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Suggested Users -->
+            <div class="card border-0 shadow-sm" style="border-radius: 15px; overflow: hidden;">
+                <div class="card-header bg-white border-0 py-3">
+                    <h6 class="fw-bold mb-0">Who to Follow</h6>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for s_user in suggested_users %}
+                    <div class="list-group-item d-flex align-items-center gap-2 border-0 px-3 py-3">
+                        <a href="{% url 'user_profile' s_user.id %}" class="text-decoration-none">
+                            <div
+                                style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #66bb6a, #43a047); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                                {{ s_user.username|slice:":1"|upper }}
+                            </div>
+                        </a>
+                        <div class="flex-grow-1 ps-2">
+                            <a href="{% url 'user_profile' s_user.id %}"
+                                class="text-dark text-decoration-none fw-bold small d-block">{{ s_user.username }}</a>
+                            <small class="text-muted" style="font-size: 0.75rem;">{{ s_user.get_role_display }}</small>
+                        </div>
+                        <button
+                            class="btn btn-sm btn-outline-success rounded-pill px-3 py-1 follow-link-{{ s_user.id }}"
+                            onclick="toggleFollowFromFeed({{ s_user.id }})" style="font-size: 0.75rem;">Follow</button>
+                    </div>
+                    {% empty %}
+                    <div class="p-4 text-center text-muted small">
+                        <p class="mb-0">No new suggestions.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Footer Links -->
+            <div class="text-center mt-4">
+                <small class="text-muted">
+                    &copy; 2025 AgriStar Community
+                </small>
+            </div>
         </div>
-        {% empty %}
-        <div class="text-center py-5 glass-card">
-            <i class="bi bi-chat-square-quote text-muted" style="font-size: 4rem;"></i>
-            <h4 class="text-muted mt-3">No posts yet</h4>
-            <p class="text-muted">Be the first to share something with the community!</p>
-            <a href="#" class="btn btn-success mt-2">Create Post</a>
-        </div>
-        {% endfor %}
     </div>
 </div>
+
+<!-- Create Post Button -->
+<a href="{% url 'create_post' %}" class="create-post-btn">
+    <i class="bi bi-plus-lg"></i>
+</a>
+
+<script>
+    // Like functionality
+    document.querySelectorAll('.like-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const postId = this.dataset.postId;
+            const likeCount = this.querySelector('.like-count');
+
+            fetch(`/community/post/${postId}/like/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        likeCount.textContent = data.likes_count;
+                        this.classList.toggle('liked', data.liked);
+                    }
+                });
+        });
+    });
+
+    // Save functionality
+    function toggleSave(postId, button) {
+        fetch(`/community/post/${postId}/save/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.saved) {
+                        button.style.background = 'linear-gradient(135deg, #4CAF50, #2d5016)';
+                        button.style.color = 'white';
+                    } else {
+                        button.style.background = '#f5f5f5';
+                        button.style.color = '#666';
+                    }
+                }
+            });
+    }
+
+    // Toggle comments section
+    function toggleComments(postId) {
+        const commentsSection = document.getElementById(`comments-${postId}`);
+        if (commentsSection.style.display === 'none') {
+            commentsSection.style.display = 'block';
+        } else {
+            commentsSection.style.display = 'none';
+        }
+    }
+
+    // Submit comment
+    function submitComment(event, postId) {
+        event.preventDefault();
+        const form = event.target;
+        const input = form.querySelector('input[name="content"]');
+        const imageInput = form.querySelector('input[name="image"]');
+        const content = input.value.trim();
+
+        if (!content && !imageInput.files.length) return;
+
+        const formData = new FormData();
+        formData.append('content', content);
+        if (imageInput.files.length > 0) {
+            formData.append('image', imageInput.files[0]);
+        }
+
+        fetch(`/community/post/${postId}/comment/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Reload page to show new comment
+                    location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to post comment. Please try again.');
+            });
+    }
+
+    // Edit comment
+    function editComment(commentId) {
+        document.querySelector(`.comment-content-${commentId}`).style.display = 'none';
+        document.querySelector(`.edit-form-${commentId}`).style.display = 'block';
+    }
+
+    function saveEdit(commentId) {
+        const content = document.getElementById(`edit-input-${commentId}`).value.trim();
+
+        if (!content) return;
+
+        const formData = new FormData();
+        formData.append('content', content);
+
+        fetch(`/community/comment/${commentId}/edit/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to edit comment.');
+            });
+    }
+
+    function cancelEdit(commentId) {
+        document.querySelector(`.comment-content-${commentId}`).style.display = 'block';
+        document.querySelector(`.edit-form-${commentId}`).style.display = 'none';
+    }
+
+    // Delete comment
+    function deleteComment(commentId) {
+        if (!confirm('Delete this comment?')) return;
+
+        fetch(`/community/comment/${commentId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById(`comment-${commentId}`).remove();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to delete comment.');
+            });
+    }
+
+    // Reply to comment
+    function showReplyForm(commentId) {
+        const replyForm = document.querySelector(`.reply-form-${commentId}`);
+        replyForm.style.display = replyForm.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function submitReply(commentId) {
+        const input = document.getElementById(`reply-input-${commentId}`);
+        const imageInput = document.getElementById(`reply-image-${commentId}`);
+        const content = input.value.trim();
+
+        if (!content && !imageInput.files.length) return;
+
+        const formData = new FormData();
+        formData.append('content', content);
+        if (imageInput.files.length > 0) {
+            formData.append('image', imageInput.files[0]);
+        }
+
+        fetch(`/community/comment/${commentId}/reply/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to post reply.');
+            });
+    }
+
+    // Like comment
+    function likeComment(commentId, button) {
+        fetch(`/community/comment/${commentId}/like/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const likeCount = document.querySelector(`.comment-like-count-${commentId}`);
+                    likeCount.textContent = data.likes_count;
+
+                    if (data.liked) {
+                        button.classList.add('liked');
+                    } else {
+                        button.classList.remove('liked');
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    }
+
+    // Image preview for comments
+    function previewCommentImage(postId, input) {
+        const preview = document.getElementById(`image-preview-${postId}`);
+        const img = preview.querySelector('img');
+
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                img.src = e.target.result;
+                preview.style.display = 'block';
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function removeCommentImage(postId) {
+        const input = document.getElementById(`comment-image-${postId}`);
+        const preview = document.getElementById(`image-preview-${postId}`);
+        input.value = '';
+        preview.style.display = 'none';
+    }
+
+    // Image preview for replies
+    function previewReplyImage(commentId, input) {
+        const preview = document.getElementById(`reply-image-preview-${commentId}`);
+        const img = preview.querySelector('img');
+
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                img.src = e.target.result;
+                preview.style.display = 'block';
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function removeReplyImage(commentId) {
+        const input = document.getElementById(`reply-image-${commentId}`);
+        const preview = document.getElementById(`reply-image-preview-${commentId}`);
+        input.value = '';
+        preview.style.display = 'none';
+    }
+
+    // Share Post
+    function sharePost(url) {
+        if (navigator.share) {
+            navigator.share({
+                title: 'AgriStar Community Post',
+                url: url
+            }).catch(console.error);
+        } else {
+            navigator.clipboard.writeText(url).then(() => {
+                alert('Link copied to clipboard!');
+            }).catch(console.error);
+        }
+    }
+
+    // Toggle Follow from Feed
+    function toggleFollowFromFeed(userId) {
+        fetch(`/community/user/${userId}/follow/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update all instances of follow buttons for this user on the page
+                    const buttons = document.querySelectorAll(`.follow-link-${userId}`);
+                    buttons.forEach(btn => {
+                        if (data.following) {
+                            btn.textContent = 'Request Sent'; // Or 'Following', kept simple
+                            // ideally we reload or change style to indicate following
+                            btn.textContent = 'Following';
+                            btn.classList.remove('text-primary');
+                            btn.classList.add('text-muted');
+                        } else {
+                            btn.textContent = 'Follow';
+                            btn.classList.add('text-primary');
+                            btn.classList.remove('text-muted');
+                        }
+                    });
+                    // Optional: reload page to refresh feed if "Following" filter is active
+                    // location.reload(); 
+                }
+            })
+            .catch(console.error);
+    }
+</script>
 {% endblock %}

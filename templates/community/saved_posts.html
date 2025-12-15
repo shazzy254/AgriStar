@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Saved Posts - AgriStar{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --agri-green: #4CAF50;
+        --agri-dark-green: #2d5016;
+    }
+
+    .saved-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .saved-header {
+        background: linear-gradient(135deg, var(--agri-green) 0%, var(--agri-dark-green) 100%);
+        border-radius: 20px;
+        padding: 2rem;
+        color: white;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .post-card {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+    }
+
+    .post-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 35px rgba(0, 0, 0, 0.12);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.08);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{% if user.role == 'FARMER' %}
+{% include 'users/farmer_menu.html' %}
+{% endif %}
+
+<div class="saved-container">
+    <div class="saved-header">
+        <h2 class="fw-bold mb-2">
+            <i class="bi bi-bookmark-fill me-2"></i>Saved Posts
+        </h2>
+        <p class="mb-0">Posts you've bookmarked for later</p>
+    </div>
+
+    {% if saved_posts %}
+    {% for saved in saved_posts %}
+    <div class="post-card">
+        <div class="d-flex align-items-start gap-3 mb-3">
+            <div
+                style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, var(--agri-green), var(--agri-dark-green)); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1.2rem;">
+                {{ saved.post.author.username|slice:":1"|upper }}
+            </div>
+            <div class="flex-grow-1">
+                <h6 class="mb-1 fw-bold">
+                    <a href="{% url 'user_profile' saved.post.author.id %}" class="text-decoration-none text-dark">
+                        {{ saved.post.author.username }}
+                    </a>
+                    <span class="badge ms-2"
+                        style="background: linear-gradient(135deg, var(--agri-green), var(--agri-dark-green)); color: white;">
+                        {{ saved.post.author.get_role_display }}
+                    </span>
+                </h6>
+                <small class="text-muted">
+                    <i class="bi bi-clock me-1"></i>{{ saved.post.created_at|timesince }} ago
+                    <span class="mx-2">•</span>
+                    <i class="bi bi-bookmark-fill me-1"></i>Saved {{ saved.saved_at|timesince }} ago
+                </small>
+            </div>
+            <button class="btn btn-sm btn-outline-danger" onclick="unsavePost({{ saved.post.id }}, this)">
+                <i class="bi bi-bookmark-x"></i>
+            </button>
+        </div>
+
+        <span class="badge mb-2" style="background: linear-gradient(135deg, #FDE047, #FCD34D); color: #2E2A23;">
+            {{ saved.post.get_category_display }}
+        </span>
+
+        <p class="mb-3">{{ saved.post.content }}</p>
+
+        {% if saved.post.images.all %}
+        <div class="row g-2 mb-3">
+            {% for image in saved.post.images.all|slice:":3" %}
+            <div class="col-4">
+                <img src="{{ image.image.url }}" alt="Post image"
+                    style="width: 100%; height: 150px; object-fit: cover; border-radius: 12px;">
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="d-flex gap-3 text-muted small">
+            <span><i class="bi bi-heart-fill text-danger me-1"></i>{{ saved.post.likes_count }}</span>
+            <span><i class="bi bi-chat-fill text-primary me-1"></i>{{ saved.post.comments_count }}</span>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="empty-state">
+        <i class="bi bi-bookmark" style="font-size: 4rem; color: var(--agri-green);"></i>
+        <h5 class="fw-bold mt-3 mb-2">No Saved Posts</h5>
+        <p class="text-muted">Posts you save will appear here</p>
+        <a href="{% url 'feed' %}" class="btn btn-success mt-3" style="border-radius: 25px; padding: 0.75rem 2rem;">
+            <i class="bi bi-arrow-left me-2"></i>Back to Feed
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    function unsavePost(postId, button) {
+        if (!confirm('Remove this post from your saved items?')) return;
+
+        fetch(`/community/post/${postId}/save/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    button.closest('.post-card').remove();
+
+                    // Check if no more posts
+                    if (document.querySelectorAll('.post-card').length === 0) {
+                        location.reload();
+                    }
+                }
+            });
+    }
+</script>
+{% endblock %}

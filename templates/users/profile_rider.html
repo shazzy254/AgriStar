@@ -1,570 +1,450 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}{{ profile_user.username }}'s Profile - AgriStar Rider{% endblock %}
+{% block title %}{{ profile_user.username }} - Rider Profile{% endblock %}
 
 {% block extra_css %}
 <style>
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        min-height: 100vh;
+    }
+
     .profile-header {
-        background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
-        padding: 3rem 0;
+        padding: 3rem 2rem;
+        border-radius: 25px;
         margin-bottom: 2rem;
-        border-radius: 0 0 30px 30px;
+        box-shadow: 0 15px 50px rgba(102, 126, 234, 0.3);
     }
 
-    .profile-avatar {
-        width: 150px;
-        height: 150px;
-        border: 5px solid white;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-        object-fit: cover;
-    }
-
-    .verification-badge {
-        display: inline-block;
-        padding: 0.5rem 1.5rem;
-        border-radius: 50px;
-        font-weight: bold;
-        margin-top: 1rem;
-        font-size: 0.9rem;
-    }
-
-    .badge-verified {
-        background: linear-gradient(135deg, #2ecc71, #27ae60);
-        color: white;
-    }
-
-    .badge-pending {
-        background: linear-gradient(135deg, #f39c12, #e67e22);
-        color: white;
-    }
-
-    .badge-suspended {
-        background: linear-gradient(135deg, #e74c3c, #c0392b);
-        color: white;
-    }
-
-    .availability-badge {
-        display: inline-block;
-        padding: 0.5rem 1.5rem;
-        border-radius: 50px;
-        font-weight: bold;
-        margin-top: 0.5rem;
-    }
-
-    .badge-available {
-        background: linear-gradient(135deg, #2ecc71, #27ae60);
-        color: white;
-    }
-
-    .badge-busy {
-        background: linear-gradient(135deg, #95a5a6, #7f8c8d);
-        color: white;
-    }
-
-    .stat-card {
+    .profile-card {
         background: white;
-        border-radius: 15px;
-        padding: 1.5rem;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        transition: transform 0.3s;
-        text-align: center;
-    }
-
-    .stat-card:hover {
-        transform: translateY(-5px);
-    }
-
-    .stat-number {
-        font-size: 2.5rem;
-        font-weight: bold;
-        color: #3498db;
-    }
-
-    .stat-label {
-        color: #7f8c8d;
-        font-size: 0.9rem;
-        margin-top: 0.5rem;
-    }
-
-    .info-card {
-        background: white;
-        border-radius: 15px;
-        padding: 1.5rem;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
         margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
     }
 
-    .info-card h5 {
-        color: #2c3e50;
-        border-bottom: 2px solid #3498db;
-        padding-bottom: 0.5rem;
-        margin-bottom: 1rem;
+    .profile-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
     }
 
-    .info-row {
-        display: flex;
-        justify-content: space-between;
-        padding: 0.75rem 0;
-        border-bottom: 1px solid #ecf0f1;
+    .stat-badge {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 15px;
+        text-align: center;
+        transition: all 0.3s ease;
     }
 
-    .info-row:last-child {
-        border-bottom: none;
+    .stat-badge:hover {
+        transform: scale(1.05);
     }
 
-    .info-label {
-        font-weight: 600;
-        color: #7f8c8d;
+    .stat-badge h3 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin: 0;
     }
 
-    .info-value {
-        color: #2c3e50;
-        font-weight: 500;
-    }
-
-    .contact-btn {
-        border-radius: 50px;
-        padding: 0.75rem 2rem;
-        font-weight: bold;
-        transition: all 0.3s;
-        margin: 0.5rem;
-    }
-
-    .contact-btn:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-    }
-
-    .vehicle-icon {
-        font-size: 3rem;
-        color: #3498db;
-        margin-bottom: 1rem;
-    }
-
-    .delivery-card {
+    .review-card {
         background: #f8f9fa;
         border-radius: 15px;
         padding: 1.5rem;
         margin-bottom: 1rem;
-        border-left: 4px solid #3498db;
-        transition: all 0.3s;
+        border-left: 4px solid #667eea;
     }
 
-    .delivery-card:hover {
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        transform: translateX(5px);
+    .btn-gradient-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+        padding: 0.75rem 2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: all 0.3s ease;
     }
 
-    .rating-stars {
-        color: #ffc107;
-        font-size: 1.5rem;
+    .btn-gradient-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        color: white;
     }
 
-    .progress-ring {
-        width: 120px;
-        height: 120px;
-        margin: 0 auto;
-    }
-
-    .success-rate-text {
-        font-size: 2rem;
-        font-weight: bold;
-        color: #2ecc71;
-    }
-
-    .location-badge {
-        background: #ecf0f1;
-        padding: 0.25rem 0.75rem;
-        border-radius: 15px;
-        font-size: 0.85rem;
-        color: #34495e;
-        margin: 0.25rem;
+    .verification-badge {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        color: white;
+        padding: 0.5rem 1.5rem;
+        border-radius: 20px;
+        font-weight: 600;
         display: inline-block;
+    }
+
+    .pending-badge {
+        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        color: white;
+        padding: 0.5rem 1.5rem;
+        border-radius: 20px;
+        font-weight: 600;
+        display: inline-block;
+    }
+
+    .avatar-container {
+        position: relative;
+        width: 180px;
+        height: 180px;
+        margin: 0 auto 1.5rem;
+    }
+
+    .avatar-img {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 5px solid white;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .qr-container {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+
+    .star-rating {
+        color: #ffc107;
+        font-size: 1.2rem;
+    }
+
+    .availability-switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 34px;
+    }
+
+    .availability-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .switch-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        transition: .4s;
+        border-radius: 34px;
+    }
+
+    .switch-slider:before {
+        position: absolute;
+        content: "";
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+
+    input:checked+.switch-slider {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    }
+
+    input:checked+.switch-slider:before {
+        transform: translateX(26px);
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- Profile Header -->
-<div class="profile-header">
-    <div class="container">
-        <div class="row align-items-center">
-            <div class="col-md-3 text-center">
-                <div class="profile-avatar-container position-relative d-inline-block">
-                    <img src="{{ profile_user.profile.avatar.url }}" class="rounded-circle profile-avatar"
-                        id="profileAvatar" alt="{{ profile_user.username }}">
-                    {% if is_own_profile %}
-                    <button class="btn btn-light rounded-circle position-absolute bottom-0 end-0 shadow-sm p-2"
-                        onclick="document.getElementById('avatarInput').click()"
-                        style="width: 40px; height: 40px; border: 2px solid #fff;">
-                        <i class="bi bi-camera-fill text-primary"></i>
-                    </button>
-                    <input type="file" id="avatarInput" accept="image/*" class="d-none">
-                    {% endif %}
-                </div>
-            </div>
-            <div class="col-md-9">
-                <h1 class="display-4 fw-bold mb-2">{{ profile_user.username }}</h1>
-                <p class="lead mb-2">
-                    <i class="bi bi-geo-alt-fill me-2"></i>{{
-                    profile_user.rider_profile.get_full_location|default:"Location not set" }}
-                </p>
-
-                {% if is_own_profile %}
-                <div class="mb-3">
-                    <a href="{% url 'edit_profile' %}" class="btn btn-light btn-sm rounded-pill fw-bold">
-                        <i class="bi bi-pencil-fill me-1"></i>Edit Profile
-                    </a>
-                </div>
-                {% endif %}
-
-                <!-- Verification Badge -->
-                {% if profile_user.rider_profile.verification_status == 'VERIFIED' %}
-                <div class="verification-badge badge-verified">
-                    <i class="bi bi-patch-check-fill me-2"></i>✓ Verified Rider
-                </div>
-                {% elif profile_user.rider_profile.verification_status == 'PENDING' %}
-                <div class="verification-badge badge-pending">
-                    <i class="bi bi-clock-fill me-2"></i>⏳ Pending Verification
-                </div>
-                {% elif profile_user.rider_profile.verification_status == 'SUSPENDED' %}
-                <div class="verification-badge badge-suspended">
-                    <i class="bi bi-exclamation-triangle-fill me-2"></i>⚠ Suspended
-                </div>
-                {% endif %}
-
-                <!-- Availability Badge -->
-                {% if profile_user.rider_profile.is_available %}
-                <div class="availability-badge badge-available">
-                    <i class="bi bi-check-circle-fill me-2"></i>🟢 Available for Delivery
-                </div>
-                {% else %}
-                <div class="availability-badge badge-busy">
-                    <i class="bi bi-x-circle-fill me-2"></i>🔴 Currently Busy
-                </div>
-                {% endif %}
-
-                <!-- Contact Buttons -->
-                <div class="mt-4">
-                    {% if profile_user.profile.phone_number %}
-                    <a href="tel:{{ profile_user.profile.phone_number }}" class="btn btn-light contact-btn">
-                        <i class="bi bi-telephone-fill me-2"></i>Call
-                    </a>
-                    {% endif %}
-                    {% if profile_user.profile.whatsapp_number %}
-                    <a href="https://wa.me/{{ profile_user.profile.whatsapp_number }}" target="_blank"
-                        class="btn btn-success contact-btn">
-                        <i class="bi bi-whatsapp me-2"></i>WhatsApp
-                    </a>
-                    {% endif %}
-                </div>
-            </div>
+<div class="container py-4">
+    <!-- Profile Header -->
+    <div class="profile-header text-center">
+        <div class="avatar-container">
+            <img src="{{ profile_user.profile.avatar.url }}" alt="{{ profile_user.username }}" class="avatar-img">
         </div>
-    </div>
-</div>
+        <h1 class="display-5 fw-bold mb-2">{{ profile_user.get_full_name|default:profile_user.username }}</h1>
+        <p class="fs-5 mb-3 opacity-90">{{ profile_user.get_role_display }}</p>
 
-<!-- Stats Section -->
-<div class="container mb-5">
-    <div class="row g-4">
-        <div class="col-md-3">
-            <div class="stat-card">
-                <div class="stat-number">{{ profile_user.rider_profile.completed_deliveries }}</div>
-                <p class="stat-label">Completed Deliveries</p>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stat-card">
-                <div class="stat-number">{{ active_deliveries }}</div>
-                <p class="stat-label">Active Deliveries</p>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stat-card">
-                <div class="stat-number">{{ profile_user.rider_profile.delivery_success_rate }}%</div>
-                <p class="stat-label">Success Rate</p>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stat-card">
-                <div class="stat-number">{{ profile_user.profile.average_rating|default:0|floatformat:1 }}</div>
-                <p class="stat-label">Rating ({{ profile_user.profile.total_reviews }} reviews)</p>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Main Content -->
-<div class="container pb-5">
-    <div class="row">
-        <!-- Sidebar -->
-        <div class="col-md-4">
-            <!-- Vehicle Information -->
-            <div class="info-card">
-                <h5><i class="bi bi-truck me-2"></i>Vehicle & Capacity</h5>
-                <div class="text-center vehicle-icon">
-                    {% if profile_user.rider_profile.vehicle_type == 'MOTORBIKE' %}
-                    <i class="bi bi-bicycle"></i>
-                    {% elif profile_user.rider_profile.vehicle_type == 'BICYCLE' %}
-                    <i class="bi bi-bicycle"></i>
-                    {% elif profile_user.rider_profile.vehicle_type == 'TUKTUK' %}
-                    <i class="bi bi-truck"></i>
-                    {% elif profile_user.rider_profile.vehicle_type == 'ON_FOOT' %}
-                    <i class="bi bi-person-walking"></i>
-                    {% endif %}
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Vehicle Type:</span>
-                    <span class="info-value">{{ profile_user.rider_profile.get_vehicle_type_display }}</span>
-                </div>
-                {% if profile_user.rider_profile.license_plate %}
-                <div class="info-row">
-                    <span class="info-label">License Plate:</span>
-                    <span class="info-value">{{ profile_user.rider_profile.license_plate }}</span>
-                </div>
-                {% endif %}
-                <div class="info-row">
-                    <span class="info-label">Max Weight:</span>
-                    <span class="info-value">{{ profile_user.rider_profile.max_weight_kg }} kg</span>
-                </div>
-                {% if profile_user.rider_profile.max_volume_liters %}
-                <div class="info-row">
-                    <span class="info-label">Max Volume:</span>
-                    <span class="info-value">{{ profile_user.rider_profile.max_volume_liters }} L</span>
-                </div>
-                {% endif %}
-            </div>
-
-            <!-- Location Details -->
-            <div class="info-card">
-                <h5><i class="bi bi-geo-alt-fill me-2"></i>Service Area</h5>
-                {% if profile_user.rider_profile.county %}
-                <div class="mb-2">
-                    <span class="location-badge"><i class="bi bi-pin-map me-1"></i>{{ profile_user.rider_profile.county
-                        }}</span>
-                </div>
-                {% endif %}
-                {% if profile_user.rider_profile.constituency %}
-                <div class="mb-2">
-                    <span class="location-badge"><i class="bi bi-signpost me-1"></i>{{
-                        profile_user.rider_profile.constituency }}</span>
-                </div>
-                {% endif %}
-                {% if profile_user.rider_profile.ward %}
-                <div class="mb-2">
-                    <span class="location-badge"><i class="bi bi-house me-1"></i>{{ profile_user.rider_profile.ward
-                        }}</span>
-                </div>
-                {% endif %}
-                {% if profile_user.rider_profile.estate_village %}
-                <div class="mb-2">
-                    <span class="location-badge"><i class="bi bi-building me-1"></i>{{
-                        profile_user.rider_profile.estate_village }}</span>
-                </div>
-                {% endif %}
-            </div>
-
-            <!-- Contact Information -->
-            <div class="info-card">
-                <h5><i class="bi bi-person-lines-fill me-2"></i>Contact Information</h5>
-                {% if profile_user.profile.phone_number %}
-                <div class="info-row">
-                    <span class="info-label">Phone:</span>
-                    <span class="info-value">{{ profile_user.profile.phone_number }}</span>
-                </div>
-                {% endif %}
-                {% if profile_user.profile.whatsapp_number %}
-                <div class="info-row">
-                    <span class="info-label">WhatsApp:</span>
-                    <span class="info-value">{{ profile_user.profile.whatsapp_number }}</span>
-                </div>
-                {% endif %}
-                {% if profile_user.email %}
-                <div class="info-row">
-                    <span class="info-label">Email:</span>
-                    <span class="info-value">{{ profile_user.email }}</span>
-                </div>
-                {% endif %}
-                {% if profile_user.rider_profile.active_hours_start %}
-                <div class="info-row">
-                    <span class="info-label">Active Hours:</span>
-                    <span class="info-value">{{ profile_user.rider_profile.active_hours_start|time:"H:i" }} - {{
-                        profile_user.rider_profile.active_hours_end|time:"H:i" }}</span>
-                </div>
-                {% endif %}
-
-                {% if is_own_profile %}
-                <div class="info-row">
-                    <span class="info-label">ID Number:</span>
-                    <span class="info-value text-muted">
-                        {% if profile_user.rider_profile.id_number %}
-                        {{ profile_user.rider_profile.id_number }}
-                        {% else %}
-                        <span class="badge bg-warning text-dark">Not Set</span>
-                        {% endif %}
-                    </span>
-                </div>
-                {% endif %}
-            </div>
-
-            <!-- Performance Metrics -->
-            <div class="info-card">
-                <h5><i class="bi bi-graph-up me-2"></i>Performance</h5>
-                <div class="text-center mb-3">
-                    <div class="success-rate-text">{{ profile_user.rider_profile.delivery_success_rate }}%</div>
-                    <small class="text-muted">Success Rate</small>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Total Deliveries:</span>
-                    <span class="info-value">{{ profile_user.rider_profile.total_deliveries }}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Completed:</span>
-                    <span class="info-value text-success">{{ profile_user.rider_profile.completed_deliveries }}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Cancelled:</span>
-                    <span class="info-value text-warning">{{ profile_user.rider_profile.cancelled_deliveries }}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Failed:</span>
-                    <span class="info-value text-danger">{{ profile_user.rider_profile.failed_deliveries }}</span>
-                </div>
-            </div>
-
-            <!-- About -->
-            {% if profile_user.profile.bio %}
-            <div class="info-card">
-                <h5><i class="bi bi-info-circle me-2"></i>About</h5>
-                <p class="text-muted">{{ profile_user.profile.bio }}</p>
-            </div>
-            {% endif %}
-
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
             {% if is_own_profile %}
-            <div class="mt-4 text-center">
-                <a href="{% url 'delete_account' %}" class="btn btn-outline-danger rounded-pill">
-                    <i class="bi bi-trash-fill me-1"></i>Delete Account
-                </a>
+            <div class="d-flex align-items-center gap-2 bg-white bg-opacity-25 px-3 py-2 rounded-pill">
+                <label class="availability-switch mb-0">
+                    <input type="checkbox" id="availabilityToggle" {% if profile_user.rider_profile.is_available %}checked{% endif %}>
+                    <span class="switch-slider"></span>
+                </label>
+                <span class="fw-bold" id="statusLabel">
+                    {% if profile_user.rider_profile.is_available %}🟢 Online{% else %}🔴 Offline{% endif %}
+                </span>
+            </div>
+            {% else %}
+            {% if profile_user.rider_profile.is_available %}
+            <span class="verification-badge">🟢 Available Now</span>
+            {% else %}
+            <span class="pending-badge">🔴 Offline</span>
+            {% endif %}
+            {% endif %}
+
+            {% if profile_user.rider_profile.verification_status == 'VERIFIED' %}
+            <span class="verification-badge"><i class="bi bi-patch-check-fill me-1"></i>Verified Rider</span>
+            {% else %}
+            <span class="pending-badge"><i class="bi bi-hourglass-split me-1"></i>{{
+                profile_user.rider_profile.get_verification_status_display }}</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Contact Info -->
+            <div class="profile-card">
+                <h5 class="fw-bold mb-3"><i class="bi bi-telephone me-2"></i>Contact Information</h5>
+                <div class="mb-2">
+                    <small class="text-muted d-block">Phone</small>
+                    <div class="fw-semibold">{{ profile_user.profile.phone_number|default:"Not provided" }}</div>
+                </div>
+                <div class="mb-2">
+                    <small class="text-muted d-block">WhatsApp</small>
+                    <div class="fw-semibold">{{ profile_user.profile.whatsapp_number|default:"Not provided" }}</div>
+                </div>
+                <div>
+                    <small class="text-muted d-block">Location</small>
+                    <div class="fw-semibold">{{ profile_user.profile.location|default:"Not provided" }}</div>
+                </div>
+            </div>
+
+            <!-- Vehicle Info -->
+            <div class="profile-card">
+                <h5 class="fw-bold mb-3"><i class="bi bi-bicycle me-2"></i>Vehicle Information</h5>
+                <div class="mb-2">
+                    <small class="text-muted d-block">Type</small>
+                    <div class="fw-semibold">{{ profile_user.rider_profile.get_vehicle_type_display|default:"Not set" }}
+                    </div>
+                </div>
+                <div>
+                    <small class="text-muted d-block">Plate Number</small>
+                    <div class="fw-semibold">{{ profile_user.rider_profile.vehicle_plate_number|default:"Not set" }}
+                    </div>
+                </div>
+            </div>
+
+
+
+            <!-- Settings (Own Profile Only) -->
+            {% if is_own_profile %}
+            <div class="profile-card">
+                <h5 class="fw-bold mb-3"><i class="bi bi-gear me-2"></i>Settings</h5>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'rider_settings' %}" class="btn btn-gradient-primary">
+                        <i class="bi bi-pencil me-2"></i>Edit Profile
+                    </a>
+                    <a href="{% url 'rider_upload_documents' %}" class="btn btn-outline-secondary rounded-pill">
+                        <i class="bi bi-file-earmark-arrow-up me-2"></i>Upload Documents
+                    </a>
+                    <a href="{% url 'delete_account' %}" class="btn btn-outline-danger rounded-pill">
+                        <i class="bi bi-trash me-2"></i>Delete Account
+                    </a>
+                </div>
             </div>
             {% endif %}
         </div>
 
-        <!-- Main Content Area -->
-        <div class="col-md-8">
-            <!-- Recent Deliveries -->
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-body">
-                    <h5 class="fw-bold mb-4"><i class="bi bi-clock-history me-2"></i>Recent Deliveries</h5>
-                    {% if recent_deliveries %}
-                    {% for delivery in recent_deliveries %}
-                    <div class="delivery-card">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <div>
-                                <h6 class="mb-1"><i class="bi bi-box me-2"></i>Order #{{ delivery.id }}</h6>
-                                <small class="text-muted">{{ delivery.product.name }}</small>
-                            </div>
-                            <span
-                                class="badge bg-{% if delivery.status == 'DELIVERED' %}success{% elif delivery.status == 'IN_DELIVERY' %}primary{% else %}secondary{% endif %}">
-                                {{ delivery.get_status_display }}
-                            </span>
-                        </div>
-                        <div class="small text-muted">
-                            <i class="bi bi-calendar me-1"></i>{{ delivery.created_at|date:"M d, Y H:i" }}
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- Bio -->
+            {% if profile_user.profile.bio %}
+            <div class="profile-card">
+                <h5 class="fw-bold mb-3"><i class="bi bi-person me-2"></i>About</h5>
+                <p class="mb-0">{{ profile_user.profile.bio }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Performance Stats -->
+            <div class="profile-card">
+                <h5 class="fw-bold mb-4"><i class="bi bi-graph-up me-2"></i>Performance Statistics</h5>
+                <div class="row g-3 text-center">
+                    <div class="col-md-3 col-6">
+                        <div class="stat-badge">
+                            <h3>{{ profile_user.rider_profile.completed_deliveries }}</h3>
+                            <small>Deliveries</small>
                         </div>
                     </div>
-                    {% endfor %}
-                    {% else %}
-                    <div class="text-center py-5">
-                        <i class="bi bi-inbox display-1 text-muted"></i>
-                        <p class="text-muted mt-3">No recent deliveries</p>
+                    <div class="col-md-3 col-6">
+                        <div class="stat-badge" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                            <h3>{{ profile_user.rider_profile.delivery_success_rate }}%</h3>
+                            <small>Success</small>
+                        </div>
                     </div>
-                    {% endif %}
+                    <div class="col-md-3 col-6">
+                        <div class="stat-badge" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                            <h3>{{ avg_rating }}</h3>
+                            <small>Rating</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="stat-badge" style="background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);">
+                            <h3>{{ reviews.count }}</h3>
+                            <small>Reviews</small>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Reviews -->
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <h5 class="fw-bold mb-4"><i class="bi bi-star me-2"></i>Reviews ({{ reviews.count }})</h5>
-                    {% if reviews %}
-                    {% for review in reviews %}
-                    <div class="delivery-card">
-                        <div class="d-flex align-items-start">
-                            <img src="{{ review.reviewer.profile.avatar.url }}" class="rounded-circle me-3" width="50"
-                                height="50" alt="{{ review.reviewer.username }}">
-                            <div class="flex-grow-1">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <div>
-                                        <h6 class="mb-1">{{ review.reviewer.username }}</h6>
-                                        <div class="text-warning">
-                                            {% for i in "12345" %}
-                                            {% if forloop.counter <= review.rating %} <i class="bi bi-star-fill"></i>
-                                                {% else %}
-                                                <i class="bi bi-star"></i>
-                                                {% endif %}
-                                                {% endfor %}
-                                        </div>
+            <!-- Reviews & Ratings -->
+            <div class="profile-card">
+                <h5 class="fw-bold mb-4"><i class="bi bi-star me-2"></i>Reviews & Ratings</h5>
+
+                <!-- Overall Rating -->
+                <div class="text-center mb-4 p-4 bg-light rounded-3">
+                    <h2 class="display-4 fw-bold mb-2" style="color: #ffc107;">{{ avg_rating }}</h2>
+                    <div class="star-rating mb-2">
+                        {% with ''|center:5 as range %}
+                        {% for _ in range %}
+                        {% if forloop.counter <= avg_rating %} <i class="bi bi-star-fill"></i>
+                            {% else %}
+                            <i class="bi bi-star"></i>
+                            {% endif %}
+                            {% endfor %}
+                            {% endwith %}
+                    </div>
+                    <small class="text-muted">Based on {{ reviews.count }} reviews</small>
+                </div>
+
+                <!-- Add Review Form -->
+                {% if not is_own_profile and user.is_authenticated %}
+                <div class="card bg-white border-0 shadow-sm mb-4">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold mb-3">Write a Review</h5>
+                        <form action="{% url 'add_rider_review' profile_user.id %}" method="POST">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label class="form-label text-muted small fw-bold">Rating</label>
+                                <div class="rating-select">
+                                    <div class="btn-group" role="group" aria-label="Rating">
+                                        <input type="radio" class="btn-check" name="rating" id="rating5" value="5"
+                                            checked>
+                                        <label class="btn btn-outline-warning" for="rating5"><i
+                                                class="bi bi-star-fill"></i> 5</label>
+
+                                        <input type="radio" class="btn-check" name="rating" id="rating4" value="4">
+                                        <label class="btn btn-outline-warning" for="rating4"><i
+                                                class="bi bi-star-fill"></i> 4</label>
+
+                                        <input type="radio" class="btn-check" name="rating" id="rating3" value="3">
+                                        <label class="btn btn-outline-warning" for="rating3"><i
+                                                class="bi bi-star-fill"></i> 3</label>
+
+                                        <input type="radio" class="btn-check" name="rating" id="rating2" value="2">
+                                        <label class="btn btn-outline-warning" for="rating2"><i
+                                                class="bi bi-star-fill"></i> 2</label>
+
+                                        <input type="radio" class="btn-check" name="rating" id="rating1" value="1">
+                                        <label class="btn btn-outline-warning" for="rating1"><i
+                                                class="bi bi-star-fill"></i> 1</label>
                                     </div>
-                                    <small class="text-muted">{{ review.created_at|timesince }} ago</small>
                                 </div>
-                                <p class="mt-2 mb-0">{{ review.comment }}</p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted small fw-bold">Comment</label>
+                                <textarea name="comment" class="form-control" rows="3"
+                                    placeholder="Describe your experience with this rider..." required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-gradient-primary rounded-pill px-4">
+                                <i class="bi bi-send me-2"></i>Submit Review
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Reviews List -->
+                {% if reviews %}
+                {% for review in reviews %}
+                <div class="review-card">
+                    <div class="d-flex align-items-start mb-2">
+                        <img src="{{ review.reviewer.profile.avatar.url }}" class="rounded-circle me-3"
+                            style="width: 50px; height: 50px; object-fit: cover;" alt="{{ review.reviewer.username }}">
+                        <div class="flex-grow-1">
+                            <div class="fw-bold">{{ review.reviewer.get_full_name|default:review.reviewer.username }}
+                            </div>
+                            <div class="star-rating small">
+                                {% for i in "12345" %}
+                                {% if forloop.counter <= review.rating %} <i class="bi bi-star-fill"></i>
+                                    {% else %}
+                                    <i class="bi bi-star"></i>
+                                    {% endif %}
+                                    {% endfor %}
                             </div>
                         </div>
+                        <small class="text-muted">{{ review.created_at|timesince }} ago</small>
                     </div>
-                    {% endfor %}
-                    {% else %}
-                    <div class="text-center py-5">
-                        <i class="bi bi-chat-quote display-1 text-muted"></i>
-                        <p class="text-muted mt-3">No reviews yet</p>
-                    </div>
-                    {% endif %}
+                    <p class="mb-0">{{ review.comment }}</p>
                 </div>
+                {% endfor %}
+                {% else %}
+                <div class="text-center text-muted py-4">
+                    <i class="bi bi-chat-quote" style="font-size: 3rem; opacity: 0.3;"></i>
+                    <p class="mt-2">No reviews yet</p>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
 </div>
 
-{% block extra_js %}
+
+
+{% if is_own_profile %}
 <script>
-    // Handle Avatar Upload
-    document.getElementById('avatarInput').addEventListener('change', function (e) {
-        if (this.files && this.files[0]) {
-            const formData = new FormData();
-            formData.append('avatar', this.files[0]);
+    document.addEventListener('DOMContentLoaded', function () {
+        // Availability Toggle
+        const toggle = document.getElementById('availabilityToggle');
+        const label = document.getElementById('statusLabel');
 
-            // Show loading state
-            const avatarImg = document.getElementById('profileAvatar');
-            const originalSrc = avatarImg.src;
-            avatarImg.style.opacity = '0.5';
+        if (toggle) {
+            toggle.addEventListener('change', function () {
+                const isAvailable = this.checked;
+                label.innerHTML = isAvailable ? '🟢 Online' : '🔴 Offline';
 
-            fetch("{% url 'update_profile_photo' %}", {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
-                body: formData
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        avatarImg.src = data.avatar_url;
-                        // Show success toast/alert
-                    } else {
-                        alert('Error updating photo: ' + data.error);
-                        avatarImg.src = originalSrc;
-                    }
+                fetch("{% url 'toggle_rider_availability' %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({ 'is_available': isAvailable })
                 })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Error updating photo');
-                    avatarImg.src = originalSrc;
-                })
-                .finally(() => {
-                    avatarImg.style.opacity = '1';
-                });
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.success) {
+                            this.checked = !isAvailable;
+                            label.innerHTML = !isAvailable ? '🟢 Online' : '🔴 Offline';
+                            alert('Failed to update status');
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        this.checked = !isAvailable;
+                        label.innerHTML = !isAvailable ? '🟢 Online' : '🔴 Offline';
+                    });
+            });
         }
     });
 </script>
-{% endblock %}
+{% endif %}
 {% endblock %}

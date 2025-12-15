@@ -4,6 +4,10 @@
 {% block title %}Profile - AgriStar{% endblock %}
 
 {% block content %}
+{% if user.role == 'FARMER' %}
+{% include 'users/farmer_menu.html' %}
+{% endif %}
+
 <div class="row">
     <!-- User Info Sidebar -->
     <div class="col-md-4 mb-4">

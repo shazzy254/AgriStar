@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edit Rider Profile - AgriStar{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-lg position-relative" style="border-radius: 20px; overflow: hidden;">
+                <div class="card-header bg-primary text-white py-4 position-relative">
+                    <h4 class="fw-bold mb-0"><i class="bi bi-person-badge-fill me-2"></i>Rider Verification & Settings
+                    </h4>
+                    <p class="mb-0 opacity-75">Update your vehicle details and verification documents</p>
+                </div>
+
+                <div class="card-body p-4">
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <!-- Personal Information -->
+                        <h5 class="text-primary fw-bold mb-3"><i class="bi bi-person-vcard me-2"></i>Personal ID</h5>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">National ID Number</label>
+                                <input type="text" name="id_number" class="form-control"
+                                    value="{{ user.rider_profile.id_number|default:'' }}" placeholder="ID Number">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Phone Number</label>
+                                <input type="text" name="phone_number" class="form-control"
+                                    value="{{ user.profile.phone_number|default:'' }}" placeholder="07...">
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">Driving License Number (Optional)</label>
+                                <input type="text" name="license_number" class="form-control"
+                                    value="{{ user.rider_profile.license_number|default:'' }}"
+                                    placeholder="License Number">
+                            </div>
+                        </div>
+
+                        <!-- Passport Photo -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Passport Photo</label>
+                            {% if user.rider_profile.passport_photo %}
+                            <div class="mb-2">
+                                <img src="{{ user.rider_profile.passport_photo.url }}" class="rounded shadow-sm"
+                                    style="width: 100px; height: 100px; object-fit: cover;">
+                            </div>
+                            {% endif %}
+                            <input type="file" name="passport_photo" class="form-control" accept="image/*">
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Vehicle Information -->
+                        <h5 class="text-primary fw-bold mb-3"><i class="bi bi-truck me-2"></i>Vehicle Details</h5>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">Vehicle Type</label>
+                                <select name="vehicle_type" class="form-select" required>
+                                    <option value="MOTORBIKE" {% if user.rider_profile.vehicle_type == 'MOTORBIKE' %}selected{% endif %}>Motorbike</option>
+                                    <option value="TUKTUK" {% if user.rider_profile.vehicle_type == 'TUKTUK' %}selected{% endif %}>TukTuk</option>
+                                    <option value="PICKUP" {% if user.rider_profile.vehicle_type == 'PICKUP' %}selected{% endif %}>Pickup</option>
+                                    <option value="LORRY" {% if user.rider_profile.vehicle_type == 'LORRY' %}selected{% endif %}>Lorry</option>
+                                    <option value="BICYCLE" {% if user.rider_profile.vehicle_type == 'BICYCLE' %}selected{% endif %}>Bicycle</option>
+                                    <option value="ON_FOOT" {% if user.rider_profile.vehicle_type == 'ON_FOOT' %}selected{% endif %}>On Foot</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">License Plate / Registration</label>
+                                <input type="text" name="vehicle_plate_number" class="form-control"
+                                    value="{{ user.rider_profile.vehicle_plate_number }}" placeholder="e.g. KTE 123A">
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Verification Documents -->
+                        <h5 class="text-primary fw-bold mb-3"><i class="bi bi-file-earmark-lock me-2"></i>Verification
+                            Documents</h5>
+                        <div class="alert alert-info small">
+                            <i class="bi bi-info-circle me-2"></i>
+                            Upload clear photos of your documents. These are required to verify your rider account.
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">National ID (Front)</label>
+                            {% if user.rider_profile.verification_id_front %}
+                            <div class="mb-2">
+                                <a href="{{ user.rider_profile.verification_id_front.url }}" target="_blank"
+                                    class="badge bg-success text-decoration-none">
+                                    <i class="bi bi-check-circle me-1"></i>Uploaded
+                                </a>
+                            </div>
+                            {% endif %}
+                            <input type="file" name="verification_id_front" class="form-control" accept="image/*">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">National ID (Back)</label>
+                            {% if user.rider_profile.verification_id_back %}
+                            <div class="mb-2">
+                                <a href="{{ user.rider_profile.verification_id_back.url }}" target="_blank"
+                                    class="badge bg-success text-decoration-none">
+                                    <i class="bi bi-check-circle me-1"></i>Uploaded
+                                </a>
+                            </div>
+                            {% endif %}
+                            <input type="file" name="verification_id_back" class="form-control" accept="image/*">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Selfie holding ID</label>
+                            {% if user.rider_profile.verification_selfie %}
+                            <div class="mb-2">
+                                <a href="{{ user.rider_profile.verification_selfie.url }}" target="_blank"
+                                    class="badge bg-success text-decoration-none">
+                                    <i class="bi bi-check-circle me-1"></i>Uploaded
+                                </a>
+                            </div>
+                            {% endif %}
+                            <input type="file" name="verification_selfie" class="form-control" accept="image/*">
+                            <div class="form-text">Take a clear photo of your face while holding your ID card next to
+                                it.</div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Driving License (Optional)</label>
+                                {% if user.rider_profile.verification_license %}
+                                <div class="mb-2">
+                                    <a href="{{ user.rider_profile.verification_license.url }}" target="_blank"
+                                        class="badge bg-success text-decoration-none">
+                                        <i class="bi bi-check-circle me-1"></i>Uploaded
+                                    </a>
+                                </div>
+                                {% endif %}
+                                <input type="file" name="verification_license" class="form-control" accept="image/*">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Good Conduct Cert (Optional)</label>
+                                {% if user.rider_profile.verification_good_conduct %}
+                                <div class="mb-2">
+                                    <a href="{{ user.rider_profile.verification_good_conduct.url }}" target="_blank"
+                                        class="badge bg-success text-decoration-none">
+                                        <i class="bi bi-check-circle me-1"></i>Uploaded
+                                    </a>
+                                </div>
+                                {% endif %}
+                                <input type="file" name="verification_good_conduct" class="form-control"
+                                    accept="image/*">
+                            </div>
+                        </div>
+
+                        <div class="mt-5 d-flex gap-3 justify-content-end">
+                            <a href="{% url 'dashboard' %}" class="btn btn-light rounded-pill px-4">Cancel</a>
+                            <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">
+                                <i class="bi bi-save me-2"></i>Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

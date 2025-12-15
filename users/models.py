@@ -3,6 +3,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils import timezone
 
 class User(AbstractUser):
     class Role(models.TextChoices):
@@ -38,6 +39,14 @@ class Profile(models.Model):
     whatsapp_number = models.CharField(max_length=20, blank=True)
     avatar = models.ImageField(upload_to='avatars/', default='avatars/default.png')
     is_verified = models.BooleanField(default=False)
+    
+    # Location Coordinates & Hierarchy
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    
+    county = models.ForeignKey('County', on_delete=models.SET_NULL, null=True, blank=True)
+    sub_county = models.ForeignKey('SubCounty', on_delete=models.SET_NULL, null=True, blank=True)
+    ward = models.ForeignKey('Ward', on_delete=models.SET_NULL, null=True, blank=True)
     
     # For Farmers
     farm_size = models.CharField(max_length=50, blank=True, help_text="e.g. 5 acres")
@@ -75,6 +84,7 @@ class RiderProfile(models.Model):
         PENDING = 'PENDING', _('Pending')
         VERIFIED = 'VERIFIED', _('Verified')
         SUSPENDED = 'SUSPENDED', _('Suspended')
+        REJECTED = 'REJECTED', _('Rejected')
 
     class VehicleType(models.TextChoices):
         MOTORBIKE = 'MOTORBIKE', _('Motorbike')
@@ -107,6 +117,18 @@ class RiderProfile(models.Model):
     vehicle_type = models.CharField(max_length=20, choices=VehicleType.choices, default=VehicleType.MOTORBIKE)
     vehicle_plate_number = models.CharField(max_length=20, blank=True)
     
+    # Personal Info
+    id_number = models.CharField(max_length=20, blank=True, null=True)
+    license_number = models.CharField(max_length=20, blank=True, null=True)
+    passport_photo = models.ImageField(upload_to='rider_passports/', blank=True, null=True)
+    
+    # Verification Documents
+    verification_id_front = models.ImageField(upload_to='rider_verification/', blank=True, null=True)
+    verification_id_back = models.ImageField(upload_to='rider_verification/', blank=True, null=True)
+    verification_selfie = models.ImageField(upload_to='rider_verification/', blank=True, null=True)
+    verification_license = models.ImageField(upload_to='rider_verification/', blank=True, null=True)
+    verification_good_conduct = models.ImageField(upload_to='rider_verification/', blank=True, null=True)
+    
     def __str__(self):
         return f"Rider: {self.user.username}"
         
@@ -118,6 +140,20 @@ class RiderProfile(models.Model):
     
     def get_full_location(self):
         return self.user.profile.location or "Location not set"
+
+
+class RiderReview(models.Model):
+    rider = models.ForeignKey(User, on_delete=models.CASCADE, related_name='rider_reviews')
+    reviewer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='given_rider_reviews')
+    rating = models.PositiveSmallIntegerField(choices=[(i, str(i)) for i in range(1, 6)], default=5)
+    comment = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Review for {self.rider.username} by {self.reviewer.username}"
 
 class DeliveryAddress(models.Model):
     """Model for buyer delivery addresses with Kenyan location details"""
@@ -144,6 +180,102 @@ class DeliveryAddress(models.Model):
         if self.is_default:
             DeliveryAddress.objects.filter(user=self.user, is_default=True).update(is_default=False)
         super().save(*args, **kwargs)
+
+# Location Hierarchy Models (Kenya)
+class County(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+    code = models.IntegerField(unique=True, help_text="County Code (e.g., 047 for Nairobi)")
+    
+    class Meta:
+        ordering = ['name']
+        verbose_name_plural = "Counties"
+        
+    def __str__(self):
+        return f"{self.code} - {self.name}"
+
+class SubCounty(models.Model):
+    county = models.ForeignKey(County, on_delete=models.CASCADE, related_name='sub_counties')
+    name = models.CharField(max_length=50)
+    
+    class Meta:
+        ordering = ['name']
+        verbose_name_plural = "Sub Counties"
+        unique_together = ('county', 'name')
+        
+    def __str__(self):
+        return f"{self.name}, {self.county.name}"
+
+class Ward(models.Model):
+    sub_county = models.ForeignKey(SubCounty, on_delete=models.CASCADE, related_name='wards')
+    name = models.CharField(max_length=50)
+    
+    class Meta:
+        ordering = ['name']
+        unique_together = ('sub_county', 'name')
+        
+    def __str__(self):
+        return f"{self.name} (Ward)"
+
+class VehicleChangeRequest(models.Model):
+    """Model for tracking rider vehicle information change requests"""
+    STATUS_CHOICES = [
+        ('PENDING', 'Pending Review'),
+        ('APPROVED', 'Approved'),
+        ('REJECTED', 'Rejected'),
+    ]
+    
+    rider = models.ForeignKey(User, on_delete=models.CASCADE, related_name='vehicle_change_requests')
+    
+    # Old values
+    old_vehicle_type = models.CharField(max_length=20, blank=True)
+    old_vehicle_plate = models.CharField(max_length=20, blank=True)
+    old_license_number = models.CharField(max_length=50, blank=True)
+    
+    # Requested new values
+    new_vehicle_type = models.CharField(max_length=20)
+    new_vehicle_plate = models.CharField(max_length=20)
+    new_license_number = models.CharField(max_length=50, blank=True)
+    
+    # Request details
+    reason = models.TextField(help_text="Reason for change request")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    admin_notes = models.TextField(blank=True, help_text="Admin's notes on approval/rejection")
+    
+    # Timestamps
+    requested_at = models.DateTimeField(auto_now_add=True)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    reviewed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='reviewed_vehicle_changes')
+    
+    class Meta:
+        ordering = ['-requested_at']
+        verbose_name = "Vehicle Change Request"
+        verbose_name_plural = "Vehicle Change Requests"
+    
+    def __str__(self):
+        return f"Vehicle change request by {self.rider.username} - {self.status}"
+    
+    def approve(self, admin_user, notes=""):
+        """Approve the change request and update rider profile"""
+        self.status = 'APPROVED'
+        self.admin_notes = notes
+        self.reviewed_by = admin_user
+        self.reviewed_at = timezone.now()
+        self.save()
+        
+        # Update rider profile
+        rider_profile = self.rider.rider_profile
+        rider_profile.vehicle_type = self.new_vehicle_type
+        rider_profile.vehicle_plate_number = self.new_vehicle_plate
+        rider_profile.license_number = self.new_license_number
+        rider_profile.save()
+    
+    def reject(self, admin_user, notes=""):
+        """Reject the change request"""
+        self.status = 'REJECTED'
+        self.admin_notes = notes
+        self.reviewed_by = admin_user
+        self.reviewed_at = timezone.now()
+        self.save()
 
 class Review(models.Model):
     reviewer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews_given')

@@ -3,616 +3,530 @@
 
 {% block title %}Rider Dashboard - AgriStar{% endblock %}
 
-{% block navbar_menu %}
-<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-    <span class="navbar-toggler-icon"></span>
-</button>
-<div class="collapse navbar-collapse" id="navbarNav">
-    <ul class="navbar-nav ms-auto align-items-center">
-        <li class="nav-item">
-            <a class="nav-link text-white" href="{% url 'home' %}">Home</a>
-        </li>
-        {% if user.is_authenticated %}
-        <li class="nav-item">
-            <a class="nav-link text-white" href="{% url 'profile' %}">My Profile</a>
-        </li>
-        <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle text-white btn btn-sm btn-outline-light border-0 ms-2" href="#"
-                role="button" data-bs-toggle="dropdown">
-                <i class="bi bi-person-circle me-1"></i> {{ user.username }}
-            </a>
-            <ul class="dropdown-menu dropdown-menu-end glass-card border-0 shadow-lg">
-                <li><a class="dropdown-item" href="{% url 'dashboard' %}"><i
-                            class="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
-                <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="bi bi-person me-2"></i>Profile</a>
-                </li>
-                <li>
-                    <hr class="dropdown-divider">
-                </li>
-                <li>
-                    <form action="{% url 'logout' %}" method="post" class="d-inline">
-                        {% csrf_token %}
-                        <button type="submit" class="dropdown-item text-danger"><i
-                                class="bi bi-box-arrow-right me-2"></i>Logout</button>
-                    </form>
-                </li>
-            </ul>
-        </li>
-        {% else %}
-        <li class="nav-item ms-2">
-            <a class="nav-link btn btn-sm btn-outline-light px-3 rounded-pill" href="{% url 'login' %}">Login</a>
-        </li>
-        <li class="nav-item ms-2">
-            <a class="nav-link btn btn-sm btn-success text-white px-3 rounded-pill"
-                href="{% url 'register' %}">Register</a>
-        </li>
-        {% endif %}
-    </ul>
-</div>
-{% endblock %}
-
 {% block extra_css %}
 <style>
-    .rider-dashboard {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
         min-height: 100vh;
-        padding: 2rem 0;
     }
 
-    .dashboard-header {
-        background: white;
-        border-radius: 20px;
-        padding: 2rem;
-        margin-bottom: 2rem;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    }
-
-    .verification-alert {
-        border-radius: 15px;
-        border-left: 5px solid;
-    }
-
-    .alert-verified {
-        border-left-color: #2ecc71;
-        background: linear-gradient(135deg, #d4edda, #c3e6cb);
-    }
-
-    .alert-pending {
-        border-left-color: #f39c12;
-        background: linear-gradient(135deg, #fff3cd, #ffeaa7);
-    }
-
-    .alert-suspended {
-        border-left-color: #e74c3c;
-        background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+    .dashboard-hero {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 3rem 2rem;
+        border-radius: 25px;
+        margin-bottom: 2.5rem;
+        box-shadow: 0 15px 50px rgba(102, 126, 234, 0.3);
     }
 
     .stat-card {
         background: white;
         border-radius: 20px;
-        padding: 1.5rem;
-        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
-        transition: all 0.3s;
-        height: 100%;
+        padding: 2rem;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        border: 1px solid rgba(0, 0, 0, 0.05);
     }
 
     .stat-card:hover {
         transform: translateY(-10px);
-        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
     }
 
-    .stat-icon {
-        width: 60px;
-        height: 60px;
-        border-radius: 15px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.8rem;
-        margin-bottom: 1rem;
+    .stat-number {
+        font-size: 2.8rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
     }
 
-    .stat-value {
-        font-size: 2.5rem;
-        font-weight: bold;
-        margin-bottom: 0.5rem;
-    }
-
-    .stat-label {
-        color: #7f8c8d;
-        font-size: 0.9rem;
-    }
-
-    .earnings-card {
-        background: linear-gradient(135deg, #2ecc71, #27ae60);
-        color: white;
+    .request-card {
+        background: white;
         border-radius: 20px;
         padding: 2rem;
-        box-shadow: 0 10px 30px rgba(46, 204, 113, 0.3);
+        margin-bottom: 1.5rem;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+        border-left: 6px solid transparent;
+        background-image: linear-gradient(white, white), linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        background-origin: border-box;
+        background-clip: padding-box, border-box;
+        transition: all 0.4s ease;
     }
 
-    .wallet-balance {
-        font-size: 3rem;
-        font-weight: bold;
+    .request-card:hover {
+        transform: translateX(10px);
+        box-shadow: 0 15px 45px rgba(17, 153, 142, 0.2);
+    }
+
+    .active-job-card {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+        border-left: 6px solid #667eea;
+        transition: all 0.4s ease;
+    }
+
+    .active-job-card:hover {
+        transform: translateX(10px);
+        box-shadow: 0 15px 45px rgba(102, 126, 234, 0.2);
+    }
+
+    .btn-gradient-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+        padding: 0.85rem 2.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-gradient-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
+        color: white;
+    }
+
+    .btn-gradient-success {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        border: none;
+        color: white;
+        padding: 0.85rem 2.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 5px 15px rgba(17, 153, 142, 0.3);
+    }
+
+    .btn-gradient-success:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(17, 153, 142, 0.5);
+        color: white;
+    }
+
+    .btn-gradient-danger {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        border: none;
+        color: white;
+        padding: 0.85rem 2.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 5px 15px rgba(245, 87, 108, 0.3);
+    }
+
+    .btn-gradient-danger:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(245, 87, 108, 0.5);
+        color: white;
+    }
+
+    .qr-data-section {
+        background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%);
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-top: 1rem;
+        border: 2px dashed #667eea;
+    }
+
+    .badge-distance {
+        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+    }
+
+    .badge-fee {
+        background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+    }
+
+    .section-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        color: #2d3748;
     }
 
     .availability-toggle {
         background: white;
-        border-radius: 20px;
-        padding: 1.5rem;
-        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
-    }
-
-    .toggle-btn {
-        width: 100%;
-        padding: 1rem;
-        border-radius: 15px;
-        font-weight: bold;
-        font-size: 1.1rem;
-        transition: all 0.3s;
-    }
-
-    .delivery-card {
-        background: white;
-        border-radius: 15px;
-        padding: 1.5rem;
-        margin-bottom: 1rem;
-        box-shadow: 0 3px 15px rgba(0, 0, 0, 0.1);
-        border-left: 5px solid;
-        transition: all 0.3s;
-    }
-
-    .delivery-card:hover {
-        transform: translateX(10px);
-        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.15);
-    }
-
-    .delivery-active {
-        border-left-color: #3498db;
-    }
-
-    .delivery-completed {
-        border-left-color: #2ecc71;
-    }
-
-    .delivery-cancelled {
-        border-left-color: #e74c3c;
-    }
-
-    .action-btn {
+        padding: 1rem 1.5rem;
         border-radius: 50px;
-        padding: 0.5rem 1.5rem;
-        font-weight: 600;
-        transition: all 0.3s;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        display: inline-flex;
+        align-items: center;
+        gap: 1rem;
     }
 
-    .performance-ring {
-        width: 150px;
-        height: 150px;
-        margin: 0 auto;
+    .switch {
         position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 34px;
     }
 
-    .ring-text {
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .slider {
         position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        font-size: 2rem;
-        font-weight: bold;
-    }
-
-    .quick-action-card {
-        background: white;
-        border-radius: 15px;
-        padding: 1.5rem;
-        text-align: center;
         cursor: pointer;
-        transition: all 0.3s;
-        box-shadow: 0 3px 15px rgba(0, 0, 0, 0.1);
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        transition: .4s;
+        border-radius: 34px;
     }
 
-    .quick-action-card:hover {
-        transform: scale(1.05);
-        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.15);
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
     }
 
-    .quick-action-icon {
-        font-size: 2.5rem;
-        margin-bottom: 1rem;
+    input:checked+.slider {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    }
+
+    input:checked+.slider:before {
+        transform: translateX(26px);
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="rider-dashboard">
-    <div class="container">
-        <!-- Header Section -->
-        <div class="dashboard-header">
-            <div class="row align-items-center">
-                <div class="col-md-8">
-                    <h1 class="fw-bold mb-2">Welcome back, {{ user.username }}! 👋</h1>
-                    <p class="text-muted mb-0">
-                        <i class="bi bi-geo-alt-fill me-2"></i>{{ rider_profile.get_full_location|default:"Set your
-                        location in profile" }}
-                    </p>
+<div class="container py-4">
+    <!-- Hero Header -->
+    <div class="dashboard-hero">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="display-5 fw-bold mb-2">Welcome back, {{ user.get_full_name|default:user.username }}! 👋</h1>
+                <p class="mb-0 opacity-90 fs-5">Ready to make deliveries today?</p>
+            </div>
+            <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                <div class="availability-toggle" {% if rider_profile.verification_status != 'VERIFIED' %}style="opacity: 0.6; cursor: not-allowed;" title="Verification Required"{% endif %}>
+                    <label class="switch mb-0">
+                        <input type="checkbox" id="availabilityToggle" {% if rider_profile.is_available %}checked{% endif %} {% if rider_profile.verification_status != 'VERIFIED' %}disabled{% endif %}>
+                        <span class="slider"></span>
+                    </label>
+                    <span class="fw-bold" id="statusText">
+                        {% if rider_profile.is_available %}🟢 Online{% else %}🔴 Offline{% endif %}
+                    </span>
                 </div>
-                <div class="col-md-4 text-end">
-                    <a href="{% url 'profile' %}" class="btn btn-outline-primary rounded-pill">
+            </div>
+        </div>
+    </div>
+
+    <!-- Verification Alert -->
+    {% if rider_profile.verification_status != 'VERIFIED' %}
+    <div class="alert alert-warning border-0 shadow-sm rounded-4 mb-4">
+        <div class="d-flex align-items-center">
+            <div class="display-6 me-3"><i class="bi bi-shield-exclamation"></i></div>
+            <div class="flex-grow-1">
+                {% if rider_profile.verification_status == 'PENDING' %}
+                <h5 class="fw-bold mb-1">Account Verification Pending</h5>
+                <p class="mb-0">Your account is currently under review or requires document upload. You cannot accept
+                    orders yet.</p>
+                {% elif rider_profile.verification_status == 'REJECTED' %}
+                <h5 class="fw-bold mb-1 text-danger">Verification Rejected</h5>
+                <p class="mb-0">Please re-upload your documents with clear photos/details.</p>
+                {% else %}
+                <h5 class="fw-bold mb-1">Account Not Verified</h5>
+                <p class="mb-0">Complete your profile verification to start working.</p>
+                {% endif %}
+            </div>
+            <a href="{% url 'rider_upload_documents' %}" class="btn btn-dark rounded-pill px-4">
+                <i class="bi bi-upload me-2"></i>{% if rider_profile.verification_status == 'REJECTED' %}Re-upload{%
+                else %}Upload Documents{% endif %}
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Quick Stats -->
+    <div class="row g-4 mb-5">
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card text-center">
+                <div class="stat-number">{{ rider_profile.completed_deliveries }}</div>
+                <div class="text-muted fw-semibold">Completed</div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card text-center">
+                <div class="stat-number">KES {{ total_earnings|default:0 }}</div>
+                <div class="text-muted fw-semibold">Earnings</div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card text-center">
+                <div class="stat-number">{{ rider_profile.delivery_success_rate }}%</div>
+                <div class="text-muted fw-semibold">Success Rate</div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card text-center">
+                <div class="stat-number">{{ active_deliveries.count }}</div>
+                <div class="text-muted fw-semibold">Active Jobs</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- Active Jobs -->
+            {% if active_deliveries %}
+            <h2 class="section-title"><i class="bi bi-bicycle me-2"></i>Active Deliveries</h2>
+            {% for order in active_deliveries %}
+            <div class="active-job-card">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <span class="badge bg-primary mb-2">Order #{{ order.id }}</span>
+                        <h5 class="fw-bold mb-1">{{ order.product.name }}</h5>
+                        <p class="text-muted mb-0">{{ order.quantity }} {{ order.product.unit }} • KES {{ order.total_price }}</p>
+                    </div>
+                    <button class="btn btn-sm btn-gradient-primary" onclick="toggleQRData('active-{{ order.id }}')">
+                        <i class="bi bi-qr-code-scan me-1"></i>View Details
+                    </button>
+                </div>
+
+                <!-- QR Data Section (Hidden by default) -->
+                <div id="qr-data-active-{{ order.id }}" class="qr-data-section" style="display: none;">
+                    <h6 class="fw-bold mb-3"><i class="bi bi-info-circle me-2"></i>Delivery Information</h6>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="p-3 bg-white rounded">
+                                <small class="text-muted d-block mb-1">PICKUP FROM</small>
+                                <div class="fw-bold">{{ order.product.seller.get_full_name|default:order.product.seller.username }}</div>
+                                <div class="small text-muted"><i class="bi bi-geo-alt me-1"></i>{{ order.product.location }}</div>
+                                <div class="small"><i class="bi bi-telephone me-1"></i>{{ order.product.seller.profile.phone_number }}</div>
+                                <a href="tel:{{ order.product.seller.profile.phone_number }}"
+                                    class="btn btn-sm btn-outline-primary mt-2 rounded-pill">
+                                    <i class="bi bi-telephone-fill me-1"></i>Call Farmer
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 bg-white rounded">
+                                <small class="text-muted d-block mb-1">DELIVER TO</small>
+                                <div class="fw-bold">{{ order.buyer.get_full_name|default:order.buyer.username }}</div>
+                                <div class="small text-muted"><i class="bi bi-geo-alt me-1"></i>{{ order.buyer.profile.location }}</div>
+                                <div class="small"><i class="bi bi-telephone me-1"></i>{{ order.buyer.profile.phone_number }}</div>
+                                <a href="tel:{{ order.buyer.profile.phone_number }}"
+                                    class="btn btn-sm btn-outline-success mt-2 rounded-pill">
+                                    <i class="bi bi-telephone-fill me-1"></i>Call Buyer
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <form method="post" action="{% url 'update_delivery_status' order.id %}" class="mt-3">
+                    {% csrf_token %}
+                    {% if order.status == 'ACCEPTED' or order.status == 'ESCROW' %}
+                    <button type="submit" name="action" value="picked_up" class="btn btn-gradient-success w-100">
+                        <i class="bi bi-box-seam me-2"></i>Mark as Picked Up
+                    </button>
+                    {% elif order.status == 'IN_DELIVERY' or order.status == 'PICKED_UP' %}
+                    <button type="submit" name="action" value="delivered" class="btn btn-gradient-success w-100">
+                        <i class="bi bi-check-circle-fill me-2"></i>Mark as Delivered
+                    </button>
+                    {% endif %}
+                </form>
+            </div>
+            {% endfor %}
+            {% endif %}
+
+            <!-- Available Requests -->
+            <h2 class="section-title mt-5"><i class="bi bi-list-task me-2"></i>Available Delivery Requests</h2>
+            {% if available_orders %}
+            {% for order in available_orders %}
+            <div class="request-card">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="flex-grow-1">
+                        <h5 class="fw-bold mb-2">{{ order.product.name }}</h5>
+                        <p class="text-muted mb-2">{{ order.quantity }} {{ order.product.unit }}</p>
+                        <div class="d-flex gap-2 flex-wrap">
+                            {% if order.distance_km != "N/A" %}
+                            <span class="badge-distance"><i class="bi bi-signpost-2 me-1"></i>{{ order.distance_km }}
+                                km</span>
+                            {% endif %}
+                            <span class="badge-fee"><i class="bi bi-cash me-1"></i>KES {{ order.estimated_fee }}</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-sm btn-gradient-primary" onclick="toggleQRData('request-{{ order.id }}')">
+                        <i class="bi bi-qr-code-scan me-1"></i>Tap to Scan
+                    </button>
+                </div>
+
+                <!-- QR Data Section (Hidden by default) -->
+                <div id="qr-data-request-{{ order.id }}" class="qr-data-section" style="display: none;">
+                    <h6 class="fw-bold mb-3"><i class="bi bi-info-circle me-2"></i>Order Details</h6>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <div class="p-3 bg-white rounded">
+                                <small class="text-muted d-block mb-1">FARMER</small>
+                                <div class="fw-bold">{{ order.product.seller.get_full_name|default:order.product.seller.username }}</div>
+                                <div class="small text-muted"><i class="bi bi-geo-alt me-1"></i>{{ order.product.location }}</div>
+                                <div class="small"><i class="bi bi-telephone me-1"></i>{{ order.product.seller.profile.phone_number }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 bg-white rounded">
+                                <small class="text-muted d-block mb-1">BUYER</small>
+                                <div class="fw-bold">{{ order.buyer.get_full_name|default:order.buyer.username }}</div>
+                                <div class="small text-muted"><i class="bi bi-geo-alt me-1"></i>{{ order.buyer.profile.location }}</div>
+                                <div class="small"><i class="bi bi-telephone me-1"></i>{{ order.buyer.profile.phone_number }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-3 bg-white rounded">
+                        <div class="row">
+                            <div class="col-6">
+                                <small class="text-muted d-block">Package Value</small>
+                                <div class="fw-bold text-success">KES {{ order.total_price }}</div>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted d-block">Delivery Fee</small>
+                                <div class="fw-bold text-primary">KES {{ order.estimated_fee }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="d-flex gap-2 mt-3">
+                    <form method="post" action="{% url 'accept_delivery' order.id %}" class="flex-grow-1">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-gradient-success w-100">
+                            <i class="bi bi-check-circle me-2"></i>Accept
+                        </button>
+                    </form>
+                    <form method="post" action="{% url 'reject_delivery' order.id %}" class="flex-grow-1">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-gradient-danger w-100">
+                            <i class="bi bi-x-circle me-2"></i>Reject
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-inbox" style="font-size: 5rem; opacity: 0.2;"></i>
+                <p class="text-muted mt-3 fs-5">No delivery requests available at the moment</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Quick Actions -->
+            <div class="stat-card mb-4">
+                <h5 class="fw-bold mb-3">Quick Actions</h5>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'view_rider_profile' user.username %}" class="btn btn-gradient-primary">
+                        <i class="bi bi-person-circle me-2"></i>My Profile
+                    </a>
+                    <a href="{% url 'rider_settings' %}" class="btn btn-outline-secondary rounded-pill">
                         <i class="bi bi-gear me-2"></i>Settings
                     </a>
                 </div>
             </div>
 
-            <!-- Verification Status Alert -->
-            <div class="mt-3">
-                {% if rider_profile.verification_status == 'VERIFIED' %}
-                <div class="verification-alert alert-verified p-3">
-                    <i class="bi bi-patch-check-fill me-2"></i>
-                    <strong>✓ Verified Rider</strong> - You're all set to accept deliveries!
-                </div>
-                {% elif rider_profile.verification_status == 'PENDING' %}
-                <div class="verification-alert alert-pending p-3">
-                    <i class="bi bi-clock-fill me-2"></i>
-                    <strong>⏳ Verification Pending</strong> - Your documents are being reviewed. You'll be notified
-                    soon!
-                </div>
-                {% elif rider_profile.verification_status == 'SUSPENDED' %}
-                <div class="verification-alert alert-suspended p-3">
-                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                    <strong>⚠ Account Suspended</strong> - Please contact support for assistance.
-                </div>
-                {% endif %}
-            </div>
-        </div>
-
-        <!-- Stats Row -->
-        <div class="row g-4 mb-4">
-            <!-- Earnings Card -->
-            <div class="col-md-4">
-                <div class="earnings-card">
-                    <h5 class="opacity-75 mb-3">💰 Wallet Balance</h5>
-                    <div class="wallet-balance">KSH {{ rider_profile.wallet_balance|floatformat:2 }}</div>
-                    <p class="opacity-75 mb-3">Total Earned: KSH {{ rider_profile.total_earnings|floatformat:2 }}</p>
-                    <button class="btn btn-light btn-lg w-100 rounded-pill" data-bs-toggle="modal"
-                        data-bs-target="#withdrawModal">
-                        <i class="bi bi-cash-stack me-2"></i>Withdraw to M-Pesa
-                    </button>
-                </div>
-            </div>
-
-            <!-- Availability Toggle -->
-            <div class="col-md-4">
-                <div class="availability-toggle">
-                    <h6 class="text-center mb-3">Availability Status</h6>
-                    <form action="{% url 'toggle_rider_availability' %}" method="post">
-                        {% csrf_token %}
-                        {% if rider_profile.is_available %}
-                        <button type="submit" class="toggle-btn btn btn-success">
-                            <i class="bi bi-toggle-on me-2"></i>🟢 Available
-                        </button>
-                        <p class="text-center text-muted small mt-2">You're receiving delivery requests</p>
-                        {% else %}
-                        <button type="submit" class="toggle-btn btn btn-secondary">
-                            <i class="bi bi-toggle-off me-2"></i>🔴 Offline
-                        </button>
-                        <p class="text-center text-muted small mt-2">Toggle on to start receiving deliveries</p>
-                        {% endif %}
-                    </form>
-                    {% if rider_profile.active_hours_start %}
-                    <div class="text-center mt-3 small text-muted">
-                        <i class="bi bi-clock me-1"></i>Active Hours: {{ rider_profile.active_hours_start|time:"H:i" }}
-                        - {{ rider_profile.active_hours_end|time:"H:i" }}
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-
             <!-- Performance -->
-            <div class="col-md-4">
-                <div class="stat-card">
-                    <h6 class="text-center mb-3">Performance</h6>
-                    <div class="performance-ring">
-                        <svg width="150" height="150">
-                            <circle cx="75" cy="75" r="65" fill="none" stroke="#ecf0f1" stroke-width="10" />
-                            <circle cx="75" cy="75" r="65" fill="none" stroke="#2ecc71" stroke-width="10"
-                                stroke-dasharray="{{ rider_profile.delivery_success_rate|floatformat:0 }} 100"
-                                stroke-dashoffset="25" stroke-linecap="round" />
-                        </svg>
-                        <div class="ring-text text-success">{{ rider_profile.delivery_success_rate|floatformat:0 }}%
-                        </div>
+            <div class="stat-card">
+                <h5 class="fw-bold mb-3">This Month</h5>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-2">
+                        <small class="text-muted">Success Rate</small>
+                        <small class="fw-bold">{{ rider_profile.delivery_success_rate }}%</small>
                     </div>
-                    <p class="text-center text-muted small mt-2">Success Rate</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Quick Stats -->
-        <div class="row g-4 mb-4">
-            <div class="col-md-3">
-                <div class="stat-card">
-                    <div class="stat-icon bg-primary bg-opacity-10 text-primary">
-                        <i class="bi bi-box-seam"></i>
-                    </div>
-                    <div class="stat-value text-primary">{{ active_deliveries.count }}</div>
-                    <div class="stat-label">Active Deliveries</div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stat-card">
-                    <div class="stat-icon bg-success bg-opacity-10 text-success">
-                        <i class="bi bi-check-circle"></i>
-                    </div>
-                    <div class="stat-value text-success">{{ rider_profile.completed_deliveries }}</div>
-                    <div class="stat-label">Completed</div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stat-card">
-                    <div class="stat-icon bg-warning bg-opacity-10 text-warning">
-                        <i class="bi bi-star-fill"></i>
-                    </div>
-                    <div class="stat-value text-warning">{{ rider_profile.average_rating|floatformat:1 }}</div>
-                    <div class="stat-label">Rating</div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stat-card">
-                    <div class="stat-icon bg-info bg-opacity-10 text-info">
-                        <i class="bi bi-currency-exchange"></i>
-                    </div>
-                    <div class="stat-value text-info">{{ rider_profile.pending_payments|floatformat:0 }}</div>
-                    <div class="stat-label">Pending (KSH)</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Main Content Row -->
-        <div class="row g-4">
-            <!-- Active Deliveries -->
-            <div class="col-md-8">
-                <div class="card border-0 shadow-sm" style="border-radius: 20px;">
-                    <div class="card-header bg-white border-0 pt-4">
-                        <h4 class="fw-bold mb-0"><i class="bi bi-truck me-2"></i>Active Deliveries</h4>
-                    </div>
-                    <div class="card-body">
-                        {% if active_deliveries %}
-                        {% for order in active_deliveries %}
-                        <div class="delivery-card delivery-active">
-                            <div class="row align-items-center">
-                                <div class="col-md-6">
-                                    <h6 class="fw-bold mb-2">
-                                        <i class="bi bi-box me-2"></i>Order #{{ order.id }}
-                                    </h6>
-                                    <p class="small text-muted mb-1">
-                                        <i class="bi bi-arrow-up-circle me-1"></i>
-                                        <strong>Pickup:</strong> {{ order.product.seller.profile.location|default:"Not
-                                        specified" }}
-                                    </p>
-                                    <p class="small text-muted mb-0">
-                                        <i class="bi bi-arrow-down-circle me-1"></i>
-                                        <strong>Dropoff:</strong> {{ order.buyer.profile.location|default:"Not
-                                        specified" }}
-                                    </p>
-                                </div>
-                                <div class="col-md-3">
-                                    <span
-                                        class="badge bg-{% if order.status == 'ACCEPTED' %}warning{% elif order.status == 'ESCROW' %}info text-dark{% elif order.status == 'IN_DELIVERY' %}primary{% endif %} rounded-pill">
-                                        {{ order.get_status_display }}
-                                    </span>
-                                    <p class="small text-muted mb-0 mt-1">{{ order.created_at|timesince }} ago</p>
-                                </div>
-                                <div class="col-md-3">
-                                    <form method="post" action="{% url 'update_order_status' order.id %}">
-                                        {% csrf_token %}
-                                        {% if order.status == 'ACCEPTED' or order.status == 'ESCROW' %}
-                                        <button type="submit" name="status" value="IN_DELIVERY"
-                                            class="action-btn btn btn-primary w-100">
-                                            <i class="bi bi-truck me-1"></i>Start Delivery
-                                        </button>
-                                        {% elif order.status == 'IN_DELIVERY' %}
-                                        <button type="submit" name="status" value="DELIVERED"
-                                            class="action-btn btn btn-success w-100">
-                                            <i class="bi bi-check-circle me-1"></i>Mark Delivered
-                                        </button>
-                                        {% endif %}
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                        {% else %}
-                        <div class="text-center py-5">
-                            <i class="bi bi-inbox display-1 text-muted"></i>
-                            <p class="text-muted mt-3">No active deliveries</p>
-                            {% if not rider_profile.is_available %}
-                            <p class="small text-muted">Toggle your availability to start receiving deliveries</p>
-                            {% endif %}
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-
-                <!-- Recent History -->
-                <div class="card border-0 shadow-sm mt-4" style="border-radius: 20px;">
-                    <div class="card-header bg-white border-0 pt-4">
-                        <h4 class="fw-bold mb-0"><i class="bi bi-clock-history me-2"></i>Recent Deliveries</h4>
-                    </div>
-                    <div class="card-body">
-                        {% if assigned_orders %}
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Order ID</th>
-                                        <th>Date</th>
-                                        <th>Status</th>
-                                        <th>Earnings</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for order in assigned_orders|slice:":10" %}
-                                    <tr>
-                                        <td>#{{ order.id }}</td>
-                                        <td>{{ order.created_at|date:"M d, Y" }}</td>
-                                        <td>
-                                            <span
-                                                class="badge bg-{% if order.status == 'DELIVERED' %}success{% elif order.status == 'CANCELLED' %}danger{% else %}secondary{% endif %} rounded-pill">
-                                                {{ order.get_status_display }}
-                                            </span>
-                                        </td>
-                                        <td class="text-success fw-bold">
-                                            {% if order.status == 'DELIVERED' %}
-                                            +KSH {{ order.delivery_fee|default:50 }}
-                                            {% else %}
-                                            -
-                                            {% endif %}
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                        {% else %}
-                        <p class="text-center text-muted py-4">No delivery history yet</p>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-
-            <!-- Sidebar -->
-            <div class="col-md-4">
-                <!-- Quick Actions -->
-                <div class="card border-0 shadow-sm mb-4" style="border-radius: 20px;">
-                    <div class="card-header bg-white border-0 pt-4">
-                        <h5 class="fw-bold mb-0">Quick Actions</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row g-3">
-                            <div class="col-6">
-                                <a href="{% url 'profile' %}"
-                                    class="quick-action-card d-block text-decoration-none text-dark">
-                                    <div class="quick-action-icon text-primary">
-                                        <i class="bi bi-person-gear"></i>
-                                    </div>
-                                    <p class="small fw-bold mb-0">Edit Profile</p>
-                                </a>
-                            </div>
-                            <div class="col-6">
-                                <div class="quick-action-card" data-bs-toggle="modal" data-bs-target="#withdrawModal">
-                                    <div class="quick-action-icon text-success">
-                                        <i class="bi bi-wallet2"></i>
-                                    </div>
-                                    <p class="small fw-bold mb-0">Withdraw</p>
-                                </div>
-                            </div>
+                    <div class="progress" style="height: 10px; border-radius: 10px;">
+                        <div class="progress-bar"
+                            style="width: {{ rider_profile.delivery_success_rate }}%; background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
                         </div>
                     </div>
                 </div>
-
-                <!-- Vehicle Info -->
-                <div class="card border-0 shadow-sm mb-4" style="border-radius: 20px;">
-                    <div class="card-header bg-white border-0 pt-4">
-                        <h5 class="fw-bold mb-0">Vehicle Info</h5>
+                <div class="row g-2 text-center">
+                    <div class="col-6">
+                        <div class="p-3 bg-light rounded">
+                            <div class="fw-bold text-success fs-4">{{ rider_profile.completed_deliveries }}</div>
+                            <small class="text-muted">Completed</small>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <div class="text-center mb-3">
-                            <i
-                                class="bi bi-{% if rider_profile.vehicle_type == 'MOTORBIKE' %}bicycle{% elif rider_profile.vehicle_type == 'BICYCLE' %}bicycle{% elif rider_profile.vehicle_type == 'TUKTUK' %}truck{% else %}person-walking{% endif %} display-4 text-primary"></i>
-                        </div>
-                        <p class="text-center mb-2"><strong>{{ rider_profile.get_vehicle_type_display }}</strong></p>
-                        {% if rider_profile.license_plate %}
-                        <p class="text-center text-muted small">{{ rider_profile.license_plate }}</p>
-                        {% endif %}
-                        <hr>
-                        <p class="small mb-1"><strong>Max Weight:</strong> {{ rider_profile.max_weight_kg }} kg</p>
-                        {% if rider_profile.max_volume_liters %}
-                        <p class="small mb-0"><strong>Max Volume:</strong> {{ rider_profile.max_volume_liters }} L</p>
-                        {% endif %}
-                    </div>
-                </div>
-
-                <!-- Performance Breakdown -->
-                <div class="card border-0 shadow-sm" style="border-radius: 20px;">
-                    <div class="card-header bg-white border-0 pt-4">
-                        <h5 class="fw-bold mb-0">Performance</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between mb-2">
-                            <span class="small">Total:</span>
-                            <span class="fw-bold">{{ rider_profile.total_deliveries }}</span>
-                        </div>
-                        <div class="d-flex justify-content-between mb-2">
-                            <span class="small text-success">Completed:</span>
-                            <span class="fw-bold text-success">{{ rider_profile.completed_deliveries }}</span>
-                        </div>
-                        <div class="d-flex justify-content-between mb-2">
-                            <span class="small text-warning">Cancelled:</span>
-                            <span class="fw-bold text-warning">{{ rider_profile.cancelled_deliveries }}</span>
-                        </div>
-                        <div class="d-flex justify-content-between">
-                            <span class="small text-danger">Failed:</span>
-                            <span class="fw-bold text-danger">{{ rider_profile.failed_deliveries }}</span>
+                    <div class="col-6">
+                        <div class="p-3 bg-light rounded">
+                            <div class="fw-bold text-danger fs-4">{{ rider_profile.failed_deliveries }}</div>
+                            <small class="text-muted">Failed</small>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Withdraw Modal -->
-<div class="modal fade" id="withdrawModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" style="border-radius: 20px;">
-            <div class="modal-header border-0">
-                <h5 class="modal-title fw-bold"><i class="bi bi-wallet2 me-2"></i>Withdraw to M-Pesa</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="alert alert-info">
-                    <strong>Available Balance:</strong> KSH {{ rider_profile.wallet_balance|floatformat:2 }}
-                </div>
-                <form method="POST" action="{% url 'rider_withdraw' %}">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        <label class="form-label">Amount (KSH)</label>
-                        <input type="number" name="amount" class="form-control" min="1"
-                            max="{{ rider_profile.wallet_balance }}" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">M-Pesa Number</label>
-                        <input type="tel" name="phone" class="form-control" placeholder="254712345678"
-                            value="{{ user.profile.phone_number }}" required>
-                    </div>
-                    <button type="submit" class="btn btn-success w-100 rounded-pill">
-                        <i class="bi bi-send me-2"></i>Send Withdrawal Request
-                    </button>
-                </form>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    // GPS Location Update (when available)
-    const isRiderAvailable = "{{ rider_profile.is_available|yesno:'true,false' }}" === "true";
-    if (isRiderAvailable && "geolocation" in navigator) {
-        setInterval(() => {
-            navigator.geolocation.getCurrentPosition(position => {
-                fetch("{% url 'update_rider_location' %}", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRFToken": "{{ csrf_token }}"
-                    },
-                    body: JSON.stringify({
-                        latitude: position.coords.latitude,
-                        longitude: position.coords.longitude
-                    })
-                });
-            });
-        }, 60000); // Update every minute
+    // Toggle QR Data Display
+    function toggleQRData(id) {
+        const element = document.getElementById('qr-data-' + id);
+        if (element.style.display === 'none') {
+            element.style.display = 'block';
+        } else {
+            element.style.display = 'none';
+        }
     }
+
+    // Availability Toggle
+    document.getElementById('availabilityToggle').addEventListener('change', function () {
+        const isAvailable = this.checked;
+        const statusText = document.getElementById('statusText');
+
+        statusText.innerHTML = isAvailable ? '🟢 Online' : '🔴 Offline';
+
+        fetch("{% url 'toggle_rider_availability' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ 'is_available': isAvailable })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    this.checked = !isAvailable;
+                    statusText.innerHTML = !isAvailable ? '🟢 Online' : '🔴 Offline';
+                    alert('Failed to update status');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                this.checked = !isAvailable;
+                statusText.innerHTML = !isAvailable ? '🟢 Online' : '🔴 Offline';
+            });
+    });
 </script>
 {% endblock %}

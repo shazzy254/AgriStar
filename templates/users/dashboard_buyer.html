@@ -161,6 +161,7 @@
                                 <th>Seller</th>
                                 <th>Date</th>
                                 <th>Status</th>
+                                <th>Method</th>
                                 <th>Total</th>
                             </tr>
                         </thead>
@@ -191,18 +192,28 @@
                                     <span class="badge bg-warning text-dark rounded-pill">Pending</span>
                                     {% elif order.status == 'ACCEPTED' %}
                                     <span class="badge bg-warning text-dark rounded-pill">Accepted</span>
+                                    {% if order.delivery_method == 'PICKUP' %}
+                                    <div class="mt-2">
+                                        <span class="badge bg-secondary rounded-pill px-3">
+                                            <i class="bi bi-cash-coin me-1"></i> Pay on Pickup
+                                        </span>
+                                    </div>
+                                    {% else %}
                                     <div class="mt-2">
                                         <a href="{% url 'payment_page' order.id %}"
                                             class="btn btn-sm btn-success rounded-pill px-3">
                                             <i class="bi bi-credit-card me-1"></i> Pay Now
                                         </a>
                                     </div>
+                                    {% endif %}
                                     {% elif order.status == 'ESCROW' %}
                                     <span class="badge bg-info text-dark rounded-pill">Escrow (Paid)</span>
                                     <div class="mt-2">
                                         <a href="{% url 'confirm_delivery' order.id %}"
                                             class="btn btn-sm btn-primary rounded-pill px-3">
-                                            <i class="bi bi-check-circle me-1"></i> Confirm & Release Funds
+                                            <i class="bi bi-check-circle me-1"></i>
+                                            {% if order.delivery_method == 'PICKUP' %}Confirm Pickup{% else %}Confirm
+                                            Delivery{% endif %}
                                         </a>
                                     </div>
                                     {% elif order.status == 'IN_DELIVERY' %}
@@ -233,6 +244,15 @@
                                     <span class="badge bg-danger rounded-pill">Rejected</span>
                                     {% else %}
                                     <span class="badge bg-info rounded-pill">{{ order.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if order.delivery_method == 'PICKUP' %}
+                                    <span class="badge bg-secondary rounded-pill"><i
+                                            class="bi bi-people-fill me-1"></i>Pickup</span>
+                                    {% else %}
+                                    <span class="badge bg-info text-dark rounded-pill"><i
+                                            class="bi bi-truck me-1"></i>Delivery</span>
                                     {% endif %}
                                 </td>
                                 <td class="fw-bold">KSh {{ order.total_price }}</td>

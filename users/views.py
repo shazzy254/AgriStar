@@ -1,13 +1,18 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.db.models import Sum
+from decimal import Decimal
 from .forms import (
     RegisterForm, LoginForm, UserUpdateForm, ProfileUpdateForm,
     FarmerRegistrationProfileForm, SupplierRegistrationProfileForm,
-    BuyerRegistrationProfileForm, RiderRegistrationProfileForm
+    BuyerRegistrationProfileForm, RiderRegistrationProfileForm, RiderVerificationForm
 )
-from .models import User
+from .models import User, VehicleChangeRequest, RiderProfile
+import json
 
 def select_role(request):
     """Display role selection page"""
@@ -144,21 +149,315 @@ def dashboard(request):
         return render(request, 'users/dashboard_supplier.html')
     elif user.role == User.Role.RIDER:
         from marketplace.models import Order
-        
+        from django.db.models import Sum
+        from math import radians, cos, sin, asin, sqrt
+
+        def haversine(lon1, lat1, lon2, lat2):
+            """
+            Calculate the great circle distance between two points 
+            on the earth (specified in decimal degrees)
+            """
+            if not all([lon1, lat1, lon2, lat2]):
+                return None
+            # convert decimal degrees to radians 
+            lon1, lat1, lon2, lat2 = map(radians, [float(lon1), float(lat1), float(lon2), float(lat2)])
+            # haversine formula 
+            dlon = lon2 - lon1 
+            dlat = lat2 - lat1 
+            a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+            c = 2 * asin(sqrt(a)) 
+            r = 6371 # Radius of earth in kilometers
+            return c * r
+
         # Get rider profile and stats
         rider_profile = user.rider_profile
-        assigned_orders = Order.objects.filter(assigned_rider=user)
+        rider_lat = rider_profile.current_latitude or user.profile.latitude
+        rider_lon = rider_profile.current_longitude or user.profile.longitude
         
-        active_deliveries = assigned_orders.filter(status__in=['ACCEPTED', 'ESCROW', 'IN_DELIVERY'])
+        # 1. Available Deliveries (Ready for pickup + Unassigned)
+        available_orders_qs = Order.objects.filter(
+            is_ready_for_pickup=True,
+            assigned_rider__isnull=True,
+            status__in=['ACCEPTED', 'ESCROW'] 
+        ).order_by('-updated_at')
         
+        # Annotate with distance
+        available_orders = []
+        for order in available_orders_qs:
+            seller_profile = order.product.seller.profile
+            dist = None
+            if rider_lat and rider_lon and seller_profile.latitude and seller_profile.longitude:
+                dist = haversine(rider_lon, rider_lat, seller_profile.longitude, seller_profile.latitude)
+            
+            # Add attributes dynamically for template
+            order.distance_km = round(dist, 1) if dist is not None else "N/A"
+            order.estimated_fee = int(order.total_price * 0.15) # Mock 15% delivery fee
+            available_orders.append(order)
+
+        # 2. Accepted Deliveries (Active Jobs)
+        active_deliveries = Order.objects.filter(
+            assigned_rider=user,
+            status__in=['ACCEPTED', 'ESCROW', 'IN_DELIVERY', 'PICKED_UP'] 
+        ).order_by('-updated_at')
+        
+        # 3. Earnings & History
+        completed_orders = Order.objects.filter(assigned_rider=user, status='DELIVERED')
+        total_delivered_value = completed_orders.aggregate(Sum('total_price'))['total_price__sum'] or 0
+        total_earnings = int(total_delivered_value * Decimal('0.15')) # Estimated earnings
+        
+        delivery_history = completed_orders.order_by('-updated_at')[:10]
+        
+        # 4. Notifications
+        notifications = user.notifications.filter(is_read=False).order_by('-created_at')[:5]
+
         context = {
             'rider_profile': rider_profile,
-            'assigned_orders': assigned_orders.order_by('-updated_at'),
+            'available_orders': available_orders,
             'active_deliveries': active_deliveries,
+            'total_earnings': total_earnings, 
+            'delivery_history': delivery_history,
+            'notifications': notifications,
         }
         return render(request, 'users/dashboard_rider.html', context)
     else:
         return render(request, 'users/dashboard_base.html') # Fallback
+
+@login_required
+def accept_delivery(request, order_id):
+    """Rider accepts a delivery"""
+    from marketplace.models import Order, Notification
+    
+    if request.method == 'POST' and request.user.role == User.Role.RIDER:
+        # Check Verification Status
+        rider_profile = getattr(request.user, 'rider_profile', None)
+        if not rider_profile or rider_profile.verification_status != 'VERIFIED':
+            messages.error(request, "Access Denied: You must be a VERIFIED rider to accept orders. Please complete your profile verification.")
+            return redirect('dashboard')
+            
+        if not rider_profile.is_available:
+            messages.error(request, "You are currently marked as unavailable. Please go online to accept jobs.")
+            return redirect('dashboard')
+
+        order = Order.objects.get(id=order_id)
+        if order.assigned_rider is None:
+            order.assigned_rider = request.user
+            # Update status to indicate rider attached, though it might still be waiting for pickup
+            # If status was ESCROW/ACCEPTED, maybe keep it or move to specialized state?
+            # Let's keep status field as main tracker. 
+            # If it was 'ESCROW', it implies paid. 
+            
+            order.save()
+            
+            messages.success(request, f"You have accepted order #{order.id}")
+            
+            # Notify Farmer
+            Notification.objects.create(
+                user=order.product.seller,
+                notification_type='ORDER_ASSIGNED',
+                order=order,
+                message=f"Rider {request.user.username} has accepted your delivery request for {order.product.name}."
+            )
+            
+            # Notify Buyer
+            Notification.objects.create(
+                user=order.buyer,
+                notification_type='ORDER_ASSIGNED',
+                order=order,
+                message=f"Rider {request.user.username} is on the way to pick up your order."
+            )
+            
+        else:
+            messages.error(request, "This order has already been taken.")
+            
+    return redirect('dashboard')
+
+@login_required
+def update_delivery_status(request, order_id):
+    """Rider updates status (Picked Up, Delivered)"""
+    from marketplace.models import Order, Notification
+    
+    if request.method == 'POST' and request.user.role == User.Role.RIDER:
+        order = Order.objects.get(id=order_id)
+        action = request.POST.get('action')
+        
+        if order.assigned_rider != request.user:
+            messages.error(request, "Not authorized")
+            return redirect('dashboard')
+            
+        if action == 'picked_up':
+            order.status = 'IN_DELIVERY'
+            order.save()
+            messages.success(request, "Order marked as Picked Up")
+            # Notify Buyer
+            Notification.objects.create(
+                user=order.buyer,
+                notification_type='ORDER_UPDATED', # Add this type if strict or use accepted
+                order=order,
+                message=f"Your order for {order.product.name} has been picked up and is on the way!"
+            )
+            
+        elif action == 'delivered':
+            order.status = 'DELIVERED'
+            request.user.rider_profile.completed_deliveries += 1
+            request.user.rider_profile.total_deliveries += 1
+            request.user.rider_profile.save()
+            order.save()
+            messages.success(request, "Order marked as Delivered")
+             # Notify Farmer to confirm/get paid
+            Notification.objects.create(
+                user=order.product.seller,
+                notification_type='ORDER_UPDATED',
+                order=order,
+                message=f"Order #{order.id} has been delivered. Funds will be released shortly."
+            )
+            
+    return redirect('dashboard')
+
+@login_required
+def reject_delivery(request, order_id):
+    """Rider rejects a delivery request"""
+    from marketplace.models import Order, Notification
+    
+    if request.method == 'POST' and request.user.role == User.Role.RIDER:
+        order = get_object_or_404(Order, id=order_id)
+        
+        # Only allow rejection if order is not yet assigned
+        if order.assigned_rider is None and order.is_ready_for_pickup:
+            # Notify Farmer
+            Notification.objects.create(
+                user=order.product.seller,
+                notification_type='ORDER_UPDATED',
+                order=order,
+                message=f"Rider {request.user.username} declined your delivery request for {order.product.name}. Please find another rider."
+            )
+            
+            messages.info(request, f"You have declined order #{order.id}")
+        else:
+            messages.error(request, "This order cannot be rejected at this time.")
+            
+    return redirect('dashboard')
+
+
+
+@login_required
+def view_profile(request, username):
+    """Dispatcher view for public profiles based on role"""
+    target_user = get_object_or_404(User, username=username)
+    
+    if target_user.role == User.Role.RIDER:
+        return view_rider_profile(request, username)
+        
+    # Default/Generic Profile View
+    is_own_profile = (request.user == target_user)
+    context = {
+        'profile_user': target_user,
+        'is_own_profile': is_own_profile,
+    }
+    return render(request, 'users/profile_display.html', context)
+
+@login_required
+def view_rider_profile(request, username):
+    rider_user = get_object_or_404(User, username=username, role=User.Role.RIDER)
+    is_own_profile = (request.user == rider_user)
+    
+    # Get reviews
+    reviews = rider_user.rider_reviews.all().order_by('-created_at')
+    
+    # Calculate average rating
+    from django.db.models import Avg
+    avg_rating = reviews.aggregate(Avg('rating'))['rating__avg'] or 0
+    
+    # Active deliveries for public view might be sensitive, maybe just count?
+    active_deliveries = rider_user.assigned_orders.filter(status__in=['ACCEPTED', 'ESCROW', 'IN_DELIVERY']).count()
+    
+    # Recent deliveries (completed)
+    recent_deliveries = rider_user.assigned_orders.filter(status='DELIVERED').order_by('-updated_at')[:5]
+
+    context = {
+        'profile_user': rider_user,
+        'is_own_profile': is_own_profile,
+        'reviews': reviews,
+        'avg_rating': round(avg_rating, 1),
+        'active_deliveries': active_deliveries,
+        'recent_deliveries': recent_deliveries,
+    }
+    return render(request, 'users/profile_rider.html', context)
+
+@login_required
+def rider_profile_edit(request):
+    """Edit Rider Profile and Upload Docs"""
+    # Simply reuse the main edit_profile or specialized?
+    # Let's use the main one but ensure the template shows rider fields
+    # Or creating a new view if specialized handling needed for 5 images.
+    
+    # For now, rely on existing edit_profile logic but ensure forms are correct.
+    # The existing edit_profile uses ProfileUpdateForm which is for standard Profile model.
+    # Rider info is in RiderProfile.
+    
+    if request.method == 'POST':
+        user = request.user
+        # Retrieve images manually or via a Form
+        rider_profile = user.rider_profile
+        
+        vehicle_type = request.POST.get('vehicle_type')
+        plate = request.POST.get('vehicle_plate_number')
+        id_num = request.POST.get('id_number')
+        lic_num = request.POST.get('license_number')
+        phone = request.POST.get('phone_number') # Get phone
+        
+        if vehicle_type: rider_profile.vehicle_type = vehicle_type
+        if plate: rider_profile.vehicle_plate_number = plate
+        if id_num: rider_profile.id_number = id_num
+        if lic_num: rider_profile.license_number = lic_num
+        
+        # Update Phone Number (on Profile model)
+        if phone:
+            profile = user.profile
+            profile.phone_number = phone
+            profile.save()
+        
+        # Handle images
+        if request.FILES.get('passport_photo'):
+            rider_profile.passport_photo = request.FILES['passport_photo']
+        if request.FILES.get('verification_id_front'):
+            rider_profile.verification_id_front = request.FILES['verification_id_front']
+        if request.FILES.get('verification_id_back'):
+            rider_profile.verification_id_back = request.FILES['verification_id_back']
+        if request.FILES.get('verification_selfie'):
+            rider_profile.verification_selfie = request.FILES['verification_selfie']
+        if request.FILES.get('verification_license'):
+            rider_profile.verification_license = request.FILES['verification_license']
+        if request.FILES.get('verification_good_conduct'):
+            rider_profile.verification_good_conduct = request.FILES['verification_good_conduct']
+            
+        rider_profile.save()
+        messages.success(request, "Rider profile updated")
+        return redirect('profile') # Which redirects to public_profile
+        
+    return render(request, 'users/profile_rider_edit.html', {'user': request.user})
+
+@login_required
+def add_rider_review(request, rider_id):
+    if request.method == 'POST':
+        from .models import RiderReview
+        rider_user = get_object_or_404(User, id=rider_id)
+        rating = request.POST.get('rating')
+        comment = request.POST.get('comment')
+        
+        if rating and comment:
+            RiderReview.objects.create(
+                rider=rider_user,
+                reviewer=request.user,
+                rating=rating,
+                comment=comment
+            )
+            messages.success(request, 'Review submitted successfully!')
+        else:
+            messages.error(request, 'Please provide both a rating and a comment.')
+            
+        return redirect('view_rider_profile', username=rider_user.username)
+    return redirect('dashboard')
+
 
 @login_required
 def profile(request):
@@ -329,6 +628,27 @@ def add_delivery_address(request):
             is_default=request.POST.get('is_default') == 'on'
         )
         messages.success(request, 'Delivery address added successfully!')
+    return redirect('profile')
+
+@login_required
+def edit_delivery_address(request, address_id):
+    """Edit an existing delivery address"""
+    if request.method == 'POST':
+        from .models import DeliveryAddress
+        address = get_object_or_404(DeliveryAddress, id=address_id, user=request.user)
+        
+        address.label = request.POST.get('label', '')
+        address.county = request.POST.get('county')
+        address.constituency = request.POST.get('constituency')
+        address.ward = request.POST.get('ward')
+        address.gps_coordinates = request.POST.get('gps_coordinates', '')
+        address.additional_details = request.POST.get('additional_details', '')
+        
+        if request.POST.get('is_default') == 'on':
+            address.is_default = True
+            
+        address.save()
+        messages.success(request, 'Delivery address updated successfully!')
     return redirect('profile')
 
 @login_required
@@ -511,14 +831,39 @@ def favorite_farmers_list(request):
 @login_required
 def toggle_rider_availability(request):
     """Toggle rider availability status"""
+    from django.http import JsonResponse
+    import json
+
     if request.method == 'POST' and request.user.role == User.Role.RIDER:
+        is_ajax = request.headers.get('content-type') == 'application/json'
+        
         try:
             rider_profile = request.user.rider_profile
-            rider_profile.is_available = not rider_profile.is_available
+            
+            if is_ajax:
+                data = json.loads(request.body)
+                target_status = data.get('is_available')
+                if target_status is not None:
+                     rider_profile.is_available = target_status
+                else:
+                     rider_profile.is_available = not rider_profile.is_available
+            else:
+                rider_profile.is_available = not rider_profile.is_available
+                
             rider_profile.save()
+            
+            if is_ajax:
+                return JsonResponse({
+                    'success': True, 
+                    'is_available': rider_profile.is_available,
+                    'status': "Available" if rider_profile.is_available else "Offline"
+                })
+
             status = "Available" if rider_profile.is_available else "Offline"
             messages.success(request, f"You are now {status}")
         except Exception as e:
+            if is_ajax:
+                return JsonResponse({'success': False, 'error': str(e)}, status=400)
             messages.error(request, "Error updating status")
             
     return redirect('dashboard')
@@ -549,8 +894,8 @@ def rider_withdraw(request):
     return redirect('dashboard')
 
 @login_required
-def update_rider_location(request):
-    """Update rider's real-time GPS location"""
+def update_location(request):
+    """Update user's real-time GPS location (Works for Riders and Farmers/Buyers)"""
     if request.method == 'POST' and request.headers.get('content-type') == 'application/json':
         try:
             import json
@@ -558,17 +903,226 @@ def update_rider_location(request):
             latitude = data.get('latitude')
             longitude = data.get('longitude')
             
-            if latitude and longitude and request.user.role == User.Role.RIDER:
-                rider_profile = request.user.rider_profile
-                rider_profile.current_latitude = latitude
-                rider_profile.current_longitude = longitude
-                rider_profile.save()
+            if latitude and longitude:
+                # Update generic Profile (for Farmers/Buyers)
+                if hasattr(request.user, 'profile'):
+                    profile = request.user.profile
+                    profile.latitude = latitude
+                    profile.longitude = longitude
+                    profile.save()
                 
-                from django.http import JsonResponse
+                # Update RiderProfile if exists (for Riders) - keep specialized fields in sync or use them
+                if request.user.role == User.Role.RIDER and hasattr(request.user, 'rider_profile'):
+                    rider_profile = request.user.rider_profile
+                    rider_profile.current_latitude = latitude
+                    rider_profile.current_longitude = longitude
+                    rider_profile.save()
+                
                 return JsonResponse({'status': 'success'})
                 
         except Exception as e:
-            pass # Silent fail for background updates
+            pass # Silent fail
             
-    from django.http import JsonResponse
+            pass # Silent fail
+            
     return JsonResponse({'status': 'error'}, status=400)
+
+def get_locations(request):
+    """API to fetch sub-locations (SubCounties or Wards)"""
+    parent_type = request.GET.get('parent_type')
+    parent_id = request.GET.get('parent_id')
+    
+    data = []
+    
+    if parent_type == 'county' and parent_id:
+        from .models import SubCounty
+        sub_counties = SubCounty.objects.filter(county_id=parent_id).values('id', 'name')
+        data = list(sub_counties)
+        
+    elif parent_type == 'sub_county' and parent_id:
+        from .models import Ward
+        wards = Ward.objects.filter(sub_county_id=parent_id).values('id', 'name')
+        data = list(wards)
+        
+    from django.http import JsonResponse
+    return JsonResponse({'results': data})
+
+# ============= RIDER SETTINGS VIEWS =============
+
+@login_required
+def rider_settings(request):
+    """Rider settings page"""
+    if request.user.role != User.Role.RIDER:
+        messages.error(request, "Access denied. Riders only.")
+        return redirect('dashboard')
+    
+    # Check for pending vehicle change requests
+    pending_vehicle_request = VehicleChangeRequest.objects.filter(
+        rider=request.user,
+        status='PENDING'
+    ).first()
+    
+    context = {
+        'pending_vehicle_request': pending_vehicle_request,
+    }
+    return render(request, 'users/rider_settings.html', context)
+
+@login_required
+@require_POST
+def update_personal_info(request):
+    """Update rider personal information"""
+    if request.user.role != User.Role.RIDER:
+        messages.error(request, "Access denied.")
+        return redirect('dashboard')
+    
+    try:
+        # Update User model
+        full_name = request.POST.get('full_name', '').strip()
+        if full_name:
+            name_parts = full_name.split(' ', 1)
+            request.user.first_name = name_parts[0]
+            request.user.last_name = name_parts[1] if len(name_parts) > 1 else ''
+        
+        request.user.email = request.POST.get('email', request.user.email)
+        request.user.save()
+        
+        # Update Profile model
+        profile = request.user.profile
+        profile.phone_number = request.POST.get('phone_number', profile.phone_number)
+        profile.whatsapp_number = request.POST.get('whatsapp_number', '')
+        profile.bio = request.POST.get('bio', '')
+        profile.save()
+        
+        messages.success(request, "Personal information updated successfully!")
+        return redirect('rider_settings')
+    except Exception as e:
+        messages.error(request, f"Error updating information: {str(e)}")
+        return redirect('rider_settings')
+
+@login_required
+@require_POST
+def request_vehicle_change(request):
+    """Submit a vehicle change request for admin approval"""
+    if request.user.role != User.Role.RIDER:
+        messages.error(request, "Access denied.")
+        return redirect('dashboard')
+    
+    # Check if there's already a pending request
+    existing_request = VehicleChangeRequest.objects.filter(
+        rider=request.user,
+        status='PENDING'
+    ).exists()
+    
+    if existing_request:
+        messages.warning(request, "You already have a pending vehicle change request.")
+        return redirect('rider_settings')
+    
+    try:
+        rider_profile = request.user.rider_profile
+        
+        # Create change request
+        VehicleChangeRequest.objects.create(
+            rider=request.user,
+            old_vehicle_type=rider_profile.vehicle_type,
+            old_vehicle_plate=rider_profile.vehicle_plate_number or '',
+            old_license_number=rider_profile.license_number or '',
+            new_vehicle_type=request.POST.get('new_vehicle_type'),
+            new_vehicle_plate=request.POST.get('new_vehicle_plate'),
+            new_license_number=request.POST.get('new_license_number', ''),
+            reason=request.POST.get('reason')
+        )
+        
+        messages.success(request, "Vehicle change request submitted! An admin will review it soon.")
+        return redirect('rider_settings')
+    except Exception as e:
+        messages.error(request, f"Error submitting request: {str(e)}")
+        return redirect('rider_settings')
+
+@login_required
+@require_POST
+def update_location_settings(request):
+    """Update rider location and service area"""
+    if request.user.role != User.Role.RIDER:
+        messages.error(request, "Access denied.")
+        return redirect('dashboard')
+    
+    try:
+        rider_profile = request.user.rider_profile
+        rider_profile.county = request.POST.get('county', '')
+        rider_profile.constituency = request.POST.get('constituency', '')
+        rider_profile.ward = request.POST.get('ward', '')
+        rider_profile.estate_village = request.POST.get('estate_village', '')
+        rider_profile.save()
+        
+        messages.success(request, "Location settings updated successfully!")
+        return redirect('rider_settings')
+    except Exception as e:
+        messages.error(request, f"Error updating location: {str(e)}")
+        return redirect('rider_settings')
+
+@login_required
+def rider_upload_documents(request):
+    if request.user.role != User.Role.RIDER:
+        messages.error(request, "Access denied.")
+        return redirect('dashboard')
+    
+    rider_profile = request.user.rider_profile
+    
+    if request.method == 'POST':
+        form = RiderVerificationForm(request.POST, request.FILES, instance=rider_profile)
+        if form.is_valid():
+            form.save(commit=False)
+            rider_profile = form.save()
+            
+            # Update status to PENDING whenever new docs are uploaded
+            rider_profile.verification_status = 'PENDING'
+            rider_profile.save()
+            
+            messages.success(request, "Documents uploaded successfully! Status updated to Pending Verification.")
+            return redirect('dashboard')
+    else:
+        form = RiderVerificationForm(instance=rider_profile)
+    
+    return render(request, 'users/rider_upload_documents.html', {'form': form})
+
+# --- Admin Verification Views ---
+
+@login_required
+@user_passes_test(lambda u: u.is_staff)
+def admin_rider_verification_list(request):
+    # Get all riders, prioritize pending ones
+    pending_riders = RiderProfile.objects.filter(verification_status='PENDING').order_by('-user__date_joined')
+    other_riders = RiderProfile.objects.exclude(verification_status='PENDING').order_by('-user__date_joined')
+    
+    context = {
+        'pending_riders': pending_riders,
+        'other_riders': other_riders,
+    }
+    return render(request, 'users/admin_rider_verification_list.html', context)
+
+@login_required
+@user_passes_test(lambda u: u.is_staff)
+def admin_rider_verification_detail(request, rider_id):
+    rider_profile = get_object_or_404(RiderProfile, id=rider_id)
+    return render(request, 'users/admin_rider_verification_detail.html', {'rider_profile': rider_profile})
+
+@login_required
+@user_passes_test(lambda u: u.is_staff)
+def admin_rider_verification_action(request, rider_id):
+    if request.method != 'POST':
+        return redirect('admin_rider_verification_detail', rider_id=rider_id)
+        
+    rider_profile = get_object_or_404(RiderProfile, id=rider_id)
+    action = request.POST.get('action')
+    
+    if action == 'approve':
+        rider_profile.verification_status = 'VERIFIED'
+        rider_profile.save()
+        messages.success(request, f'Rider {rider_profile.user.username} has been verified.')
+    elif action == 'reject':
+        rider_profile.verification_status = 'REJECTED'
+        rider_profile.save()
+        messages.warning(request, f'Rider {rider_profile.user.username} verification rejected.')
+        
+    return redirect('admin_rider_verification_list')
+

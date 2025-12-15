@@ -1,0 +1,194 @@
+{% extends 'administration/base_admin.html' %}
+{% load static %}
+
+{% block title %}Review Rider: {{ rider_profile.user.username }} - AgriStar Admin{% endblock %}
+{% block header %}Review Verification{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="mb-4">
+        <a href="{% url 'admin_rider_verification_list' %}" class="text-decoration-none text-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Back to Queue
+        </a>
+    </div>
+
+    <div class="row">
+        <!-- Rider Info & Documents -->
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0 card-title fw-bold">Rider Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <img src="{{ rider_profile.user.profile.avatar.url }}" class="rounded-circle me-3" width="64"
+                            height="64" style="object-fit: cover;">
+                        <div>
+                            <h4 class="mb-1">{{ rider_profile.user.get_full_name|default:rider_profile.user.username }}
+                            </h4>
+                            <p class="mb-0 text-muted">{{ rider_profile.user.email }} • {{
+                                rider_profile.company_name|default:"Individual Rider" }}</p>
+                            <p class="mb-0 text-muted small"><i class="bi bi-telephone me-1"></i>{{
+                                rider_profile.user.profile.phone_number }}</p>
+                        </div>
+                        <div class="ms-auto text-end">
+                            <span
+                                class="badge {% if rider_profile.verification_status == 'VERIFIED' %}bg-success{% elif rider_profile.verification_status == 'PENDING' %}bg-warning text-dark{% else %}bg-danger{% endif %} fs-6">
+                                {{ rider_profile.get_verification_status_display }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="small text-muted fw-bold">VEHICLE TYPE</label>
+                            <div>{{ rider_profile.get_vehicle_type_display }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small text-muted fw-bold">PLATE NUMBER</label>
+                            <div class="font-monospace">{{ rider_profile.vehicle_plate_number }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Documents -->
+            <h5 class="fw-bold mb-3 mt-4">Submitted Documents</h5>
+            <div class="row g-4">
+                <!-- ID Front -->
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-light py-2">
+                            <small class="fw-bold">National ID (Front)</small>
+                        </div>
+                        <div class="card-body text-center bg-dark p-0 d-flex align-items-center justify-content-center"
+                            style="min-height: 200px;">
+                            {% if rider_profile.verification_id_front %}
+                            <a href="{{ rider_profile.verification_id_front.url }}" target="_blank">
+                                <img src="{{ rider_profile.verification_id_front.url }}" class="img-fluid"
+                                    style="max-height: 250px;">
+                            </a>
+                            {% else %}
+                            <span class="text-white-50 fst-italic">Not Uploaded</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ID Back -->
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-light py-2">
+                            <small class="fw-bold">National ID (Back)</small>
+                        </div>
+                        <div class="card-body text-center bg-dark p-0 d-flex align-items-center justify-content-center"
+                            style="min-height: 200px;">
+                            {% if rider_profile.verification_id_back %}
+                            <a href="{{ rider_profile.verification_id_back.url }}" target="_blank">
+                                <img src="{{ rider_profile.verification_id_back.url }}" class="img-fluid"
+                                    style="max-height: 250px;">
+                            </a>
+                            {% else %}
+                            <span class="text-white-50 fst-italic">Not Uploaded</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Selfie -->
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header bg-light py-2">
+                            <small class="fw-bold">Selfie with ID</small>
+                        </div>
+                        <div class="card-body text-center bg-dark p-0 d-flex align-items-center justify-content-center"
+                            style="min-height: 300px;">
+                            {% if rider_profile.verification_selfie %}
+                            <a href="{{ rider_profile.verification_selfie.url }}" target="_blank">
+                                <img src="{{ rider_profile.verification_selfie.url }}" class="img-fluid"
+                                    style="max-height: 400px;">
+                            </a>
+                            {% else %}
+                            <span class="text-white-50 fst-italic">Not Uploaded</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- License -->
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-light py-2">
+                            <small class="fw-bold">Driving License</small>
+                        </div>
+                        <div class="card-body text-center bg-dark p-0 d-flex align-items-center justify-content-center"
+                            style="min-height: 200px;">
+                            {% if rider_profile.verification_license %}
+                            <a href="{{ rider_profile.verification_license.url }}" target="_blank">
+                                <img src="{{ rider_profile.verification_license.url }}" class="img-fluid"
+                                    style="max-height: 250px;">
+                            </a>
+                            {% else %}
+                            <span class="text-white-50 fst-italic">Not Uploaded</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Good Conduct -->
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-light py-2">
+                            <small class="fw-bold">Good Conduct Certificate</small>
+                        </div>
+                        <div class="card-body text-center bg-dark p-0 d-flex align-items-center justify-content-center"
+                            style="min-height: 200px;">
+                            {% if rider_profile.verification_good_conduct %}
+                            <a href="{{ rider_profile.verification_good_conduct.url }}" target="_blank">
+                                <img src="{{ rider_profile.verification_good_conduct.url }}" class="img-fluid"
+                                    style="max-height: 250px;">
+                            </a>
+                            {% else %}
+                            <span class="text-white-50 fst-italic">Not Uploaded</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm sticky-top" style="top: 100px; z-index: 100;">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-shield-check me-2"></i>Review Action</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small">Please verify all documents match the rider's information and clear
+                        photos are provided.</p>
+
+                    <form method="post" action="{% url 'admin_rider_verification_action' rider_profile.id %}">
+                        {% csrf_token %}
+                        <div class="d-grid gap-3">
+                            <button type="submit" name="action" value="approve" class="btn btn-success btn-lg"
+                                onclick="return confirm('Are you sure you want to VERIFY this rider? They will immediately be able to accept orders.')">
+                                <i class="bi bi-check-circle-fill me-2"></i>Approve & Verify
+                            </button>
+
+                            <button type="submit" name="action" value="reject" class="btn btn-outline-danger btn-lg"
+                                onclick="return confirm('Reject this application? The rider will be asked to re-upload documents.')">
+                                <i class="bi bi-x-circle me-2"></i>Reject Application
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer bg-light small">
+                    <div class="text-muted mb-1">Current Status: <strong class="text-dark">{{
+                            rider_profile.get_verification_status_display }}</strong></div>
+                    <div class="text-muted">Last Updated: {{ rider_profile.updated_at|timesince }} ago</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

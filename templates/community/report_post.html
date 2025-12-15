@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Report Post - AgriStar{% endblock %}
+
+{% block extra_css %}
+<style>
+    .report-container {
+        max-width: 600px;
+        margin: 4rem auto;
+        padding: 0 1rem;
+    }
+
+    .report-card {
+        background: white;
+        border-radius: 20px;
+        padding: 2.5rem;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    .report-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #ff9800, #f57c00);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 2rem;
+    }
+
+    .reason-option {
+        padding: 1rem 1.5rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .reason-option:hover {
+        border-color: #ff9800;
+        background: rgba(255, 152, 0, 0.05);
+    }
+
+    .reason-option input[type="radio"] {
+        margin-right: 1rem;
+    }
+
+    .reason-option.selected {
+        border-color: #ff9800;
+        background: rgba(255, 152, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{% if user.role == 'FARMER' %}
+{% include 'users/farmer_menu.html' %}
+{% endif %}
+
+<div class="report-container">
+    <div class="report-card">
+        <div class="report-icon">
+            <i class="bi bi-flag-fill text-white" style="font-size: 2.5rem;"></i>
+        </div>
+
+        <h2 class="text-center fw-bold mb-3">Report Post</h2>
+        <p class="text-center text-muted mb-4">Help us keep the community safe by reporting inappropriate content.</p>
+
+        <form method="POST">
+            {% csrf_token %}
+
+            <div class="mb-4">
+                <label class="form-label fw-bold">Why are you reporting this post?</label>
+                {% for value, label in reasons %}
+                <label class="reason-option">
+                    <input type="radio" name="reason" value="{{ value }}" required>
+                    <span>{{ label }}</span>
+                </label>
+                {% endfor %}
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label fw-bold">Additional Details (Optional)</label>
+                <textarea name="description" class="form-control" rows="4"
+                    placeholder="Please provide any additional information that might help us review this report..."
+                    style="border-radius: 12px; border: 2px solid #e0e0e0;"></textarea>
+            </div>
+
+            <div class="d-flex gap-3">
+                <a href="{% url 'feed' %}" class="btn btn-secondary flex-grow-1"
+                    style="border-radius: 25px; padding: 0.9rem;">
+                    Cancel
+                </a>
+                <button type="submit" class="btn flex-grow-1"
+                    style="background: linear-gradient(135deg, #ff9800, #f57c00); color: white; border: none; border-radius: 25px; padding: 0.9rem; font-weight: 600;">
+                    Submit Report
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Highlight selected reason
+    document.querySelectorAll('.reason-option').forEach(option => {
+        option.addEventListener('click', function () {
+            document.querySelectorAll('.reason-option').forEach(o => o.classList.remove('selected'));
+            this.classList.add('selected');
+            this.querySelector('input[type="radio"]').checked = true;
+        });
+    });
+</script>
+{% endblock %}

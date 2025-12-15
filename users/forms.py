@@ -183,3 +183,23 @@ class RiderVehicleForm(forms.ModelForm):
             'vehicle_type': forms.Select(attrs={'class': 'form-select'}),
             'vehicle_plate_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'KAA 123A'}),
         }
+
+class RiderVerificationForm(forms.ModelForm):
+    class Meta:
+        model = RiderProfile
+        fields = ['verification_id_front', 'verification_id_back', 'verification_selfie', 'verification_license', 'verification_good_conduct']
+        widgets = {
+            'verification_id_front': forms.FileInput(attrs={'class': 'form-control'}),
+            'verification_id_back': forms.FileInput(attrs={'class': 'form-control'}),
+            'verification_selfie': forms.FileInput(attrs={'class': 'form-control'}),
+            'verification_license': forms.FileInput(attrs={'class': 'form-control'}),
+            'verification_good_conduct': forms.FileInput(attrs={'class': 'form-control'}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Make fields required or optional as per logic. 
+        # Typically ID front/back and selfie are mandatory. License might be mandatory.
+        self.fields['verification_id_front'].required = True
+        self.fields['verification_id_back'].required = True
+        self.fields['verification_selfie'].required = True

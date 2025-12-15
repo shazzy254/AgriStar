@@ -66,6 +66,7 @@ class FarmerBadge(models.Model):
     total_reviews = models.IntegerField(default=0)
     earned_date = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    is_manual_override = models.BooleanField(default=False, help_text="If checked, automatic badge updates will be disabled.")
     
     class Meta:
         verbose_name = 'Farmer Badge'
@@ -76,6 +77,9 @@ class FarmerBadge(models.Model):
     
     def update_badge_level(self):
         """Update badge level based on criteria"""
+        if self.is_manual_override:
+            return
+
         # Calculate average rating
         avg_rating = self.farmer.farmer_reviews.aggregate(Avg('rating'))['rating__avg'] or 0
         self.average_rating = round(avg_rating, 2)

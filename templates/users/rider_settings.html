@@ -1,0 +1,417 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Rider Settings - AgriStar{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        min-height: 100vh;
+    }
+
+    .settings-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2.5rem 2rem;
+        border-radius: 25px;
+        margin-bottom: 2rem;
+        box-shadow: 0 15px 50px rgba(102, 126, 234, 0.3);
+    }
+
+    .settings-card {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+    }
+
+    .settings-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+    }
+
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #2d3748;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 3px solid #667eea;
+    }
+
+    .btn-gradient-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+        padding: 0.75rem 2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-gradient-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+
+    .btn-gradient-danger {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        border: none;
+        color: white;
+        padding: 0.75rem 2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-gradient-danger:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(245, 87, 108, 0.4);
+        color: white;
+    }
+
+    .alert-warning-custom {
+        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        border: none;
+        color: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+    }
+
+    .danger-zone {
+        background: linear-gradient(135deg, #fff5f5 0%, #ffe5e5 100%);
+        border: 2px dashed #f5576c;
+        border-radius: 20px;
+        padding: 2rem;
+    }
+
+    .form-control,
+    .form-select {
+        border-radius: 10px;
+        border: 2px solid #e2e8f0;
+        padding: 0.75rem 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #4a5568;
+        margin-bottom: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="settings-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="display-6 fw-bold mb-2">Rider Settings</h1>
+                <p class="mb-0 opacity-90">Manage your profile and preferences</p>
+            </div>
+            <a href="{% url 'dashboard' %}" class="btn btn-light rounded-pill">
+                <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Pending Vehicle Change Request Alert -->
+    {% if pending_vehicle_request %}
+    <div class="alert-warning-custom mb-4">
+        <h5 class="fw-bold mb-2"><i class="bi bi-hourglass-split me-2"></i>Vehicle Change Request Pending</h5>
+        <p class="mb-2">Your request to change vehicle information is awaiting admin approval.</p>
+        <p class="mb-0"><strong>Reason:</strong> {{ pending_vehicle_request.reason }}</p>
+    </div>
+    {% endif %}
+
+    <div class="row g-4">
+        <!-- Main Settings -->
+        <div class="col-lg-8">
+            <!-- Personal Information -->
+            <div class="settings-card">
+                <h4 class="section-title"><i class="bi bi-person me-2"></i>Personal Information</h4>
+                <form method="post" action="{% url 'update_personal_info' %}">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" class="form-control" name="full_name" value="{{ user.get_full_name }}"
+                                required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" name="email" value="{{ user.email }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Phone Number</label>
+                            <input type="tel" class="form-control" name="phone_number"
+                                value="{{ user.profile.phone_number }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">WhatsApp Number</label>
+                            <input type="tel" class="form-control" name="whatsapp_number"
+                                value="{{ user.profile.whatsapp_number }}">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Bio</label>
+                            <textarea class="form-control" name="bio" rows="3">{{ user.profile.bio }}</textarea>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-gradient-primary">
+                                <i class="bi bi-check-circle me-2"></i>Save Changes
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Vehicle Information -->
+            <div class="settings-card">
+                <h4 class="section-title"><i class="bi bi-bicycle me-2"></i>Vehicle Information</h4>
+                <div class="alert alert-info mb-3">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>Note:</strong> Changes to vehicle information require admin approval.
+                </div>
+                <form method="post" action="{% url 'request_vehicle_change' %}" id="vehicleForm">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Vehicle Type</label>
+                            <select class="form-select" name="new_vehicle_type" required>
+                                <option value="">Select Type</option>
+                                <option value="MOTORBIKE" {% if user.rider_profile.vehicle_type == 'MOTORBIKE' %}selected{% endif %}>Motorbike</option>
+                                <option value="TUKTUK" {% if user.rider_profile.vehicle_type == 'TUKTUK' %}selected{% endif %}>TukTuk</option>
+                                <option value="PICKUP" {% if user.rider_profile.vehicle_type == 'PICKUP' %}selected{% endif %}>Pickup</option>
+                                <option value="LORRY" {% if user.rider_profile.vehicle_type == 'LORRY' %}selected{% endif %}>Lorry</option>
+                                <option value="BICYCLE" {% if user.rider_profile.vehicle_type == 'BICYCLE' %}selected{% endif %}>Bicycle</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Plate Number</label>
+                            <input type="text" class="form-control" name="new_vehicle_plate"
+                                value="{{ user.rider_profile.vehicle_plate_number }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">License Number</label>
+                            <input type="text" class="form-control" name="new_license_number"
+                                value="{{ user.rider_profile.license_number }}">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Reason for Change <span class="text-danger">*</span></label>
+                            <textarea class="form-control" name="reason" rows="3"
+                                placeholder="e.g., Bought a new vehicle, Changed plate number..." required></textarea>
+                            <small class="text-muted">Please provide a clear reason for this change request.</small>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-gradient-primary">
+                                <i class="bi bi-send me-2"></i>Submit Change Request
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Location Settings -->
+            <div class="settings-card">
+                <h4 class="section-title"><i class="bi bi-geo-alt me-2"></i>Location Settings</h4>
+                <form method="post" action="{% url 'update_location_settings' %}">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">County</label>
+                            <input type="text" class="form-control" name="county"
+                                value="{{ user.rider_profile.county }}" placeholder="e.g., Nairobi">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Constituency</label>
+                            <input type="text" class="form-control" name="constituency"
+                                value="{{ user.rider_profile.constituency }}" placeholder="e.g., Westlands">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Ward</label>
+                            <input type="text" class="form-control" name="ward" value="{{ user.rider_profile.ward }}"
+                                placeholder="e.g., Parklands">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Estate/Village</label>
+                            <input type="text" class="form-control" name="estate_village"
+                                value="{{ user.rider_profile.estate_village }}" placeholder="e.g., Highridge">
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-gradient-primary">
+                                <i class="bi bi-check-circle me-2"></i>Update Location
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Profile Photo -->
+            <div class="settings-card text-center">
+                <h5 class="fw-bold mb-3">Profile Photo</h5>
+                <img src="{{ user.profile.avatar.url }}" class="rounded-circle mb-3"
+                    style="width: 150px; height: 150px; object-fit: cover; border: 4px solid #667eea;"
+                    alt="{{ user.username }}">
+                <button class="btn btn-gradient-primary w-100" data-bs-toggle="modal" data-bs-target="#photoModal">
+                    <i class="bi bi-camera me-2"></i>Change Photo
+                </button>
+            </div>
+
+            <!-- Upload Documents -->
+            <div class="settings-card">
+                <h5 class="fw-bold mb-3"><i class="bi bi-file-earmark-arrow-up me-2"></i>Documents</h5>
+                <p class="text-muted small mb-3">Upload verification documents to get verified</p>
+                <a href="{% url 'rider_upload_documents' %}" class="btn btn-outline-primary w-100 rounded-pill">
+                    <i class="bi bi-upload me-2"></i>Upload Documents
+                </a>
+            </div>
+
+            <!-- Danger Zone -->
+            <div class="danger-zone" id="danger-zone">
+                <h5 class="fw-bold text-danger mb-3"><i class="bi bi-exclamation-triangle me-2"></i>Danger Zone</h5>
+                <p class="text-dark mb-3">Once you delete your account, there is no going back. Please be certain.</p>
+                <button class="btn btn-gradient-danger w-100" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                    <i class="bi bi-trash me-2"></i>Delete Account
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Photo Upload Modal -->
+<div class="modal fade" id="photoModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 20px;">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold">Change Profile Photo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="photoForm" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Choose Photo</label>
+                        <input type="file" class="form-control" id="photoInput" accept="image/*" required>
+                    </div>
+                    <div class="text-center">
+                        <img id="photoPreview" src="{{ user.profile.avatar.url }}" class="rounded-circle"
+                            style="width: 150px; height: 150px; object-fit: cover;">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-gradient-primary" onclick="uploadPhoto()">Upload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Account Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 20px;">
+            <div class="modal-header border-0 bg-danger text-white" style="border-radius: 20px 20px 0 0;">
+                <h5 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle me-2"></i>Delete Account</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="fw-bold">Are you absolutely sure?</p>
+                <p class="text-muted">This action cannot be undone. This will permanently delete your account and remove
+                    all your data from our servers.</p>
+                <form method="post" action="{% url 'delete_account' %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Type <strong>DELETE</strong> to confirm</label>
+                        <input type="text" class="form-control" id="confirmDelete" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-gradient-danger" onclick="confirmDelete()">Delete My
+                    Account</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Photo Preview
+    document.getElementById('photoInput').addEventListener('change', function (e) {
+        if (this.files && this.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                document.getElementById('photoPreview').src = e.target.result;
+            }
+            reader.readAsDataURL(this.files[0]);
+        }
+    });
+
+    // Upload Photo
+    function uploadPhoto() {
+        const input = document.getElementById('photoInput');
+        if (!input.files || !input.files[0]) {
+            alert('Please select a photo');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('avatar', input.files[0]);
+
+        fetch("{% url 'update_profile_photo' %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: formData
+        })
+            .then(response => {
+                const contentType = response.headers.get("content-type");
+                if (!response.ok) {
+                    return response.text().then(text => { throw new Error('Server Error (' + response.status + ')'); });
+                }
+                if (contentType && contentType.indexOf("application/json") !== -1) {
+                    return response.json();
+                } else {
+                    return response.text().then(text => { throw new Error('Invalid Response type (Expected JSON).'); });
+                }
+            })
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error(error);
+                alert('Upload failed: ' + error.message);
+            });
+    }
+
+    // Confirm Delete
+    function confirmDelete() {
+        const input = document.getElementById('confirmDelete').value;
+        if (input === 'DELETE') {
+            document.querySelector('#deleteModal form').submit();
+        } else {
+            alert('Please type DELETE to confirm');
+        }
+    }
+</script>
+{% endblock %}
