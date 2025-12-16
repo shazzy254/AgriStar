@@ -417,6 +417,9 @@
 {% endblock %}
 
 {% block content %}
+{% if request.user == profile_user %}
+{% include 'users/farmer_menu.html' %}
+{% endif %}
 <!-- Profile Header -->
 
 <!-- Premium Sidebar-style Profile Layout -->
@@ -442,16 +445,14 @@
 
                         <h2 class="fw-bold text-dark mb-1">{{ profile_user.username }}</h2>
                         <p class="text-muted d-flex align-items-center justify-content-center gap-2 mb-2">
-                            <span><i class="bi bi-geo-alt-fill text-success me-1"></i>{{
-                                profile_user.profile.location|default:"Location not set" }}</span>
+                            <span><i class="bi bi-geo-alt-fill text-success me-1"></i>{{ profile_user.profile.location|default:"Location not set" }}</span>
                         </p>
 
                         <!-- Farmer Rating -->
                         <div class="d-flex justify-content-center mb-4">
                             <div class="rating-display shadow-sm border"
                                 style="padding: 0.5rem 1rem; border-radius: 20px; background: white;">
-                                <span class="fw-bold fs-5 text-dark me-1">{{
-                                    farmer_badge.average_rating|default:"0.0"|floatformat:1 }}</span>
+                                <span class="fw-bold fs-5 text-dark me-1">{{ farmer_badge.average_rating|default:"0.0"|floatformat:1 }}</span>
                                 <i class="bi bi-star-fill text-warning"></i>
                             </div>
                         </div>
@@ -536,8 +537,7 @@
                                 </div>
                                 <div class="card-body p-4">
                                     <h5 class="card-title fw-bold text-dark mb-1">{{ product.name }}</h5>
-                                    <p class="text-muted small mb-3">{{ product.freshness_notes|default:"Fresh from the
-                                        farm."|truncatewords:10 }}</p>
+                                    <p class="text-muted small mb-3">{{ product.freshness_notes|default:"Fresh from the farm."|truncatewords:10 }}</p>
 
                                     <a href="{% url 'product_detail' product.id %}"
                                         class="btn btn-outline-success w-100 rounded-pill fw-bold stretched-link">View
@@ -600,8 +600,7 @@
                             <h4 class="fw-bold text-dark mb-4">About the Farmer</h4>
                             <div class="mb-4">
                                 <h6 class="text-uppercase text-muted small fw-bold mb-2">Biography</h6>
-                                <p class="text-dark lead" style="font-size: 1.1rem;">{{
-                                    profile_user.profile.bio|default:"No bio available yet." }}</p>
+                                <p class="text-dark lead" style="font-size: 1.1rem;">{{ profile_user.profile.bio|default:"No bio available yet." }}</p>
                             </div>
 
                             {% if profile_user.role == 'FARMER' %}
@@ -612,15 +611,13 @@
                                 <div class="col-md-6">
                                     <div class="p-3 bg-light rounded-3">
                                         <small class="text-muted d-block mb-1">Farm Size</small>
-                                        <span class="fw-bold text-dark fs-5">{{
-                                            profile_user.profile.farm_size|default:"Not specified" }}</span>
+                                        <span class="fw-bold text-dark fs-5">{{ profile_user.profile.farm_size|default:"Not specified" }}</span>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="p-3 bg-light rounded-3">
                                         <small class="text-muted d-block mb-1">Main Crops</small>
-                                        <span class="fw-bold text-dark fs-5">{{
-                                            profile_user.profile.main_crops|default:"Not specified" }}</span>
+                                        <span class="fw-bold text-dark fs-5">{{ profile_user.profile.main_crops|default:"Not specified" }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -662,8 +659,7 @@
                                 <div class="mb-4">
                                     <div class="d-flex justify-content-between small mb-2">
                                         <span>Sales Goal</span>
-                                        <span class="fw-bold">{{ farmer_badge.total_sales }} / {{ next_badge.sales
-                                            }}</span>
+                                        <span class="fw-bold">{{ farmer_badge.total_sales }} / {{ next_badge.sales }}</span>
                                     </div>
                                     <div class="progress" style="height: 10px; border-radius: 5px;">
                                         {% widthratio farmer_badge.total_sales next_badge.sales 100 as sales_percent %}
@@ -673,12 +669,10 @@
                                 <div class="mb-4">
                                     <div class="d-flex justify-content-between small mb-2">
                                         <span>Rating Goal</span>
-                                        <span class="fw-bold">{{ farmer_badge.average_rating|floatformat:1 }} / {{
-                                            next_badge.rating }}</span>
+                                        <span class="fw-bold">{{ farmer_badge.average_rating|floatformat:1 }} / {{ next_badge.rating }}</span>
                                     </div>
                                     <div class="progress" style="height: 10px; border-radius: 5px;">
-                                        {% widthratio farmer_badge.average_rating next_badge.rating 100 as
-                                        rating_percent %}
+                                        {% widthratio farmer_badge.average_rating next_badge.rating 100 as rating_percent %}
                                         <div class="progress-bar bg-warning" style="width: {{ rating_percent }}%;">
                                         </div>
                                     </div>
@@ -686,12 +680,10 @@
                                 <div class="mb-2">
                                     <div class="d-flex justify-content-between small mb-2">
                                         <span>Reviews Goal</span>
-                                        <span class="fw-bold">{{ farmer_badge.total_reviews }} / {{ next_badge.reviews
-                                            }}</span>
+                                        <span class="fw-bold">{{ farmer_badge.total_reviews }} / {{ next_badge.reviews }}</span>
                                     </div>
                                     <div class="progress" style="height: 10px; border-radius: 5px;">
-                                        {% widthratio farmer_badge.total_reviews next_badge.reviews 100 as
-                                        reviews_percent %}
+                                        {% widthratio farmer_badge.total_reviews next_badge.reviews 100 as reviews_percent %}
                                         <div class="progress-bar bg-info" style="width: {{ reviews_percent }}%;"></div>
                                     </div>
                                 </div>
