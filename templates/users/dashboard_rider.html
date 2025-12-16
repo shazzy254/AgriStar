@@ -224,11 +224,9 @@
                 <p class="mb-0 opacity-90 fs-5">Ready to make deliveries today?</p>
             </div>
             <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
-                <div class="availability-toggle" {% if rider_profile.verification_status !='VERIFIED'
-                    %}style="opacity: 0.6; cursor: not-allowed;" title="Verification Required" {% endif %}>
+                <div class="availability-toggle" {% if rider_profile.verification_status != 'VERIFIED' %}style="opacity: 0.6; cursor: not-allowed;" title="Verification Required" {% endif %}>
                     <label class="switch mb-0">
-                        <input type="checkbox" id="availabilityToggle" {% if rider_profile.is_available %}checked{%
-                            endif %} {% if rider_profile.verification_status !='VERIFIED' %}disabled{% endif %}>
+                        <input type="checkbox" id="availabilityToggle" {% if rider_profile.is_available %}checked{% endif %} {% if rider_profile.verification_status != 'VERIFIED' %}disabled{% endif %}>
                         <span class="slider"></span>
                     </label>
                     <span class="fw-bold" id="statusText">
