@@ -112,17 +112,24 @@ def dashboard(request):
     user = request.user
     if user.role == User.Role.FARMER:
         # Get orders for products owned by this farmer
-        from marketplace.models import Order
+        from marketplace.models import Order, Product
         from django.db.models import Sum
+        
+        # Stats
         orders_count = Order.objects.filter(product__seller=user).count()
+        active_products_count = Product.objects.filter(seller=user, available=True).count()
+        
+        # Order Lists
         pending_orders = Order.objects.filter(product__seller=user, status='PENDING').order_by('-created_at')
-        accepted_orders = Order.objects.filter(product__seller=user, status__in=['ACCEPTED', 'ESCROW', 'PAID_OUT', 'COMPLETED']).order_by('-created_at')
+        accepted_statuses = ['ACCEPTED', 'ESCROW', 'IN_DELIVERY', 'DELIVERED', 'PAID_OUT', 'COMPLETED']
+        accepted_orders = Order.objects.filter(product__seller=user, status__in=accepted_statuses).order_by('-created_at')
         
         # Calculate earnings
         total_earnings = Order.objects.filter(product__seller=user, status='PAID_OUT').aggregate(Sum('total_price'))['total_price__sum'] or 0
         
         context = {
             'orders_count': orders_count,
+            'active_products_count': active_products_count,
             'pending_orders': pending_orders,
             'accepted_orders': accepted_orders,
             'total_earnings': total_earnings,
@@ -461,22 +468,10 @@ def add_rider_review(request, rider_id):
 
 @login_required
 def profile(request):
-    """Display user profile with posts and products"""
-    user = request.user
-    posts = user.posts.all()
-    products = user.products.all()
-    
-    # If rider, route to public_profile view with is_own_profile flag
-    if user.role == 'RIDER':
-        return public_profile(request, user.id)
-    
-    context = {
-        'user': user,
-        'posts': posts,
-        'products': products,
-        'is_own_profile': True
-    }
-    return render(request, 'users/profile_display.html', context)
+    """Display user profile"""
+    # Delegate to the comprehensive public_profile view which handles all roles (Rider, Farmer, Buyer)
+    # and properly loads context like badges, reviews, and stats.
+    return public_profile(request, request.user.id)
 
 @login_required
 def edit_profile(request):
@@ -541,8 +536,23 @@ def public_profile(request, user_id):
     is_own_profile = request.user.is_authenticated and request.user.id == user_id
     
     # Get reviews
-    reviews = Review.objects.filter(reviewed_user=profile_user).order_by('-created_at')
-    avg_rating = reviews.aggregate(Avg('rating'))['rating__avg']
+    # Get reviews based on role
+    if profile_user.role == User.Role.FARMER:
+        from .review_models import FarmerReview
+        raw_reviews = FarmerReview.objects.filter(farmer=profile_user).select_related('buyer', 'buyer__profile').order_by('-created_at')
+        # Calculate avg rating before list conversion
+        avg_rating = raw_reviews.aggregate(Avg('rating'))['rating__avg']
+        
+        # Adapt fields for generic template (profile_display.html expects reviewer and comment)
+        reviews = []
+        for r in raw_reviews:
+            r.reviewer = r.buyer
+            r.comment = r.review_text
+            reviews.append(r)
+    else:
+        reviews = Review.objects.filter(reviewed_user=profile_user).order_by('-created_at')
+        avg_rating = reviews.aggregate(Avg('rating'))['rating__avg']
+
     if avg_rating:
         avg_rating = round(avg_rating, 1)
     
@@ -556,7 +566,7 @@ def public_profile(request, user_id):
         'is_own_profile': is_own_profile,
         'reviews': reviews,
         'avg_rating': avg_rating,
-        'review_count': reviews.count(),
+        'review_count': len(reviews),
         'is_favorited': is_favorited,
     }
 
@@ -592,6 +602,38 @@ def public_profile(request, user_id):
     # For other roles (Farmer/Supplier), use default profile display
     products = Product.objects.filter(seller=profile_user, available=True)
     context['products'] = products
+    
+    # Add farmer badge data if user is a farmer
+    if profile_user.role == 'FARMER':
+        from .review_models import FarmerBadge
+        farmer_badge, created = FarmerBadge.objects.get_or_create(farmer=profile_user)
+        if not created:
+            farmer_badge.update_badge_level()
+        
+        # Define badge requirements for progress tracking
+        badge_tiers = {
+            'BEGINNER': {'name': 'Beginner', 'icon': '🌱', 'sales': 0, 'rating': 0.0, 'reviews': 0},
+            'BRONZE': {'name': 'Bronze', 'icon': '🥉', 'sales': 25, 'rating': 3.0, 'reviews': 5},
+            'SILVER': {'name': 'Silver', 'icon': '🥈', 'sales': 100, 'rating': 3.5, 'reviews': 15},
+            'GOLD': {'name': 'Gold', 'icon': '🥇', 'sales': 250, 'rating': 4.0, 'reviews': 50},
+            'PLATINUM': {'name': 'Platinum', 'icon': '💎', 'sales': 500, 'rating': 4.5, 'reviews': 100},
+            'DIAMOND': {'name': 'Diamond', 'icon': '💠', 'sales': 1000, 'rating': 4.8, 'reviews': 200},
+        }
+        
+        # Determine next badge level
+        tier_order = ['BEGINNER', 'BRONZE', 'SILVER', 'GOLD', 'PLATINUM', 'DIAMOND']
+        current_index = tier_order.index(farmer_badge.badge_level)
+        next_badge = None
+        if current_index < len(tier_order) - 1:
+            next_badge_level = tier_order[current_index + 1]
+            next_badge = badge_tiers[next_badge_level]
+        
+        context.update({
+            'farmer_badge': farmer_badge,
+            'badge_tiers': badge_tiers,
+            'next_badge': next_badge,
+        })
+    
     return render(request, 'users/profile_display.html', context)
 
 @login_required

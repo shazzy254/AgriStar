@@ -213,6 +213,15 @@
             <i class="bi bi-bookmark-fill"></i>
             <span>Saved Posts</span>
         </a>
+
+        <form action="{% url 'logout' %}" method="post" id="farmer-logout-form" style="display: none;">
+            {% csrf_token %}
+        </form>
+        <a href="#" onclick="event.preventDefault(); document.getElementById('farmer-logout-form').submit();"
+            class="farmer-menu-link">
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Logout</span>
+        </a>
     </div>
 </div>
 

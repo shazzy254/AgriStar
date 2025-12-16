@@ -50,3 +50,5 @@ Thumbs.db
 
 # Custom
 dev_scripts/
+.agent/
+mpesa_debug.log

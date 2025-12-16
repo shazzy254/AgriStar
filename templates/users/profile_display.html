@@ -1,148 +1,836 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Profile - AgriStar{% endblock %}
+{% block title %}My Profile - AgriStar{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --light-green-1: #d4f1dd;
+        --light-green-2: #a7e9af;
+        --light-green-3: #7dd87f;
+        --light-green-4: #4ade80;
+        --green-accent: #22c55e;
+    }
+
+    body {
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 30%, #f0fdf4 70%, #dcfce7 100%);
+        min-height: 100vh;
+    }
+
+    /* Premium Header with Glassmorphism */
+    .profile-header {
+        background: linear-gradient(135deg, var(--light-green-1) 0%, var(--light-green-2) 50%, var(--light-green-3) 100%);
+        color: #166534;
+        padding: 4rem 0 3rem;
+        margin-bottom: 3rem;
+        border-radius: 0 0 40px 40px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 10px 40px rgba(125, 216, 127, 0.2);
+    }
+
+    .profile-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 500px;
+        height: 500px;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, transparent 70%);
+        border-radius: 50%;
+    }
+
+    .profile-header::after {
+        content: '';
+        position: absolute;
+        bottom: -30%;
+        left: -5%;
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+        border-radius: 50%;
+    }
+
+    .profile-avatar-container {
+        position: relative;
+        display: inline-block;
+        z-index: 2;
+    }
+
+    .profile-avatar {
+        width: 160px;
+        height: 160px;
+        border: 6px solid rgba(255, 255, 255, 0.9);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15), 0 5px 15px rgba(0, 0, 0, 0.1);
+        border-radius: 50%;
+        object-fit: cover;
+        background: white;
+    }
+
+    .avatar-edit-btn {
+        position: absolute;
+        bottom: 8px;
+        right: 8px;
+        background: linear-gradient(135deg, var(--light-green-3), var(--light-green-4));
+        border: 3px solid white;
+        border-radius: 50%;
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+        color: white;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .avatar-edit-btn:hover {
+        transform: scale(1.15);
+        box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+    }
+
+    .badge-display {
+        display: inline-block;
+        padding: 0.75rem 2rem;
+        border-radius: 50px;
+        font-weight: 700;
+        margin-top: 1rem;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        color: var(--green-accent);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        border: 2px solid rgba(255, 255, 255, 0.5);
+    }
+
+    /* Glass Stat Cards */
+    .stat-card {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 24px;
+        padding: 2rem 1.5rem;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--light-green-2), var(--light-green-3), var(--light-green-4));
+        transform: scaleX(0);
+        transition: transform 0.4s ease;
+    }
+
+    .stat-card:hover::before {
+        transform: scaleX(1);
+    }
+
+    .stat-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 45px rgba(125, 216, 127, 0.15), 0 5px 15px rgba(0, 0, 0, 0.08);
+        border-color: var(--light-green-2);
+    }
+
+    .stat-number {
+        font-size: 3rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--light-green-3), var(--green-accent));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        color: #6b7280;
+        font-weight: 600;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Glass Product Cards */
+    .product-card {
+        border: none;
+        border-radius: 20px;
+        overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(15px);
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.8);
+    }
+
+    .product-card:hover {
+        transform: translateY(-12px) scale(1.02);
+        box-shadow: 0 20px 50px rgba(125, 216, 127, 0.2), 0 8px 20px rgba(0, 0, 0, 0.1);
+        border-color: var(--light-green-2);
+    }
+
+    .product-image {
+        height: 220px;
+        object-fit: cover;
+        width: 100%;
+        transition: transform 0.4s ease;
+    }
+
+    .product-card:hover .product-image {
+        transform: scale(1.1);
+    }
+
+    /* Premium Tabs */
+    .nav-pills .nav-link {
+        border-radius: 50px;
+        padding: 0.85rem 2.5rem;
+        font-weight: 700;
+        transition: all 0.3s ease;
+        color: #6b7280;
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        border: 2px solid transparent;
+        margin-right: 0.75rem;
+    }
+
+    .nav-pills .nav-link:hover {
+        background: rgba(255, 255, 255, 0.9);
+        color: var(--green-accent);
+        border-color: var(--light-green-2);
+    }
+
+    .nav-pills .nav-link.active {
+        background: linear-gradient(135deg, var(--light-green-2), var(--light-green-3));
+        color: white;
+        box-shadow: 0 6px 20px rgba(125, 216, 127, 0.3);
+        border-color: transparent;
+    }
+
+    /* Premium Action Buttons */
+    .action-btn {
+        border-radius: 50px;
+        padding: 0.75rem 2rem;
+        font-weight: 700;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 2px solid rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(10px);
+    }
+
+    .action-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn-light.action-btn {
+        background: rgba(255, 255, 255, 0.95);
+        color: var(--green-accent);
+    }
+
+    .btn-outline-light.action-btn {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        border-color: rgba(255, 255, 255, 0.6);
+    }
+
+    .btn-outline-light.action-btn:hover {
+        background: rgba(255, 255, 255, 0.95);
+        color: var(--green-accent);
+        border-color: white;
+    }
+
+    /* Glass Sidebar Card */
+    .sidebar-card {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(20px);
+        border-radius: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .sidebar-card h5 {
+        color: #166534;
+        font-weight: 800;
+        margin-bottom: 1.25rem;
+        font-size: 1.1rem;
+    }
+
+    /* Review Cards */
+    .review-card {
+        background: rgba(248, 250, 252, 0.9);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 1.75rem;
+        margin-bottom: 1.25rem;
+        border: 1px solid rgba(255, 255, 255, 0.6);
+        transition: all 0.3s ease;
+    }
+
+    .review-card:hover {
+        background: rgba(255, 255, 255, 0.95);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+        transform: translateX(5px);
+    }
+
+    /* Premium Add Button */
+    .btn-add-product {
+        background: linear-gradient(135deg, var(--light-green-3), var(--light-green-4));
+        color: white;
+        border: none;
+        border-radius: 50px;
+        padding: 0.85rem 2.5rem;
+        font-weight: 700;
+        box-shadow: 0 6px 20px rgba(125, 216, 127, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .btn-add-product:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(125, 216, 127, 0.4);
+        background: linear-gradient(135deg, var(--light-green-4), var(--green-accent));
+    }
+
+    /* Empty State */
+    .empty-state {
+        padding: 5rem 2rem;
+        text-align: center;
+    }
+
+    .empty-state i {
+        font-size: 5rem;
+        color: var(--light-green-2);
+        margin-bottom: 1.5rem;
+    }
+
+    .empty-state p {
+        color: #6b7280;
+        font-size: 1.1rem;
+    }
+
+    /* Modal Enhancements */
+    .modal-content {
+        border-radius: 24px;
+        border: none;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        background: rgba(255, 255, 255, 0.98);
+        backdrop-filter: blur(20px);
+    }
+
+    .modal-header {
+        border-bottom: 2px solid var(--light-green-1);
+        border-radius: 24px 24px 0 0;
+        padding: 1.75rem 2rem;
+    }
+
+    .modal-title {
+        color: #166534;
+        font-weight: 800;
+    }
+
+    /* Form Inputs in Modal */
+    .modal-body .form-control {
+        border-radius: 12px;
+        border: 2px solid #e5e7eb;
+        padding: 0.85rem 1.25rem;
+        transition: all 0.3s ease;
+    }
+
+    .modal-body .form-control:focus {
+        border-color: var(--light-green-3);
+        box-shadow: 0 0 0 4px rgba(125, 216, 127, 0.1);
+    }
+
+    /* Product Card Actions */
+    .product-card .btn-sm {
+        border-radius: 12px;
+        font-weight: 600;
+        padding: 0.5rem 0.75rem;
+        transition: all 0.2s ease;
+    }
+
+    .product-card .btn-outline-warning:hover {
+        background: #fbbf24;
+        border-color: #fbbf24;
+        color: white;
+        transform: scale(1.05);
+    }
+
+    .product-card .btn-outline-danger:hover {
+        background: #ef4444;
+        border-color: #ef4444;
+        color: white;
+        transform: scale(1.05);
+    }
+
+    .product-card .btn-outline-success:hover {
+        background: var(--green-accent);
+        border-color: var(--green-accent);
+        color: white;
+        transform: scale(1.05);
+    }
+
+    /* Rating Stars */
+    .rating-display {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(255, 255, 255, 0.9);
+        padding: 0.5rem 1.25rem;
+        border-radius: 50px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .rating-display .bi-star-fill {
+        color: #fbbf24;
+        font-size: 1.25rem;
+    }
+
+    @media (max-width: 768px) {
+        .profile-header {
+            padding: 3rem 0 2rem;
+        }
+
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+        }
+
+        .stat-number {
+            font-size: 2.25rem;
+        }
+
+        .nav-pills .nav-link {
+            padding: 0.65rem 1.5rem;
+            font-size: 0.9rem;
+        }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-{% if user.role == 'FARMER' %}
-{% include 'users/farmer_menu.html' %}
-{% endif %}
+<!-- Profile Header -->
 
-<div class="row">
-    <!-- User Info Sidebar -->
-    <div class="col-md-4 mb-4">
-        <div class="card shadow border-0">
-            <div class="card-body text-center">
-                <div class="position-relative d-inline-block mb-3">
-                    <img src="{{ user.profile.avatar.url }}" class="rounded-circle img-thumbnail"
-                        style="width: 150px; height: 150px; object-fit: cover;">
-                </div>
-                <h4>{{ user.username }}</h4>
-                <p class="text-muted">{{ user.get_role_display }}</p>
-                <p class="small">{{ user.email }}</p>
-
-                {% if is_own_profile %}
-                <div class="dropdown mt-3">
-                    <button class="btn btn-outline-primary w-100 dropdown-toggle" type="button" id="settingsDropdown"
-                        data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-gear me-2"></i>Settings
-                    </button>
-                    <ul class="dropdown-menu w-100" aria-labelledby="settingsDropdown">
-                        <li>
-                            <a class="dropdown-item" href="{% url 'edit_profile' %}">
-                                <i class="bi bi-pencil me-2"></i>Edit Profile
-                            </a>
-                        </li>
-                        <li>
-                            <hr class="dropdown-divider">
-                        </li>
-                        <li>
-                            <a class="dropdown-item text-danger" href="#" data-bs-toggle="modal"
-                                data-bs-target="#deleteAccountModal">
-                                <i class="bi bi-trash me-2"></i>Delete Account
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-
-        <!-- Contact Info -->
-        <div class="card shadow border-0 mt-4">
-            <div class="card-header bg-white border-0">
-                <h5 class="mb-0">Contact Info</h5>
-            </div>
-            <div class="card-body">
-                <p><i class="bi bi-telephone me-2"></i> {{ user.profile.phone_number|default:"Not provided" }}</p>
-                <p><i class="bi bi-whatsapp me-2"></i> {{ user.profile.whatsapp_number|default:"Not provided" }}</p>
-                <p><i class="bi bi-geo-alt me-2"></i> {{ user.profile.location|default:"Not provided" }}</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Main Content -->
-    <div class="col-md-8">
-        <!-- Products Section (for Farmers/Suppliers) -->
-        {% if user.role == 'FARMER' or user.role == 'SUPPLIER' %}
-        <div class="card shadow border-0 mb-4">
-            <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Products</h5>
-                {% if is_own_profile %}
-                <a href="{% url 'create_product' %}" class="btn btn-sm btn-success">
-                    <i class="bi bi-plus-lg"></i> Add Product
-                </a>
-                {% endif %}
-            </div>
-            <div class="card-body">
-                {% if products %}
-                <div class="row g-3">
-                    {% for product in products %}
-                    <div class="col-md-6">
-                        <div class="card h-100 border-0 shadow-sm">
-                            {% if product.image %}
-                            <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}"
-                                style="height: 150px; object-fit: cover;">
+<!-- Premium Sidebar-style Profile Layout -->
+<div class="container mt-5 mb-5 pt-2">
+    <div class="row g-4">
+        <!-- LEFT COLUMN: Profile Identity (Sticky) -->
+        <div class="col-lg-4">
+            <div class="sticky-top" style="top: 2rem; z-index: 10;">
+                <div class="card border-0 shadow-lg text-center"
+                    style="background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(20px); border-radius: 30px; overflow: hidden; border: 1px solid rgba(255,255,255,0.5);">
+                    <div class="card-body p-5">
+                        <div class="d-inline-block mb-3 position-relative">
+                            <img src="{{ profile_user.profile.avatar.url }}" class="rounded-circle shadow-sm"
+                                width="160" height="160" style="object-fit: cover; border: 6px solid white;">
+                            {% if request.user == profile_user %}
+                            <button class="position-absolute bottom-0 end-0 btn btn-success rounded-circle shadow-sm"
+                                style="width: 45px; height: 45px; border: 4px solid white; display: flex; align-items: center; justify-content: center;"
+                                data-bs-toggle="modal" data-bs-target="#changePhotoModal">
+                                <i class="bi bi-camera-fill"></i>
+                            </button>
                             {% endif %}
-                            <div class="card-body">
-                                <h6 class="card-title">{{ product.name }}</h6>
-                                <p class="card-text text-success fw-bold">Ksh {{ product.price }} / {{ product.unit }}
-                                </p>
-                                <a href="{% url 'product_detail' product.id %}"
-                                    class="btn btn-sm btn-outline-primary stretched-link">View</a>
+                        </div>
+
+                        <h2 class="fw-bold text-dark mb-1">{{ profile_user.username }}</h2>
+                        <p class="text-muted d-flex align-items-center justify-content-center gap-2 mb-2">
+                            <span><i class="bi bi-geo-alt-fill text-success me-1"></i>{{
+                                profile_user.profile.location|default:"Location not set" }}</span>
+                        </p>
+
+                        <!-- Farmer Rating -->
+                        <div class="d-flex justify-content-center mb-4">
+                            <div class="rating-display shadow-sm border"
+                                style="padding: 0.5rem 1rem; border-radius: 20px; background: white;">
+                                <span class="fw-bold fs-5 text-dark me-1">{{
+                                    farmer_badge.average_rating|default:"0.0"|floatformat:1 }}</span>
+                                <i class="bi bi-star-fill text-warning"></i>
                             </div>
+                        </div>
+
+                        {% if request.user == profile_user %}
+                        <div class="d-grid gap-3">
+                            <button class="btn btn-outline-dark rounded-pill fw-bold py-2" data-bs-toggle="modal"
+                                data-bs-target="#settingsModal">
+                                <i class="bi bi-gear-fill me-2"></i>Settings
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: Navigation & Content -->
+        <div class="col-lg-8">
+            <!-- Navigation Buttons (As Horizontal Grid) -->
+            <ul class="nav nav-pills row g-3 mb-4" role="tablist" style="border:none;">
+                <li class="col-md-3 col-6 nav-item">
+                    <button class="nav-link active w-100 p-3 h-100 rounded-4 shadow-sm fw-bold border"
+                        data-bs-toggle="pill" data-bs-target="#products" style="background:white; color:#166534;">
+                        <i class="bi bi-grid-fill d-block fs-4 mb-1"></i>Products
+                    </button>
+                </li>
+                <li class="col-md-3 col-6 nav-item">
+                    <button class="nav-link w-100 p-3 h-100 rounded-4 shadow-sm fw-bold border" data-bs-toggle="pill"
+                        data-bs-target="#reviews" style="background:white; color:#166534;">
+                        <i class="bi bi-star-fill d-block fs-4 mb-1"></i>Reviews
+                    </button>
+                </li>
+                <li class="col-md-3 col-6 nav-item">
+                    <button class="nav-link w-100 p-3 h-100 rounded-4 shadow-sm fw-bold border" data-bs-toggle="pill"
+                        data-bs-target="#about" style="background:white; color:#166534;">
+                        <i class="bi bi-person-lines-fill d-block fs-4 mb-1"></i>About
+                    </button>
+                </li>
+                <li class="col-md-3 col-6 nav-item">
+                    <button class="nav-link w-100 p-3 h-100 rounded-4 shadow-sm fw-bold border" data-bs-toggle="pill"
+                        data-bs-target="#badge" style="background:white; color:#166534;">
+                        <i class="bi bi-trophy-fill d-block fs-4 mb-1"></i>Badge
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Tab Content Area -->
+            <div class="tab-content">
+                <!-- Products Tab -->
+                <div class="tab-pane fade show active" id="products">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="fw-bold text-dark mb-0">My Products</h4>
+                        {% if request.user == profile_user %}
+                        <a href="{% url 'create_product' %}" class="btn btn-success rounded-pill fw-bold shadow-sm"
+                            style="background: linear-gradient(135deg, #22c55e, #15803d); border:none;">
+                            <i class="bi bi-plus-lg me-2"></i>Add New
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% if products %}
+                    <div class="row g-4">
+                        {% for product in products %}
+                        <div class="col-md-6">
+                            <div class="card h-100 border-0 shadow-sm product-hover-card"
+                                style="border-radius: 20px; overflow: hidden; background: white; transition: transform 0.3s ease, box-shadow 0.3s ease;">
+                                <div class="position-relative">
+                                    {% if product.image %}
+                                    <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}"
+                                        style="height: 220px; object-fit: cover;">
+                                    {% else %}
+                                    <div class="bg-light d-flex align-items-center justify-content-center"
+                                        style="height: 220px;">
+                                        <i class="bi bi-image text-muted fs-1"></i>
+                                    </div>
+                                    {% endif %}
+                                    <div class="position-absolute top-0 end-0 m-3 px-3 py-1 rounded-pill shadow-sm"
+                                        style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(4px);">
+                                        <span class="fw-bold text-success">KSh {{ product.price }}</span>
+                                        <span class="text-muted small">/ {{ product.unit }}</span>
+                                    </div>
+                                </div>
+                                <div class="card-body p-4">
+                                    <h5 class="card-title fw-bold text-dark mb-1">{{ product.name }}</h5>
+                                    <p class="text-muted small mb-3">{{ product.freshness_notes|default:"Fresh from the
+                                        farm."|truncatewords:10 }}</p>
+
+                                    <a href="{% url 'product_detail' product.id %}"
+                                        class="btn btn-outline-success w-100 rounded-pill fw-bold stretched-link">View
+                                        Details</a>
+
+
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty-state bg-white rounded-4 shadow-sm p-5 text-center">
+                        <i class="bi bi-inbox fs-1 text-muted mb-3 d-block"></i>
+                        <p class="fw-semibold text-muted">No products listed yet</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Reviews Tab -->
+                <div class="tab-pane fade" id="reviews">
+                    <h4 class="fw-bold text-dark mb-4">Customer Reviews</h4>
+                    {% if reviews %}
+                    {% for review in reviews %}
+                    <div class="card border-0 shadow-sm mb-3">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <img src="{{ review.reviewer.profile.avatar.url }}" class="rounded-circle me-3"
+                                    width="50" height="50" style="object-fit: cover;">
+                                <div>
+                                    <h6 class="mb-0 fw-bold text-dark">{{ review.reviewer.username }}</h6>
+                                    <div class="text-warning small">
+                                        {% for i in "12345" %}
+                                        {% if forloop.counter <= review.rating %} <i class="bi bi-star-fill">
+                                            </i>
+                                            {% else %}
+                                            <i class="bi bi-star text-muted opacity-25"></i>
+                                            {% endif %}
+                                            {% endfor %}
+                                    </div>
+                                </div>
+                                <small class="text-muted ms-auto">{{ review.created_at|timesince }} ago</small>
+                            </div>
+                            <p class="mb-0 text-muted" style="line-height: 1.6;">{{ review.comment }}</p>
                         </div>
                     </div>
                     {% endfor %}
+                    {% else %}
+                    <div class="empty-state bg-white rounded-4 shadow-sm p-5 text-center">
+                        <i class="bi bi-chat-quote"></i>
+                        <p class="text-muted">No reviews yet.</p>
+                    </div>
+                    {% endif %}
                 </div>
-                {% else %}
-                <p class="text-muted">No products listed yet.</p>
-                {% endif %}
+
+                <!-- About Tab -->
+                <div class="tab-pane fade" id="about">
+                    <div class="card border-0 shadow-sm rounded-4 mb-4">
+                        <div class="card-body p-5">
+                            <h4 class="fw-bold text-dark mb-4">About the Farmer</h4>
+                            <div class="mb-4">
+                                <h6 class="text-uppercase text-muted small fw-bold mb-2">Biography</h6>
+                                <p class="text-dark lead" style="font-size: 1.1rem;">{{
+                                    profile_user.profile.bio|default:"No bio available yet." }}</p>
+                            </div>
+
+                            {% if profile_user.role == 'FARMER' %}
+                            <hr class="my-4">
+                            <h6 class="text-uppercase text-success small fw-bold mb-3"><i
+                                    class="bi bi-flower1 me-2"></i>Farm Details</h6>
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <div class="p-3 bg-light rounded-3">
+                                        <small class="text-muted d-block mb-1">Farm Size</small>
+                                        <span class="fw-bold text-dark fs-5">{{
+                                            profile_user.profile.farm_size|default:"Not specified" }}</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="p-3 bg-light rounded-3">
+                                        <small class="text-muted d-block mb-1">Main Crops</small>
+                                        <span class="fw-bold text-dark fs-5">{{
+                                            profile_user.profile.main_crops|default:"Not specified" }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Badge Tab -->
+                <div class="tab-pane fade" id="badge">
+                    <div class="card border-0 shadow-sm rounded-4">
+                        <div class="card-body p-5">
+                            {% if farmer_badge %}
+                            <div class="text-center mb-5">
+                                <span style="font-size: 5rem;">{{ farmer_badge.get_badge_icon }}</span>
+                                <h2 class="fw-bold text-success mt-2">{{ farmer_badge.get_badge_level_display }}</h2>
+                                <p class="text-muted">Current Verification Status</p>
+                            </div>
+
+                            <div class="row g-3 mb-5">
+                                <div class="col-4 text-center">
+                                    <h3 class="fw-bold text-dark mb-0">{{ farmer_badge.total_sales }}</h3>
+                                    <small class="text-muted">Total Sales</small>
+                                </div>
+                                <div class="col-4 text-center border-start border-end">
+                                    <h3 class="fw-bold text-dark mb-0">{{ farmer_badge.average_rating|floatformat:1 }}
+                                    </h3>
+                                    <small class="text-muted">Avg Rating</small>
+                                </div>
+                                <div class="col-4 text-center">
+                                    <h3 class="fw-bold text-dark mb-0">{{ farmer_badge.total_reviews }}</h3>
+                                    <small class="text-muted">Reviewers</small>
+                                </div>
+                            </div>
+
+                            {% if next_badge %}
+                            <div class="bg-light p-4 rounded-4">
+                                <h6 class="fw-bold mb-3">Next Milestone: {{ next_badge.name }}</h6>
+                                <div class="mb-4">
+                                    <div class="d-flex justify-content-between small mb-2">
+                                        <span>Sales Goal</span>
+                                        <span class="fw-bold">{{ farmer_badge.total_sales }} / {{ next_badge.sales
+                                            }}</span>
+                                    </div>
+                                    <div class="progress" style="height: 10px; border-radius: 5px;">
+                                        {% widthratio farmer_badge.total_sales next_badge.sales 100 as sales_percent %}
+                                        <div class="progress-bar bg-success" style="width: {{ sales_percent }}%;"></div>
+                                    </div>
+                                </div>
+                                <div class="mb-4">
+                                    <div class="d-flex justify-content-between small mb-2">
+                                        <span>Rating Goal</span>
+                                        <span class="fw-bold">{{ farmer_badge.average_rating|floatformat:1 }} / {{
+                                            next_badge.rating }}</span>
+                                    </div>
+                                    <div class="progress" style="height: 10px; border-radius: 5px;">
+                                        {% widthratio farmer_badge.average_rating next_badge.rating 100 as
+                                        rating_percent %}
+                                        <div class="progress-bar bg-warning" style="width: {{ rating_percent }}%;">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mb-2">
+                                    <div class="d-flex justify-content-between small mb-2">
+                                        <span>Reviews Goal</span>
+                                        <span class="fw-bold">{{ farmer_badge.total_reviews }} / {{ next_badge.reviews
+                                            }}</span>
+                                    </div>
+                                    <div class="progress" style="height: 10px; border-radius: 5px;">
+                                        {% widthratio farmer_badge.total_reviews next_badge.reviews 100 as
+                                        reviews_percent %}
+                                        <div class="progress-bar bg-info" style="width: {{ reviews_percent }}%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {% if request.user == profile_user and badge_tiers %}
+                            <div class="mt-5 pt-4 border-top">
+                                <h5 class="fw-bold mb-3 text-dark">How to Earn Badges</h5>
+                                <div class="table-responsive rounded-3 border">
+                                    <table class="table table-hover mb-0 text-center align-middle">
+                                        <thead class="bg-light text-muted small text-uppercase">
+                                            <tr>
+                                                <th class="py-3">Level</th>
+                                                <th class="py-3">Sales</th>
+                                                <th class="py-3">Avg Rating</th>
+                                                <th class="py-3">Reviewers</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for level, criteria in badge_tiers.items %}
+                                            <tr
+                                                class="{% if farmer_badge.badge_level == level %}bg-success-subtle fw-bold border-start border-success border-4{% endif %}">
+                                                <td class="py-3 text-start ps-4">{{ criteria.icon }} {{ criteria.name }}
+                                                </td>
+                                                <td class="py-3">{{ criteria.sales }}+</td>
+                                                <td class="py-3">{{ criteria.rating }}+</td>
+                                                <td class="py-3">{{ criteria.reviews }}+</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <p class="text-muted small mt-3"><i
+                                        class="bi bi-info-circle-fill text-primary me-2"></i>You must meet
+                                    <strong>all</strong> criteria to unlock a badge level.
+                                </p>
+                            </div>
+                            {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-        {% endif %}
-
     </div>
 </div>
 
-<!-- Delete Account Confirmation Modal -->
-<div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel"
-    aria-hidden="true">
+
+
+<!-- Settings Modal -->
+<div class="modal fade" id="settingsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-gear-fill me-2"></i>Settings</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-grid gap-3">
+                    <a href="{% url 'edit_profile' %}" class="btn btn-outline-primary btn-lg text-start shadow-sm p-3">
+                        <i class="bi bi-person-circle me-3 fs-5"></i><span class="fs-5">Edit Profile</span>
+                    </a>
+                    <button class="btn btn-outline-danger btn-lg text-start shadow-sm p-3" data-bs-toggle="modal"
+                        data-bs-target="#deleteConfirmationModal">
+                        <i class="bi bi-trash-fill me-3 fs-5"></i><span class="fs-5">Delete Account</span>
+                    </button>
+                    <button class="btn btn-light text-start p-3" data-bs-dismiss="modal">
+                        <i class="bi bi-x-lg me-3 fs-5"></i><span class="fs-5 text-muted">Cancel</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Change Photo Modal -->
+<div class="modal fade" id="changePhotoModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-camera-fill me-2"></i>Change Profile Photo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" action="{% url 'update_profile_photo' %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Choose New Photo</label>
+                        <input type="file" name="avatar" class="form-control" accept="image/*" required>
+                    </div>
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-success action-btn">
+                            <i class="bi bi-cloud-upload-fill me-2"></i>Upload Photo
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <!-- Change Photo Modal (Closing Divs) -->
+        </div>
+    </div>
+</div>
+
+
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmationModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title" id="deleteAccountModalLabel">
-                    <i class="bi bi-exclamation-triangle me-2"></i>Delete Account
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle-fill me-2"></i>Confirm Deletion
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                    aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="alert alert-warning">
-                    <i class="bi bi-exclamation-circle me-2"></i>
-                    <strong>Warning:</strong> This action cannot be undone!
-                </div>
-                <p class="mb-3">Are you sure you want to delete your account? This will permanently remove:</p>
-                <ul>
-                    <li>Your profile information</li>
-                    <li>All your products and listings</li>
-                    <li>Your order history</li>
-                    <li>All associated data</li>
-                </ul>
-                <p class="text-danger fw-bold">Do you want to continue?</p>
+                <p class="mb-0">Are you absolutely sure you want to delete your account? This action cannot
+                    be
+                    undone.
+                </p>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="bi bi-x-circle me-2"></i>No, Cancel
-                </button>
-                <form method="POST" action="{% url 'delete_account' %}" class="d-inline">
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary action-btn" data-bs-dismiss="modal">Cancel</button>
+                <form action="{% url 'delete_account' %}" method="POST" class="d-inline">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">
-                        <i class="bi bi-trash me-2"></i>Yes, Delete My Account
-                    </button>
+                    <button type="submit" class="btn btn-danger action-btn">Yes, Delete My Account</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Scripts -->
+<script>
+    function deleteProduct(productId, productName) {
+        if (confirm(`Are you sure you want to delete "${productName}"?`)) {
+            // Implementation for delete product
+            window.location.href = `/marketplace/delete/${productId}/`;
+        }
+    }
+</script>
 {% endblock %}

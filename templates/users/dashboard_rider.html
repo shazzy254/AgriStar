@@ -224,9 +224,11 @@
                 <p class="mb-0 opacity-90 fs-5">Ready to make deliveries today?</p>
             </div>
             <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
-                <div class="availability-toggle" {% if rider_profile.verification_status != 'VERIFIED' %}style="opacity: 0.6; cursor: not-allowed;" title="Verification Required"{% endif %}>
+                <div class="availability-toggle" {% if rider_profile.verification_status !='VERIFIED'
+                    %}style="opacity: 0.6; cursor: not-allowed;" title="Verification Required" {% endif %}>
                     <label class="switch mb-0">
-                        <input type="checkbox" id="availabilityToggle" {% if rider_profile.is_available %}checked{% endif %} {% if rider_profile.verification_status != 'VERIFIED' %}disabled{% endif %}>
+                        <input type="checkbox" id="availabilityToggle" {% if rider_profile.is_available %}checked{%
+                            endif %} {% if rider_profile.verification_status !='VERIFIED' %}disabled{% endif %}>
                         <span class="slider"></span>
                     </label>
                     <span class="fw-bold" id="statusText">
@@ -303,7 +305,8 @@
                     <div>
                         <span class="badge bg-primary mb-2">Order #{{ order.id }}</span>
                         <h5 class="fw-bold mb-1">{{ order.product.name }}</h5>
-                        <p class="text-muted mb-0">{{ order.quantity }} {{ order.product.unit }} • KES {{ order.total_price }}</p>
+                        <p class="text-muted mb-0">{{ order.quantity }} {{ order.product.unit }} • KES {{
+                            order.total_price }}</p>
                     </div>
                     <button class="btn btn-sm btn-gradient-primary" onclick="toggleQRData('active-{{ order.id }}')">
                         <i class="bi bi-qr-code-scan me-1"></i>View Details
@@ -317,9 +320,12 @@
                         <div class="col-md-6">
                             <div class="p-3 bg-white rounded">
                                 <small class="text-muted d-block mb-1">PICKUP FROM</small>
-                                <div class="fw-bold">{{ order.product.seller.get_full_name|default:order.product.seller.username }}</div>
-                                <div class="small text-muted"><i class="bi bi-geo-alt me-1"></i>{{ order.product.location }}</div>
-                                <div class="small"><i class="bi bi-telephone me-1"></i>{{ order.product.seller.profile.phone_number }}</div>
+                                <div class="fw-bold">{{
+                                    order.product.seller.get_full_name|default:order.product.seller.username }}</div>
+                                <div class="small text-muted"><i class="bi bi-geo-alt me-1"></i>{{
+                                    order.product.location }}</div>
+                                <div class="small"><i class="bi bi-telephone me-1"></i>{{
+                                    order.product.seller.profile.phone_number }}</div>
                                 <a href="tel:{{ order.product.seller.profile.phone_number }}"
                                     class="btn btn-sm btn-outline-primary mt-2 rounded-pill">
                                     <i class="bi bi-telephone-fill me-1"></i>Call Farmer
@@ -330,8 +336,10 @@
                             <div class="p-3 bg-white rounded">
                                 <small class="text-muted d-block mb-1">DELIVER TO</small>
                                 <div class="fw-bold">{{ order.buyer.get_full_name|default:order.buyer.username }}</div>
-                                <div class="small text-muted"><i class="bi bi-geo-alt me-1"></i>{{ order.buyer.profile.location }}</div>
-                                <div class="small"><i class="bi bi-telephone me-1"></i>{{ order.buyer.profile.phone_number }}</div>
+                                <div class="small text-muted"><i class="bi bi-geo-alt me-1"></i>{{
+                                    order.buyer.profile.location }}</div>
+                                <div class="small"><i class="bi bi-telephone me-1"></i>{{
+                                    order.buyer.profile.phone_number }}</div>
                                 <a href="tel:{{ order.buyer.profile.phone_number }}"
                                     class="btn btn-sm btn-outline-success mt-2 rounded-pill">
                                     <i class="bi bi-telephone-fill me-1"></i>Call Buyer
@@ -387,17 +395,22 @@
                         <div class="col-md-6">
                             <div class="p-3 bg-white rounded">
                                 <small class="text-muted d-block mb-1">FARMER</small>
-                                <div class="fw-bold">{{ order.product.seller.get_full_name|default:order.product.seller.username }}</div>
-                                <div class="small text-muted"><i class="bi bi-geo-alt me-1"></i>{{ order.product.location }}</div>
-                                <div class="small"><i class="bi bi-telephone me-1"></i>{{ order.product.seller.profile.phone_number }}</div>
+                                <div class="fw-bold">{{
+                                    order.product.seller.get_full_name|default:order.product.seller.username }}</div>
+                                <div class="small text-muted"><i class="bi bi-geo-alt me-1"></i>{{
+                                    order.product.location }}</div>
+                                <div class="small"><i class="bi bi-telephone me-1"></i>{{
+                                    order.product.seller.profile.phone_number }}</div>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="p-3 bg-white rounded">
                                 <small class="text-muted d-block mb-1">BUYER</small>
                                 <div class="fw-bold">{{ order.buyer.get_full_name|default:order.buyer.username }}</div>
-                                <div class="small text-muted"><i class="bi bi-geo-alt me-1"></i>{{ order.buyer.profile.location }}</div>
-                                <div class="small"><i class="bi bi-telephone me-1"></i>{{ order.buyer.profile.phone_number }}</div>
+                                <div class="small text-muted"><i class="bi bi-geo-alt me-1"></i>{{
+                                    order.buyer.profile.location }}</div>
+                                <div class="small"><i class="bi bi-telephone me-1"></i>{{
+                                    order.buyer.profile.phone_number }}</div>
                             </div>
                         </div>
                     </div>
@@ -465,7 +478,7 @@
                     </div>
                     <div class="progress" style="height: 10px; border-radius: 10px;">
                         <div class="progress-bar"
-                            style="width: {{ rider_profile.delivery_success_rate }}%; background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                            style="width: {{ rider_profile.delivery_success_rate|default:0 }}%; background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
                         </div>
                     </div>
                 </div>

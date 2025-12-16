@@ -76,25 +76,40 @@ class FarmerBadge(models.Model):
         return f"{self.farmer.username} - {self.get_badge_level_display()}"
     
     def update_badge_level(self):
-        """Update badge level based on criteria"""
+        """Update badge level based on real-time criteria"""
         if self.is_manual_override:
             return
 
-        # Calculate average rating
+        # Import here to avoid circular dependencies
+        from marketplace.models import Product, Order
+        
+        # 1. Update Counts
+        # Update Total Products (Available ones)
+        self.total_products = Product.objects.filter(seller=self.farmer, available=True).count()
+        
+        # Update Total Sales (Completed/Delivered/Paid Out Orders)
+        # Using status__in to capture all "successful" states
+        completed_statuses = ['DELIVERED', 'PAID_OUT', 'COMPLETED']
+        self.total_sales = Order.objects.filter(
+            product__seller=self.farmer, 
+            status__in=completed_statuses
+        ).count()
+
+        # Update Average Rating & Review Count
         avg_rating = self.farmer.farmer_reviews.aggregate(Avg('rating'))['rating__avg'] or 0
         self.average_rating = round(avg_rating, 2)
         self.total_reviews = self.farmer.farmer_reviews.count()
         
-        # Badge level criteria
-        if self.total_sales >= 1000 and self.average_rating >= 4.8 and self.total_products >= 50:
+        # 2. Determine Badge Level
+        if self.total_sales >= 1000 and self.average_rating >= 4.8 and self.total_reviews >= 200:
             self.badge_level = 'DIAMOND'
-        elif self.total_sales >= 500 and self.average_rating >= 4.5 and self.total_products >= 30:
+        elif self.total_sales >= 500 and self.average_rating >= 4.5 and self.total_reviews >= 100:
             self.badge_level = 'PLATINUM'
-        elif self.total_sales >= 250 and self.average_rating >= 4.0 and self.total_products >= 20:
+        elif self.total_sales >= 250 and self.average_rating >= 4.0 and self.total_reviews >= 50:
             self.badge_level = 'GOLD'
-        elif self.total_sales >= 100 and self.average_rating >= 3.5 and self.total_products >= 10:
+        elif self.total_sales >= 100 and self.average_rating >= 3.5 and self.total_reviews >= 15:
             self.badge_level = 'SILVER'
-        elif self.total_sales >= 25 and self.average_rating >= 3.0 and self.total_products >= 5:
+        elif self.total_sales >= 25 and self.average_rating >= 3.0 and self.total_reviews >= 5:
             self.badge_level = 'BRONZE'
         else:
             self.badge_level = 'BEGINNER'
